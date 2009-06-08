@@ -39,6 +39,8 @@
 #include "image.h"
 #include "memfile.h"
 #include "integrate.h"
+#include "cool.h"
+#include "nrutil.h"
 
 #define MAXCOEF 16
 
@@ -151,6 +153,9 @@ static int dark_independent_dt;
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 
+float *tablep; //array to hold cooling curve table values
+float *ionfracp; //array to hold ionfraction table values
+
 #ifdef __PARAGON__
 void
 chk_slow(int die)
@@ -181,6 +186,8 @@ chk_slow(int die)
 int
 main(int argc, char *argv[])
 {
+    /*extern float *tablep; //added by CE
+    extern float *ionfracp; //added by CE*/
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
@@ -645,6 +652,9 @@ main(int argc, char *argv[])
 	singlPrintf("int setpvel = %d;\n", setpvel);
 	singlPrintf("float R0 = %f;\n", R0);
     }
+
+//Im guessing the set-up is now done?? -CE
+    init_CoolTable(); //read in cooling curves and ion fraction tables
 
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
@@ -1384,6 +1394,8 @@ main(int argc, char *argv[])
     singlPrintf("Bye!\n");
     Msgf(("Bye!\n"));
     Msg_flush();
+    //free(tablep); //CE: necessary?
+    //free(ionfracp);
     exit(0);			/* trex seems to hang in __exit() */
 }
 

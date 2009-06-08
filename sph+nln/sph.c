@@ -5,6 +5,8 @@
 #include "fastflpt.h"
 #include "timers.h"
 #include "error.h"
+#include "cool.h"
+#include "nrutil.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -38,6 +40,9 @@ static void (*cellfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 
 extern int do_diffusion;
 extern int do_cooling;
+
+extern float *tablep; //added by CE
+extern float *ionfracp; /added by CE
 
 void
 SetSPHOffset(float *off, float *voff)
@@ -529,7 +534,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
     double m = 1.988900e+33;  /* 1 solar mass */
     double l = 3.085678e+18;  /* 1 parsec */
     double t = 3.153600e+07;  /* 1 year */
-
+    //extern float *tablep; /*added by CE: holds cooling curve*/
+    //extern float *ionfracp; /*ditto ion fractions*/
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -562,12 +568,14 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    /* From Chris's email; fit to Dalgarno and McCray (ARA&A
 	       1972, 10, 375) and Sutherland and Dopita (ApJS, 88,
 	       253) */
-	    if (temp < 1.0e4)
-		lcool = 1.0e-27 * exp(-1.0e2/temp) * sqrtf_fast(temp);
-	    else if (temp < 3.0e5)
-		lcool=1.0e-21;
-	    else
-		lcool=1.0e-21/(3.0*(log10(temp)-5.5)+1.0);
+	/*replaced this with call to calc_cool1 to get cooling term -CE*/
+ 	   
+	    //this does the table look-up:
+	    //0=use analytic outside table, 1=extrapolate
+	    looc = calc_lcool1(temp,1);
+
+	    //this does the analytic cooling that was here before:
+	    //lcool = analytic_cool(temp,1);
 
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
 	    p->udot -= lcool*n/(2.0*mh) * t*t*t/(l*l);

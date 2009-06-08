@@ -273,6 +273,10 @@ AddWinds(SPHbody **SPHbtabp, int *nobj, template_t *temptab,
 
     StkInitEz(&s);
 
+/*comment this out if no density variation is desired, also comment out 
+the Rotate by lines downstairs. note: in radians. -CE*/
+    openangle_wind=M_PI*0.33333333333333;
+
     /* Push all existing particles onto stack */
     for (p = btab; p < btab + *nobj; ++p) {
 	q = StkPush(&s, sizeof(SPHbody));
@@ -294,9 +298,11 @@ AddWinds(SPHbody **SPHbtabp, int *nobj, template_t *temptab,
 	    q->mass = mdot_wind/windpartpershell * (tpos - *t_wind);
 
 	    /* Rotate by (theta, phi) */	    
-/* 	    q->pos[0] = t->pos[0]*sin(theta)*cos(phi); */
-/* 	    q->pos[1] = t->pos[1]*sin(theta)*sin(phi); */
-/* 	    q->pos[2] = t->pos[2]*cos(theta); */
+	    /*comment out if no density variation, also comment out 
+	      openangle_wind initialization upstairs. -CE*/
+ 	    q->pos[0] = t->pos[0]*sin(theta)*cos(phi); 
+ 	    q->pos[1] = t->pos[1]*sin(theta)*sin(phi); 
+ 	    q->pos[2] = t->pos[2]*cos(theta); 
 
 	    VV(q->pos, = t->pos);
 

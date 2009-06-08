@@ -5,7 +5,7 @@ treedir_sed=\.\.
 ifndef prog
 src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
-	SDFreadf.c
+	SDFreadf.c nrutil.c lcool1.c readintables.c
 
 programname=sph
 else
@@ -92,7 +92,7 @@ $(objdir)/main$(objsuf): $(treedir)/include/fastflpt.h $(treedir)/include/Assert
 $(objdir)/main$(objsuf): $(treedir)/include/gccextensions.h $(treedir)/include/SDF.h
 $(objdir)/main$(objsuf): $(treedir)/include/protos.h $(treedir)/include/macr.h $(treedir)/include/malloc.h
 $(objdir)/main$(objsuf): $(treedir)/include/bigmalloc.h $(treedir)/include/SDFwrite.h $(treedir)/include/SDFread.h
-$(objdir)/main$(objsuf): $(treedir)/include/timers.h physics.h $(treedir)/include/tree.h
+$(objdir)/main$(objsuf): $(treedir)/include/timers.h physics.h $(treedir)/include/tree.h nrutil.h cool.h
 $(objdir)/main$(objsuf): $(treedir)/include/key.h
 $(objdir)/main$(objsuf):
 $(objdir)/main$(objsuf): $(treedir)/include/stk.h $(treedir)/include/chn.h $(treedir)/include/pqsort.h ndim.h
@@ -167,12 +167,12 @@ $(objdir)/sph$(objsuf): $(treedir)/include/stk.h $(treedir)/include/bigmalloc.h 
 $(objdir)/sph$(objsuf):
 $(objdir)/sph$(objsuf): $(treedir)/include/gccextensions.h $(treedir)/include/chn.h $(treedir)/include/Assert.h
 $(objdir)/sph$(objsuf): $(treedir)/include/pqsort.h $(treedir)/include/vop.h $(treedir)/include/fastflpt.h
-$(objdir)/sph$(objsuf): physics.h ndim.h $(treedir)/include/physics_generic.h
+$(objdir)/sph$(objsuf): physics.h ndim.h $(treedir)/include/physics_generic.h nrutil.h cool.h
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf): $(treedir)/include/randoms.h
-$(objdir)/sphinit$(objsuf): physics.h $(treedir)/include/tree.h
+$(objdir)/sphinit$(objsuf): physics.h $(treedir)/include/tree.h nrutil.h cool.h
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf): $(treedir)/include/timers.h $(treedir)/include/key.h
 $(objdir)/sphinit$(objsuf):
