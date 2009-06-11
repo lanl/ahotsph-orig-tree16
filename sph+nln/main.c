@@ -186,8 +186,8 @@ chk_slow(int die)
 int
 main(int argc, char *argv[])
 {
-    /*extern float *tablep; //added by CE
-    extern float *ionfracp; //added by CE*/
+    extern float *tablep; //added by CE
+    extern float *ionfracp; //added by CE
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
