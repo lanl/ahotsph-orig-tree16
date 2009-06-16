@@ -12,6 +12,8 @@
 #include "SDF.h"
 #include "SDFread.h"
 #include "SDFreadf.h"
+#include "nrutil.h"
+#include "cool.h"
 
 void *
 InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 

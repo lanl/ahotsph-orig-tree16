@@ -1,0 +1,56 @@
+#defaultCC:=/ss1-raid/opt/intel/compiler71/compiler70/ia32/bin/icc
+#defaultFC:=/ss1-raid/opt/intel/compiler71/compiler70/ia32/bin/ifc
+#use icc
+
+defaultCC:=icc
+defaultFC:=ifort -nofor_main
+
+CC_SPECIFIC:=-g -DLONG_LONG_KEYS 
+#-march=core2 -mcpu=core2
+FC_SPECIFIC:=
+#-cm -w95 -80
+ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC
+
+# ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
+
+override OPTIMIZE=-O2 -tpp7 -xW
+override AGGRESSIVE_OPT=
+#LDFLAGS:=-Qoption,ld,-rpath=/ss1-raid/opt/intel/compiler71/compiler70/ia32/lib
+LOADLIBES:=-lsvml
+LEX:=flex
+YACC:=bison -y
+
+include $(treedir)/Make-common/Make.default
+
+swsrc:=lsv.c swampi.c
+
+#use lampi
+
+ifeq ($(PAROS),mpi)
+LOADLIBES:=-L/packages/intel-openmpi-1.2.7/lib -lmpi 
+PAROSCFLAGS:=-I/packages/intel-openmpi-1.2.7/include
+#PAROSCFLAGS:=-I/ss1-raid/local/mpich-1.2.5-ssh/include
+endif
+
+ifeq ($(PAROS),mvapipich) 
+LOADLIBES:=-L/packages/intel-mvapich-1.0.1/lib -lmpich
+PAROSCFLAGS:=-I/packages/intel-mvapich-1.0.1/include
+endif
+
+ifeq ($(PAROS),mpich2)
+LOADLIBES:=-L/ss1-raid/local/mpich2-0.92/lib -lmpich
+PAROSCFLAGS:=-I/ss1-raid/local/mpich2-0.92/include
+endif
+
+ifeq ($(PAROS),lam)
+LOADLIBES:=-L/usr/local/ofed/mpi/intel/openmpi-1.2.3/lib/ -lmpi_cxx
+PAROSCFLAGS:=-I/usr/local/ofed/mpi/intel/openmpi-1.2.3/include/
+#
+#LOADLIBES:=-L/usr/local/lib -lmpi -llam
+#PAROSCFLAGS:=-I/usr/local/include
+endif
+
+ifeq ($(PAROS),pvm)
+LOADLIBES:=-L/usr/local/pvm3/lib/LINUX -lpvm3
+PAROSCFLAGS:=-I/usr/local/pvm3/include
+endif

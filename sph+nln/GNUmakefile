@@ -5,7 +5,7 @@ treedir_sed=\.\.
 ifndef prog
 src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
-	SDFreadf.c nrutil.c lcool1.c readintables.c
+	SDFreadf.c nrutil.c readintables.c lcool1.c
 
 programname=sph
 else
@@ -92,7 +92,7 @@ $(objdir)/main$(objsuf): $(treedir)/include/fastflpt.h $(treedir)/include/Assert
 $(objdir)/main$(objsuf): $(treedir)/include/gccextensions.h $(treedir)/include/SDF.h
 $(objdir)/main$(objsuf): $(treedir)/include/protos.h $(treedir)/include/macr.h $(treedir)/include/malloc.h
 $(objdir)/main$(objsuf): $(treedir)/include/bigmalloc.h $(treedir)/include/SDFwrite.h $(treedir)/include/SDFread.h
-$(objdir)/main$(objsuf): $(treedir)/include/timers.h physics.h $(treedir)/include/tree.h nrutil.h cool.h
+$(objdir)/main$(objsuf): $(treedir)/include/timers.h physics.h $(treedir)/include/tree.h 
 $(objdir)/main$(objsuf): $(treedir)/include/key.h
 $(objdir)/main$(objsuf):
 $(objdir)/main$(objsuf): $(treedir)/include/stk.h $(treedir)/include/chn.h $(treedir)/include/pqsort.h ndim.h
@@ -103,6 +103,7 @@ $(objdir)/main$(objsuf): $(treedir)/include/gc.h $(treedir)/include/files.h $(tr
 $(objdir)/main$(objsuf): $(treedir)/include/verify.h $(treedir)/include/randoms.h $(treedir)/include/ring.h
 $(objdir)/main$(objsuf): $(treedir)/include/decomp.h $(treedir)/include/image.h $(treedir)/include/memfile.h
 $(objdir)/main$(objsuf): integrate.h
+$(objdir)/main$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
 $(objdir)/physics$(objsuf): physics.h $(treedir)/include/tree.h
 $(objdir)/physics$(objsuf):
 $(objdir)/physics$(objsuf):
@@ -167,12 +168,13 @@ $(objdir)/sph$(objsuf): $(treedir)/include/stk.h $(treedir)/include/bigmalloc.h 
 $(objdir)/sph$(objsuf):
 $(objdir)/sph$(objsuf): $(treedir)/include/gccextensions.h $(treedir)/include/chn.h $(treedir)/include/Assert.h
 $(objdir)/sph$(objsuf): $(treedir)/include/pqsort.h $(treedir)/include/vop.h $(treedir)/include/fastflpt.h
-$(objdir)/sph$(objsuf): physics.h ndim.h $(treedir)/include/physics_generic.h nrutil.h cool.h
+$(objdir)/sph$(objsuf): physics.h ndim.h $(treedir)/include/physics_generic.h 
+$(objdir)/sph$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf): $(treedir)/include/randoms.h
-$(objdir)/sphinit$(objsuf): physics.h $(treedir)/include/tree.h nrutil.h cool.h
+$(objdir)/sphinit$(objsuf): physics.h $(treedir)/include/tree.h 
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf): $(treedir)/include/timers.h $(treedir)/include/key.h
 $(objdir)/sphinit$(objsuf):
@@ -184,6 +186,7 @@ $(objdir)/sphinit$(objsuf): $(treedir)/include/physics_generic.h physics_sph.h $
 $(objdir)/sphinit$(objsuf): $(treedir)/include/singlio.h $(treedir)/include/fastflpt.h
 $(objdir)/sphinit$(objsuf): $(treedir)/include/mpmy.h $(treedir)/include/gc.h $(treedir)/include/Msgs.h
 $(objdir)/sphinit$(objsuf): $(treedir)/include/SDF.h $(treedir)/include/SDFread.h SDFreadf.h
+$(objdir)/sphinit$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
 $(objdir)/physics_sph$(objsuf): physics_sph.h $(treedir)/include/tree.h
 $(objdir)/physics_sph$(objsuf):
 $(objdir)/physics_sph$(objsuf):
@@ -239,3 +242,12 @@ $(objdir)/SDFreadf$(objsuf): $(treedir)/include/timers.h $(treedir)/include/SDF.
 $(objdir)/SDFreadf$(objsuf): $(treedir)/include/error.h $(treedir)/include/gccextensions.h
 $(objdir)/SDFreadf$(objsuf): $(treedir)/include/bigmalloc.h $(treedir)/include/Msgs.h $(treedir)/include/verify.h
 $(objdir)/SDFreadf$(objsuf): SDFreadf.h $(treedir)/include/gc.h $(treedir)/include/singlio.h
+$(objdir)/nrutils$(objsuf):
+$(objdir)/readintables$(objsuf): $(treedir)/sph+nln/nrutil.h
+$(objdir)/lcool1$(objsuf): 
+$(objdir)/lcool1$(objsuf): $(treedir)/include/error.h
+$(objdir)/lcool1$(objsuf): $(treedir)/include/singlio.h $(treedir)/include/fastflpt.h
+$(objdir)/lcool1$(objsuf): $(treedir)/include/mpmy.h $(treedir)/include/Msgs.h
+$(objdir)/lcool1$(objsuf): 
+$(objdir)/lcool1$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
+$(objdir)/lcool1$(objsuf): 
