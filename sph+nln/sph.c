@@ -570,23 +570,43 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	       253) */
 	/*replaced this with call to calc_cool1 to get cooling term -CE*/
  	   
-	    //this does the table look-up:
-	    //0=use analytic outside table, 1=extrapolate
+	    /*this does the table look-up:
+	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
 	    lcool = calc_lcool1(temp,1);
 
 	    //this does the analytic cooling that was here before:
-	    //lcool = analytic_cool(temp,1);
+	    //lcool = analytic_cool(temp);
 
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
+	//NOTE THE MINUS!!
 	    p->udot -= lcool*n/(2.0*mh) * t*t*t/(l*l);
+
 	}
 
 	if (!finite(p->udot)) 
 	    Error("Bad value for udot\n");
 
+        dt2=dt;
+
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
-	if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {
+	if ( (p->udot * dt > 0.25*p->u) && !(p->ident & (1<<30)) ) {
+            while(p->udot * dt2 > 0.25*p->u) {
+                dt2=dt2/2.0;
+            }
+            /*update temperature*/
+            /*update density*/
+            /*find new cooling term*/
+            /*add to total cooling for this timestep*/
+            /*check udot*(dt-dt2_tot) again*/
+            /*if too large, subcycle*/
+            /*if good, repeat from top of this list*/
+            /*until dt2_tot=dt*/
+/* this loop checks if udot is too large. basically, put subcycling here. 
+ * if udot*dt too large, try dt/2, dt/4, ... until good, then use that to 
+ * update temperature and density, go back up and do cooling again, check 
+ * the new udot, subcycle if necessary, and then add all the individual 
+ * udots to the final udot for this time step. */ 
 	    p->udot = p->u/dt;
  	    ++*limit_high;
 	}

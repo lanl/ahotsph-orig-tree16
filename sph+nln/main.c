@@ -283,6 +283,8 @@ main(int argc, char *argv[])
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
 
+    //openangle_wind=60.0; //added by CE
+
     MPMY_Init(&argc, &argv);
     singlPrintf("Welcome to the variable O() integrator running on %d procs\n",
 		MPMY_Nproc());
