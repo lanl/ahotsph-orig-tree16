@@ -7,6 +7,7 @@
 #include "error.h"
 #include "cool.h"
 #include "nrutil.h"
+#include "units.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -529,11 +530,9 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 {
     SPHbody *p;
     double u, n, lcool, temp;
-    double mh = 1.67372267e-24; /* g */
-    double kboltz = 1.38065e-16; /* g cm^2 s^-2 K^-1 */
-    double m = 1.988900e+33;  /* 1 solar mass */
-    double l = 3.085678e+18;  /* 1 parsec */
-    double t = 3.153600e+07;  /* 1 year */
+    double m = (double)massCF;  /* convert from user-units to cgs */
+    double l = (double)lengthCF;  /* convert from user-units to cgs */
+    double t = (double)timeCF;  /* convert from user-units to cgs */
     //extern float *tablep; /*added by CE: holds cooling curve*/
     //extern float *ionfracp; /*ditto ion fractions*/
 
@@ -541,7 +540,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	if (!SPH_need_update(p)) continue;
 	VV(p->acc, += p->grav_acc);
 	/* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */
-	p->rho += wij[0] * p->mass / (p->h * p->h * p->h);
+	p->rho += wij[0] * p->mass / (p->h * p->h * p->h); 
 	p->hdot = (float)(-1.0/3.0) * p->h * p->drho_dt / p->rho;
 	if (p->hdot * dt > p->h) {
 	    SeriousWarning("Hdot limit (high)\n%s\n", PrintSPHBodyContents(p));
@@ -561,9 +560,10 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	if (do_cooling) {
 	    /* Check units, calculate temp = 2.0*mh*u / (2.5*k),
 	       calculate lcool, update udot */
-	    n = p->rho * m/(l*l*l) / (2.0*mh);
-	    u = p->u * l/t * l/t;
-	    temp = 2.0*mh * u / (2.5 * kboltz);
+            /* all this is done in cgs */
+	    n = p->rho * m / (l*l*l) / (2.0*MH);/*better way to find #density?*/
+	    u = p->u * l*l /t*t; 
+	    temp = 2.0*MH * u / (2.5 * K_BOLTZ);
 
 	    /* From Chris's email; fit to Dalgarno and McCray (ARA&A
 	       1972, 10, 375) and Sutherland and Dopita (ApJS, 88,
@@ -577,8 +577,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    //this does the analytic cooling that was here before:
 	    //lcool = analytic_cool(temp,1);
 
-	    /* lcool has units of erg cm^3/s, need erg/g/s */
-	    p->udot -= lcool*n/(2.0*mh) * t*t*t/(l*l);
+	    /* lcool has units of erg cm^3/s, need energy/mass/time */
+	    p->udot -= lcool*n/(2.0*MH) * t*t*t/(l*l);
 	}
 
 	if (!finite(p->udot)) 
@@ -604,7 +604,10 @@ void
 update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
+    float acoef;
     SPHbody *p;
+   
+    acoef = A_COEFF * ((double)lengthCF * timeCF*timeCF / massCF);
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -616,22 +619,22 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
 
 	if (do_diffusion) {
-	    /* Set constants in physics_sph.h for now */
-	    /* Or read in from the control file (global)? */
 
 	    /* Calculate temperature from u, then "create" photons (a*T^4) */
-	    eos_n = ((double)(p->rho_est))/((double)(MH));
+            /* keep these in user-units */
+	    eos_n = ((double)(p->rho_est))/(MH/massCF);/*better way to find this?*/
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
 	    p->temp = newtraph(4.0e4, 1.5e7, eos_u*1.0e-6, uvst, duvst);
-	    p->u_r = A_COEFF*p->temp*p->temp*p->temp*p->temp;
+	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 
 	    /* Calculate diffusion coefficient */
-	    kes = KES_COEFF;
-	    kff = (KFF_COEFF)*p->rho_est*pow(p->temp, -3.5);
-	    p->D = C_LIGHT / ( 3.0*(kes+kff)*p->rho_est );
+	    kes = KES_COEFF/MH *((double) massCF / (lengthCF*lengthCF));
+	    kff = (KFF_COEFF) * p->rho_est*pow(p->temp, -3.5)*
+                ((double)massCF*massCF /(lengthCF*lengthCF*lengthCF*lengthCF*lengthCF));
+	    p->D = C_LIGHT *((double)timeCF /lengthCF) / ( 3.0*(kes+kff)*p->rho_est );
 
 	    /* Also, eventually, handle lightbulb approximation here */
 	}

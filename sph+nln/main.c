@@ -41,6 +41,7 @@
 #include "integrate.h"
 #include "cool.h"
 #include "nrutil.h"
+#include "units.h"
 
 #define MAXCOEF 16
 
@@ -149,6 +150,11 @@ static float courant_number;
 static int adaptive_dt;
 static int independent_dt;
 static int dark_independent_dt;
+
+/*conversion factors from user-units to cgs*/
+float massCF;
+float lengthCF;
+float timeCF;
 
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
@@ -429,7 +435,7 @@ main(int argc, char *argv[])
 	    }
 	    FixNterms(btab, nobj);
 	    SPHFixNterms(SPHbtab, SPHnobj);
-	    SDFgetfloatOrDie(csdfp, "Gnewt", &cosmo.GNewt);
+	    /*SDFgetfloatOrDie(csdfp, "Gnewt", &cosmo.GNewt);*/
 	    SDFgetfloatOrDefault(sdfp, "tpos",  &tpos, (float)0.0);
 	    tvel = tpos;
 	    SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
@@ -491,6 +497,10 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "independent_dt", &independent_dt, 0);
     SDFgetintOrDefault(csdfp, "dark_independent_dt", &dark_independent_dt, 0);
     SDFgetintOrDefault(csdfp, "default_nterms", &default_nterms, 100);
+    SDFgetfloatOrDefault(csdfp, "massCF", &massCF, 1.0);/*mass conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "lengthCF", &lengthCF, 1.0);/*length conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "timeCF", &timeCF, 1.0);/*time conversion factor; CE*/
+    Msgf(("read in massCF= %g, lengthCF= %e, timeCF= %f\n",massCF,lengthCF,timeCF));
     if (adaptive_dt) {
 	SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
 	SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
@@ -548,6 +558,8 @@ main(int argc, char *argv[])
     if (do_periodic) {
 	EnableTimer(&FixCubeTm, "Fix Cube");
     }
+            
+    cosmo.GNewt = GRAV_C *((double)massCF/lengthCF *timeCF/lengthCF *timeCF/lengthCF);
 
     singlPrintf("float errtol = %g;\n", tol);
     singlPrintf("float dt = %g;\n", dt);
@@ -564,6 +576,9 @@ main(int argc, char *argv[])
     singlPrintf("float courant_number = %g;\n", courant_number);
     singlPrintf("float gamma = %f;\n", Gamma);
     singlPrintf("float Gnewt = %g;\n", cosmo.GNewt);
+    singlPrintf("float massCF = %g;\n", massCF);/*added by CE*/
+    singlPrintf("float lengthCF = %g;\n", lengthCF);/*added by CE*/
+    singlPrintf("float timeCF = %g;\n", timeCF);/*added by CE*/
     singlPrintf("float visc_alpha = %g;\n", visc_alpha);
     singlPrintf("float visc_beta = %g;\n", visc_beta);
     singlPrintf("float visc_epsilon = %g;\n", visc_epsilon);

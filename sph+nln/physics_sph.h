@@ -12,12 +12,14 @@
 #define SPH_GRAV
 
 /* Some physical constants, in cgs units */
+/*
 #define A_COEFF (1.043565e-17)
 #define C_LIGHT (3.424758e+02)
 #define KES_COEFF (1.043946e+02)
 #define KFF_COEFF (1.591470e+12)
 #define K_BOLTZ (9.059183e-66)
 #define MH (8.411685e-58)
+*/
 
 typedef struct {
 #ifdef POS_IS_DOUBLE

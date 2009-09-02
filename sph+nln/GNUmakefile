@@ -5,7 +5,7 @@ treedir_sed=\.\.
 ifndef prog
 src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
-	SDFreadf.c nrutil.c readintables.c lcool1.c
+	SDFreadf.c nrutil.c readintables.c lcool1.c 
 
 programname=sph
 else
@@ -170,6 +170,7 @@ $(objdir)/sph$(objsuf): $(treedir)/include/gccextensions.h $(treedir)/include/ch
 $(objdir)/sph$(objsuf): $(treedir)/include/pqsort.h $(treedir)/include/vop.h $(treedir)/include/fastflpt.h
 $(objdir)/sph$(objsuf): physics.h ndim.h $(treedir)/include/physics_generic.h 
 $(objdir)/sph$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
+$(objdir)/sph$(objsuf): $(treedir)/sph+nln/units.h
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf):
 $(objdir)/sphinit$(objsuf):
@@ -200,6 +201,7 @@ $(objdir)/physics_sph$(objsuf): $(treedir)/include/gccextensions.h $(treedir)/in
 $(objdir)/physics_sph$(objsuf): $(treedir)/include/Assert.h $(treedir)/include/pqsort.h
 $(objdir)/physics_sph$(objsuf): $(treedir)/include/verify.h $(treedir)/include/mpmy.h $(treedir)/include/gc.h
 $(objdir)/physics_sph$(objsuf): $(treedir)/include/vop.h
+$(objdir)/physics_sph$(objsuf): $(treedir)/sph+nln/units.h
 $(objdir)/sphprint$(objsuf):
 $(objdir)/sphprint$(objsuf):
 $(objdir)/sphprint$(objsuf):

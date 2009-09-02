@@ -77,12 +77,12 @@ void init_CoolTable(void)
     char mychar,myline[50];	//holds new-lines and text read in from files
 
     //open table with cooling curves
-    File1p = fopen("/home/cellinge/SNSPH.dir/tree16-new/sph+nln/CHIANTI-COOLING.dat", "r");
+    File1p = fopen("/home/cellinge/SNSPH.dir/tree16/sph+nln/CHIANTI-COOLING.dat", "r");
     if (File1p == NULL) 
 	Error("error opening cooling curves: %s\n",strerror(errno));
 
     //open table with ion fractions
-    file2p=fopen("/home/cellinge/SNSPH.dir/tree16-new/sph+nln/mazzotta_etal_9.ioneq","r");
+    file2p=fopen("/home/cellinge/SNSPH.dir/tree16/sph+nln/mazzotta_etal_9.ioneq","r");
     if (File1p == NULL) 
 	Error("error opening ion fractions: %s\n",strerror(errno));
 

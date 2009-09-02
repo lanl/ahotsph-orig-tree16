@@ -37,15 +37,22 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 
 
 #include "physics_sph.h"
+#include "units.h"
 
 extern double eos_n;
 extern double eos_u;
 
 double uvst(double t) {
-    return 1.5*eos_n*((double)K_BOLTZ)*t + t*t*t*t*((double)A_COEFF) - eos_u;
+    /*convert from cgs to user-units*/
+    double kB=K_BOLTZ /((double)massCF /lengthCF/lengthCF *timeCF*timeCF);
+    double acoef=A_COEFF/((double)massCF*lengthCF*timeCF*timeCF);
+    return 1.5*eos_n*(kB)*t + t*t*t*t*(acoef) - eos_u;
 }
 
 
 double duvst(double t) {
-    return 1.5*eos_n*((double)K_BOLTZ) + 4.0*t*t*t*((double)A_COEFF);
+    /*convert from cgs to user-units*/
+    double kB=K_BOLTZ /((double)massCF /lengthCF/lengthCF *timeCF*timeCF);
+    double acoef=A_COEFF/((double)massCF*lengthCF*timeCF*timeCF);
+    return 1.5*eos_n*(kB) + 4.0*t*t*t*(acoef);
 }
