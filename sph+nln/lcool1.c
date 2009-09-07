@@ -5,13 +5,8 @@ the calling routine-note
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-//#include "physics_sph.h"
-//#include "vop.h"
-//#include "fastflpt.h"
-//#include "timers.h"
-//#include "error.h"
 #include "cool.h"
-#include "nrutil.h" //ok to have this in
+#include "nrutil.h" /*ok to have this in*/
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -26,13 +21,13 @@ the calling routine-note
  * now. eventually should have a flag in the .ctl files to turn 
  * debugging on (i.e. with output messages) or off
  **********************************************************************/
-//arrays in C: array[nrows][ncolumns]
+/*arrays in C: array[row-index][col-index]*/
 
-double calc_lcool1(double temp,int extrapolate)
+double calc_lcool1(SPHbody *p,double temp,int extrapolate)
 {
     extern float *tablep;	/*global array with cooling values*/
     extern float *ionfracp;	/*global array with ion fractions*/
-    static double lcool;	/*holds final cooling term;returned*/
+    double lcool;	/*holds final cooling term;returned*/
     double *lcoolp;	/*pointer to lcool*/
     double dy,df;	/*measure of accuracy returned from interp.*/
     double *dyp;	/*pointer to dy*/
@@ -44,12 +39,13 @@ double calc_lcool1(double temp,int extrapolate)
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
     int Nel=ionfracp[1];	/*number of elements in table*/
     int NMax=ionfracp[0];	/*number of grid points per ion in table*/
+    float X_el[Nel];		/*element fraction*/
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
     int n,m,offset,index; 	/*some indices for looping and arrays*/
 	
-    //initialize things so I don't get stupid warnings all the time:
+    /*initialize things so I don't get stupid warnings all the time:*/
     j=-999;
     dy=-999;
     jp=&j;
@@ -57,82 +53,92 @@ double calc_lcool1(double temp,int extrapolate)
     lcoolp=&lcool;
     dfp=&df;
     fracnp=&fracn;
-    offset=NMax+Nel;//offset=51 temperatures + 30 elements
+    offset=NMax+Nel;/*offset=51 temperatures + 30 elements*/
 	
 
-    //locate the indices of the table
-    //same for both tables as they go over the same range/grid points
+    /*locate the indices of the table;
+      same for both tables as they go over the same range/grid points 
+    */
     locate(&tablep[30], NMax, temp, jp); 
     j_prev=j;
 	
-    //if we're outside the table, do analytic cooling if extrapolate=0
-    //or extrapolate if extrapolate=1:
-    //extrapolation is still a little funky - CE
-    //above table= j=-2, below table= j=-99
+    /*if we're outside the table, do analytic cooling if extrapolate=0
+      or extrapolate if extrapolate=1:
+      extrapolation is still a little funky - CE
+      above table= j=-2, below table= j=-99
+    */
     if ((j==-2) || (j==-99))
     {
 	if (extrapolate)
 	{
-	    //printf("extrapolating......\n");
-	    //reset j for extrapolation
+	    /*printf("extrapolating......\n");*/
+	    /*reset j for extrapolation*/
 	    if (j==-2) j=0;
-	    //now do interpolation, should automatically extrapolate as set up below
-	    //reset j for extrapolation
+	    /*now do interpolation, should automatically extrapolate as set up below*/
+	    /*reset j for extrapolation*/
 	    if (j==-99) j=NMax-1;
-	    //now do interpolation, should automatically extrapolate as set up below
+	    /*now do interpolation, should automatically extrapolate as set up below*/
 	}
 	else
-	    return analytic_cool(temp); //we're done here
+	    return analytic_cool(temp); /*we're done here*/
     } 
-    //technically, need to interpolate over every ion in every element
-    //then weigh by equil fraction at current T, and mix according to 
-    //composition
+    /*technically, need to interpolate over every ion in every element
+      then weigh by equil fraction at current T, and mix according to 
+      composition.
+      So, create array with element fractions from the SPHbody array of
+      isotope fractions (mole fractions?)
+    */
+    for(n=0;n<Nel;n++) {X_el[n] = 0.;} /*initialize all to zero*/
+    for(n=0;n<NISO;n++) {/*sum individual isotopes*/
+        /*exclude neutrons only;in tablep/ionfracp index=0 is H*/
+        if(p->np[n] > 0) {X_el[p->np[n]-1] += p->compos[n];}
+    }
+
     logtemp=log10(temp);
-    //for (n=0;n<Nel;n++)	//loop over elements
-    for (n=7;n<8;n++)	//loop over oxygen (no abundance tracking yet)
+
+    /*for (n=0;n<Nel;n++)*/	/*loop over elements*/
+    for (n=7;n<8;n++)	/*loop over oxygen (no abundance tracking yet)*/
     {
-        for (m=0;m<=(n+1);m++)	//loop over ions for each element,dont skip any
+        for (m=0;m<=(n+1);m++)	/*loop over ions for each element,dont skip any*/
 	{
 	    index=(((n+1)*(n+2)>>1)-1+m)*51;	/*find row of element n, ion m*/
-	    //re-assign table values so interpolation can be done in 
-	    //double precision (table is floats).
+	    /*re-assign table values so interpolation can be done in 
+	      double precision (table is floats).
+            */
 	    rowarr[0]=tablep[j+Nel];
 	    rowarr[1]=tablep[j+Nel+1];
 	    interp[0]=tablep[index+offset+j];
 	    interp[1]=tablep[index+offset+j+1];
-	    //interpolate
+	    /*interpolate*/
 	    polint(rowarr,interp,2,temp,lcoolp,dyp);
-//THIS IS JUST A QUICK DIRTY FIX, MAKE MORE ROBUST!!!!
-	    //reset value if extrapolated to negative value
+	    /*reset value if extrapolated to negative value*/
 	    if (lcool<0.0)
 	    {
 		if ((interp[0]-interp[1]) <0) lcool=0.0;
-		//else fracn=1.0;//this case shouldn't happen
+		/*else fracn=1.0;*//*this case shouldn't happen*/
 	    }
 		
-	    //find equil fraction of this ion:
+	    /*find equil fraction of this ion:*/
 	    temps[0]=ionfracp[j+2];
 	    temps[1]=ionfracp[j+2+1];
-	    //break-down of ionfracp index:
-	    //-first two elements contain # grid points (NMax) and # of elements
-	    //-then NMax temperature grid points, then the data.
-	    //The data includes neutrals, skip these! (see read_ioncool-b.c) done
-	    //with NMax*(n+1). change to *n to skip bare ions. 
+	    /*break-down of ionfracp index:
+	      -first two elements contain # grid points (NMax) and # of elements
+	      -then NMax temperature grid points, then the data.
+	      The data includes neutrals, skip these! (see read_ioncool-b.c) done
+	      with NMax*(n+1). change to *n to skip bare ions. 
+            */
 	    fracns[0]=ionfracp[2+NMax+index+j];
 	    fracns[1]=ionfracp[2+NMax+index+j+1];
-	    //interpolate
+	    /*interpolate*/
 	    polint(temps,fracns,2,logtemp,fracnp,dfp);
-//THIS IS JUST A QUICK DIRTY FIX, MAKE MORE ROBUST!!!!
-	    //reset value if extrapolated to unphysical value
+	    /*reset value if extrapolated to unphysical value*/
 	    if (fracn<0.0)
 	    {
 	        if ((fracns[0]-fracns[1]) <0) fracn=1.0e-30;
 		else fracn=1.0;
 	    }
-	    //sum over all ions of given species. 
-	    //also need to find equil fraction of ions (interpolate also)
-	    //ioncool+=lcool*fracn*X_el[n];
-	    ioncool+=lcool*fracn; //assume pure O composition
+
+	    ioncool+=lcool*fracn*X_el[n]; /*assume pure O composition*/
 	}
     }
     return ioncool;
@@ -158,7 +164,7 @@ double analytic_cool(double temp)
 		//lcool=1.0e-21/(3.0*(log10(temp)-5.5)+1.0);
 	
 	return lcool;
-}//end analytic_cool
+}/*end analytic_cool*/
 
 
 
@@ -173,16 +179,17 @@ that x is out of range.*/
 void 
 locate(float xx[], long Nel, float x, long *j)
 {
-   //floats should be enough for finding correct indices
+   /*floats should be enough for finding correct indices*/
    long ju, jm, jl;
    int ascnd,sign;
 
    jl=-1;
    ju=Nel;
-   //check whether the table is in increasing (ascnd=1) or 
-   //decreasing (ascnd=0) order
-   ascnd=(xx[Nel-1] >= xx[0]);   //what does this line do - check whether
-                             //xx[N]>xx[1] or not -CE
+   /*check whether the table is in increasing (ascnd=1) or 
+     decreasing (ascnd=0) order
+   */
+   ascnd=(xx[Nel-1] >= xx[0]);   /*what does this line do - check whether
+                                   xx[N]>xx[1] or not -CE*/
    if (ascnd) sign=1;
    if (!ascnd) sign=-1;
 
@@ -194,14 +201,14 @@ locate(float xx[], long Nel, float x, long *j)
       else
          ju=jm;
    }
-   //if (true && true) && true (1 is true) then below (j<0) table
+   /*if (true && true) && true (1 is true) then below (j<0) table*/
    if ( (((x - xx[0])*sign <0) && ((x-xx[Nel-1])*sign <0)) && 1)
 	   *j=-2; 
-   //if (not false && not false) && true (1 is true) then above (j>Nel) table
+   /*if (not false && not false) && true (1 is true) then above (j>Nel) table*/
    else if ( (!((x - xx[0])*sign <0) && !((x-xx[Nel-1])*sign <0)) && 1)
 	   *j=-99; 
    else *j=jl;
-} //end locate
+} /*end locate*/
 
 
 

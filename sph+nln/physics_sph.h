@@ -7,6 +7,7 @@
 #include "timers.h"
 
 #define NDIM 3
+#define NISO 50 /*number of isotopes to include*/
 #define SPH_SAVE_ACC
 #define POS_IS_DOUBLE
 #define SPH_GRAV
@@ -20,6 +21,7 @@
 #define K_BOLTZ (9.059183e-66)
 #define MH (8.411685e-58)
 */
+
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -70,6 +72,9 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
+    float compos[NISO]; 
+    int np[NISO];
+    int nn[NISO];
 } SPHbody;
 
 
@@ -125,6 +130,9 @@ typedef struct {
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
+    float compos[NISO]; 
+    int np[NISO];
+    int nn[NISO];
 } SPHoutbody;
 
 typedef struct {
@@ -163,6 +171,9 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
+    float compos[NISO];         /* mole fractions */\n\ 
+    int np[NISO];               /* Z of isotope */\n\
+    int nn[NISO];               /* (A-Z) of isotope */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -190,6 +201,9 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
+    float compos[NISO];         /* mole fractions */\n\ 
+    int np[NISO];               /* Z of isotope */\n\
+    int nn[NISO];               /* (A-Z) of isotope */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\

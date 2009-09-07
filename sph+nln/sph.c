@@ -529,12 +529,16 @@ void
 update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 {
     SPHbody *p;
+    int i,j,k,l; /*coupla indices for loops*/
     double u, n, lcool, temp;
     double m = (double)massCF;  /* convert from user-units to cgs */
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
-    //extern float *tablep; /*added by CE: holds cooling curve*/
-    //extern float *ionfracp; /*ditto ion fractions*/
+    float molfrac[22]; /*float or double?? */
+/* for the purpose of making progress, hard-code for now which isotope 
+ * should be included in the burning. This is UGLY!! */
+    int inNW[2][22]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
+                     {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -557,6 +561,32 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    ( (do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
 	      : 0.0 );
 
+/*perhaps set a do_burning flag to turn network on/off?*/
+
+/*prepare abundance array passed into network - more ugliness!*/
+        for(i=0;i<22;i++){
+            for(j=0;j<NISO;j++){
+                if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                    molfrac[i]=p->compos[j];
+                }   
+            }
+        }
+/* in here somewhere calc energy generation by nuclear burning? */
+        Fortran(solven)(&dt,&temp,&rho,&molfrac,&ener_gen);
+        p->udot += ener_gen;/*is ener_gen the rate of energy production???*/
+
+/*update composition of particle from updated abundance array*/
+        for(i=0;i<22;i++){
+            for(j=0;j<NISO;j++){
+                if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                    p->compos[j] = molfrac[i];
+                }   
+            }
+        }
+
+/*also can calculate rho,n of particle?*/
+
+
 	if (do_cooling) {
 	    /* Check units, calculate temp = 2.0*mh*u / (2.5*k),
 	       calculate lcool, update udot */
@@ -565,17 +595,17 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    u = p->u * l*l /t*t; 
 	    temp = 2.0*MH * u / (2.5 * K_BOLTZ);
 
+	    /*this does the table look-up:
+	      0=use analytic outside table, 1=extrapolate
+            */
+	    lcool = calc_lcool1(temp,1);
+
+	    /*this does the analytic cooling that was here before:*/
 	    /* From Chris's email; fit to Dalgarno and McCray (ARA&A
 	       1972, 10, 375) and Sutherland and Dopita (ApJS, 88,
 	       253) */
-	/*replaced this with call to calc_cool1 to get cooling term -CE*/
  	   
-	    //this does the table look-up:
-	    //0=use analytic outside table, 1=extrapolate
-	    lcool = calc_lcool1(temp,1);
-
-	    //this does the analytic cooling that was here before:
-	    //lcool = analytic_cool(temp,1);
+	    /*lcool = analytic_cool(temp,1);*/
 
 	    /* lcool has units of erg cm^3/s, need energy/mass/time */
 	    p->udot -= lcool*n/(2.0*MH) * t*t*t/(l*l);
@@ -584,6 +614,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	if (!finite(p->udot)) 
 	    Error("Bad value for udot\n");
 
+/*in here, do subcycling if necessary -CE*/
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
 	if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {

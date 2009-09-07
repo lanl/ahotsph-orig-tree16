@@ -1,6 +1,8 @@
+#include"physics_sph.h"
+
 //void calc_lcool(double temp, double lcool)
 //double calc_lcool(double temp,double uint,double dens,int numu,int numD);
-double calc_lcool1(double temp,int extrapolate);
+double calc_lcool1(SPHbody *p,double temp,int extrapolate);
 //double calc_lcool2(double temp,double uint,double dens,int numu,int numD);
 
 double analytic_cool(double temp);

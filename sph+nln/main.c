@@ -668,8 +668,11 @@ main(int argc, char *argv[])
 	singlPrintf("float R0 = %f;\n", R0);
     }
 
-//Im guessing the set-up is now done?? -CE
-    init_CoolTable(); //read in cooling curves and ion fraction tables
+    /*IO of control file now done, start setting things up*/
+    init_CoolTable(); /*read in cooling curves and ion fraction tables*/
+
+    /*set up network for burn code*/
+    Fortran(build)();
 
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
@@ -2079,7 +2082,7 @@ static void ShortWindOutput(SPHbody *btab, int nobj, windbody *windbtab,
 static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter)
 {
     SPHbody *p;
-    int i;
+    int i,j;
     sortresult_t outputsort;
     SPHoutbody *output_btab;
     int output_nobj = nobj;
@@ -2117,6 +2120,11 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 #endif
  	output_btab[i].nbrs = btab[i].nbrs;
 	output_btab[i].ident = btab[i].ident;
+        for(j=0;j<NISO;j++){ /*will this work? -CE*/
+            output_btab[i].compos[j] = btab[i].compos[j];
+            output_btab[i].np[j] = btab[i].np[j];
+            output_btab[i].nn[j] = btab[i].nn[j];
+        }
     }
 /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
     Msgf(("Doing output of %d bodies\n", output_nobj));
