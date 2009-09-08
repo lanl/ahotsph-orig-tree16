@@ -275,7 +275,7 @@ AddWinds(SPHbody **SPHbtabp, int *nobj, template_t *temptab,
 
 /*comment this out if no density variation is desired, also comment out 
 the Rotate by lines downstairs. note: in radians. -CE*/
-    openangle_wind=M_PI*0.33333333333333;
+    openangle_wind=60.0;//maybe in degrees after all??
 
     /* Push all existing particles onto stack */
     for (p = btab; p < btab + *nobj; ++p) {

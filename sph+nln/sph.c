@@ -539,6 +539,10 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
  * should be included in the burning. This is UGLY!! */
     int inNW[2][22]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
                      {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
+    float dt1_tot,udot_tot,frac,dt1,udot;
+    int cycles,cycle_count;
+    //extern float *tablep; /*added by CE: holds cooling curve*/
+    //extern float *ionfracp; /*ditto ion fractions*/
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -596,19 +600,50 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    temp = 2.0*MH * u / (2.5 * K_BOLTZ);
 
 	    /*this does the table look-up:
-	      0=use analytic outside table, 1=extrapolate
-            */
-	    lcool = calc_lcool1(temp,1);
+	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
+	    lcool = calc_lcool1(p,temp,1);
+	    /* lcool has units of erg cm^3/s, need erg/g/s */
+	    udot = lcool*n/(2.0*MH);
 
-	    /*this does the analytic cooling that was here before:*/
-	    /* From Chris's email; fit to Dalgarno and McCray (ARA&A
-	       1972, 10, 375) and Sutherland and Dopita (ApJS, 88,
-	       253) */
- 	   
-	    /*lcool = analytic_cool(temp,1);*/
+            /*determine if we need subcycling*/
+	    if ( (udot * dt > frac * u) && !(p->ident & (1<<30)) ) {
+	        dt1=dt * t / 2.;
+                dt1_tot = 0.;
+                cycles = 2; /*total number of cycles*/
+                cycle_count = 0; /*keep track of cycles gone through*/
+/*nothing prevents this from being infinite, but I'm hoping it won't be. It shouldn't be...CE*/
+                /*hopefully this condition will prevent it from not doing the last dt1
+                  due to rounding errors in dt1_tot */
+	        while(abs(dt1_tot / t - dt) > 0.99*dt1) { /*ensures we go through the whole dt*/
+		    if (abs(dt1 * udot) < u * frac) { /*yes; update udot, calc new temperature */
+		        /*for this sub-timestep*/
+		        dt1_tot += dt1;	/*keep track of time*/
+		        u += udot * dt1;	/*new u*/
+            /*update temperature*/
+		        temp = 2.0*MH *u /(2.5 *KBOLTZ);/*temp after dt1 timestep*/
+            /*update density*/
+		        udot_tot += udot;
+		        /*for next sub-timestep*/
+            /*find new cooling term*/
+		        lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
+            /*add to total cooling for this timestep*/
+		        udot = lcool*n /(2.0*MH);	/*udot after this timestep*/
+                        cycle_count++;
+		    } 
+		    else { /*no; subdivide further*/
+		        dt1=dt1/2.0; 
+                    }
+                }
+            }
 
-	    /* lcool has units of erg cm^3/s, need energy/mass/time */
-	    p->udot -= lcool*n/(2.0*MH) * t*t*t/(l*l);
+/*CHECK: (p->u - u) = udot_tot*dt......... right??*/
+
+	    //this does the analytic cooling that was here before:
+	    //lcool = analytic_cool(temp);
+
+	    /* lcool has units of erg cm^3/s, need erg/g/s */
+	//NOTE THE MINUS!!
+            p->udot -= (p->u - u * t*t/(l*l))/dt;
 	}
 
 	if (!finite(p->udot)) 
@@ -618,6 +653,11 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
 	if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {
+/* this loop checks if udot is too large. basically, put subcycling here. 
+ * if udot*dt too large, try dt/2, dt/4, ... until good, then use that to 
+ * update temperature and density, go back up and do cooling again, check 
+ * the new udot, subcycle if necessary, and then add all the individual 
+ * udots to the final udot for this time step. */ 
 	    p->udot = p->u/dt;
  	    ++*limit_high;
 	}
