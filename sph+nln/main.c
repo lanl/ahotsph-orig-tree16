@@ -158,7 +158,7 @@ float timeCF;
 
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
-int do_burning;    /* used in sph.c, turn reaction network on/off */
+int do_burning;    /* used in sph.c, turns network on */
 
 float *tablep; //array to hold cooling curve table values
 float *ionfracp; //array to hold ionfraction table values

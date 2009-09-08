@@ -130,7 +130,7 @@ typedef struct {
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
-    float compos[NISO]; 
+    float compos[NISO];
     int np[NISO];
     int nn[NISO];
 } SPHoutbody;
@@ -171,9 +171,9 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
-    float compos[NISO];         /* mole fractions */\n\ 
-    int np[NISO];               /* Z of isotope */\n\
-    int nn[NISO];               /* (A-Z) of isotope */\n\
+    float compos[NISO];         /* composition (mole fractions) */\n\
+    int np[NISO];               /* A of isotope */\n\
+    int nn[NISO];               /* (Z-A) of isotope */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -201,9 +201,9 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
-    float compos[NISO];         /* mole fractions */\n\ 
-    int np[NISO];               /* Z of isotope */\n\
-    int nn[NISO];               /* (A-Z) of isotope */\n\
+    float compos[NISO];         /* composition (mole fractions) */\n\
+    int np[NISO];               /* A of isotope */\n\
+    int nn[NISO];               /* (Z-A) of isotope */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
