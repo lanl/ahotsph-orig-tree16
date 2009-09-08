@@ -583,21 +583,25 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
                 /*hopefully this condition will prevent it from not doing the last dt1
                   due to rounding errors in dt1_tot */
 	        while(abs(dt1_tot / t - dt) > 0.99*dt1) { /*ensures we go through the whole dt*/
-		     if (abs(dt1 * udot) < u * frac) { /*yes; update udot, calc new temperature */
-		          /*for this sub-timestep*/
-		          dt1_tot += dt1;	/*keep track of time*/
-		          u += udot * dt1;	/*new u*/
-		          temp = 2.0*mh *u /(2.5 *kboltz);/*temp after dt1 timestep*/
-		          udot_tot += udot;
-		          /*for next sub-timestep*/
-		          lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
-		          udot = lcool*n /(2.0*mh);	/*udot after this timestep*/
-                          cycle_count++;
-		      } 
-		      else { /*no; subdivide further*/
-		          dt1=dt1/2.0; 
-                      }
-                 }
+		    if (abs(dt1 * udot) < u * frac) { /*yes; update udot, calc new temperature */
+		        /*for this sub-timestep*/
+		        dt1_tot += dt1;	/*keep track of time*/
+		        u += udot * dt1;	/*new u*/
+            /*update temperature*/
+		        temp = 2.0*mh *u /(2.5 *kboltz);/*temp after dt1 timestep*/
+            /*update density*/
+		        udot_tot += udot;
+		        /*for next sub-timestep*/
+            /*find new cooling term*/
+		        lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
+            /*add to total cooling for this timestep*/
+		        udot = lcool*n /(2.0*mh);	/*udot after this timestep*/
+                        cycle_count++;
+		    } 
+		    else { /*no; subdivide further*/
+		        dt1=dt1/2.0; 
+                    }
+                }
             }
 
 /*CHECK: (p->u - u) = udot_tot*dt......... right??*/
@@ -613,28 +617,15 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	if (!finite(p->udot)) 
 	    Error("Bad value for udot\n");
 
-        dt2=dt;
-
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
-	if ( (p->udot * dt > 0.25*p->u) && !(p->ident & (1<<30)) ) {
-            while(p->udot * dt2 > 0.25*p->u) {
-                dt2=dt2/2.0;
-            }
-            /*update temperature*/
-            /*update density*/
-            /*find new cooling term*/
-            /*add to total cooling for this timestep*/
-            /*check udot*(dt-dt2_tot) again*/
-            /*if too large, subcycle*/
-            /*if good, repeat from top of this list*/
-            /*until dt2_tot=dt*/
+	if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {
 /* this loop checks if udot is too large. basically, put subcycling here. 
  * if udot*dt too large, try dt/2, dt/4, ... until good, then use that to 
  * update temperature and density, go back up and do cooling again, check 
  * the new udot, subcycle if necessary, and then add all the individual 
  * udots to the final udot for this time step. */ 
-	    /*p->udot = p->u/dt;*/
+	    p->udot = p->u/dt;
  	    ++*limit_high;
 	}
 	if ( (p->udot * dt < -0.333*p->u) && !(p->ident & (1<<30)) ) {
