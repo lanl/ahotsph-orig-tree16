@@ -534,6 +534,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
     double m = 1.988900e+33;  /* 1 solar mass */
     double l = 3.085678e+18;  /* 1 parsec */
     double t = 3.153600e+07;  /* 1 year */
+    float dt1_tot,udot_tot,frac,dt1,udot;
+    int cycles,cycle_count;
     //extern float *tablep; /*added by CE: holds cooling curve*/
     //extern float *ionfracp; /*ditto ion fractions*/
 
@@ -565,22 +567,47 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    u = p->u * l/t * l/t;
 	    temp = 2.0*mh * u / (2.5 * kboltz);
 
-	    /* From Chris's email; fit to Dalgarno and McCray (ARA&A
-	       1972, 10, 375) and Sutherland and Dopita (ApJS, 88,
-	       253) */
-	/*replaced this with call to calc_cool1 to get cooling term -CE*/
- 	   
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
-	    lcool = calc_lcool1(temp,1);
+	    lcool = calc_lcool1(p,temp,1);
+	    /* lcool has units of erg cm^3/s, need erg/g/s */
+	    udot = lcool*n/(2.0*mh);
+
+            /*determine if we need subcycling*/
+	    if ( (udot * dt > frac * u) && !(p->ident & (1<<30)) ) {
+	        dt1=dt * t / 2.;
+                dt1_tot = 0.;
+                cycles = 2; /*total number of cycles*/
+                cycle_count = 0; /*keep track of cycles gone through*/
+/*nothing prevents this from being infinite, but I'm hoping it won't be. It shouldn't be...CE*/
+                /*hopefully this condition will prevent it from not doing the last dt1
+                  due to rounding errors in dt1_tot */
+	        while(abs(dt1_tot / t - dt) > 0.99*dt1) { /*ensures we go through the whole dt*/
+		     if (abs(dt1 * udot) < u * frac) { /*yes; update udot, calc new temperature */
+		          /*for this sub-timestep*/
+		          dt1_tot += dt1;	/*keep track of time*/
+		          u += udot * dt1;	/*new u*/
+		          temp = 2.0*mh *u /(2.5 *kboltz);/*temp after dt1 timestep*/
+		          udot_tot += udot;
+		          /*for next sub-timestep*/
+		          lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
+		          udot = lcool*n /(2.0*mh);	/*udot after this timestep*/
+                          cycle_count++;
+		      } 
+		      else { /*no; subdivide further*/
+		          dt1=dt1/2.0; 
+                      }
+                 }
+            }
+
+/*CHECK: (p->u - u) = udot_tot*dt......... right??*/
 
 	    //this does the analytic cooling that was here before:
 	    //lcool = analytic_cool(temp);
 
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
 	//NOTE THE MINUS!!
-	    p->udot -= lcool*n/(2.0*mh) * t*t*t/(l*l);
-
+            p->udot -= (p->u - u * t*t/(l*l))/dt;
 	}
 
 	if (!finite(p->udot)) 
@@ -607,7 +634,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
  * update temperature and density, go back up and do cooling again, check 
  * the new udot, subcycle if necessary, and then add all the individual 
  * udots to the final udot for this time step. */ 
-	    p->udot = p->u/dt;
+	    /*p->udot = p->u/dt;*/
  	    ++*limit_high;
 	}
 	if ( (p->udot * dt < -0.333*p->u) && !(p->ident & (1<<30)) ) {

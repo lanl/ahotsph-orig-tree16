@@ -29,27 +29,24 @@ each new timestep. if not, repeat subdividing until met. */
 
     u0=u;
     dt1=dt;
-    dt1=dt1/2.0;
     dt1_tot=0.0;
 
-    while(dt1_tot < dt)
-    {
-            if (abs(dt1*udot) < u*frac) 
-            {
-		/*yes; update udot, calc new temperature */
-		dt1_tot += dt1;	/*keep track of time*/
-		u -= udot*dt1;	/*new u*/
-		temp = 2.0*mh *u /(2.5 *kboltz);/*temp after dt1 timestep*/
-                n = rho * m /(l*l*l) /(2.*mh);
-		lcool = calc_lcool1(temp,1);	/*lcool at this temp (after dt1)*/
-		udot -= lcool*n /(2.0*mh) *t*t*t/(l*l);	/*udot after this timestep*/
-                udot_tot += udot;
-	    } 
-	    else
-	    {
-		/*no; subdivide further*/
-                dt1=dt1/2.0;
-	    }
+    dt1=dt1/2.0;
+    while(dt1_tot < dt) {
+         if (abs(dt1*udot) < u*frac) { /*yes; update udot, calc new temperature */
+              /*for this sub-timestep*/
+              dt1_tot += dt1;	/*keep track of time*/
+              u -= udot*dt1;	/*new u*/
+              temp = 2.0*mh *u /(2.5 *kboltz);/*temp after dt1 timestep*/
+              n = rho * m /(l*l*l) /(2.*mh);
+              /*for next sub-timestep*/
+              lcool = calc_lcool1(temp,1);	/*lcool at this temp (after dt1)*/
+              udot -= lcool*n /(2.0*mh) *t*t*t/(l*l);	/*udot after this timestep*/
+              udot_tot += udot;
+	  } 
+	  else { /*no; subdivide further*/
+              dt1=dt1/2.0;
+	  }
     }
     /*output udot_tot and (u0-u)/dt for comparison*/
 }

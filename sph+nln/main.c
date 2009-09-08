@@ -152,6 +152,7 @@ static int dark_independent_dt;
 
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
+int do_burning;    /* used in sph.c, turn reaction network on/off */
 
 float *tablep; //array to hold cooling curve table values
 float *ionfracp; //array to hold ionfraction table values
@@ -311,6 +312,7 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "do_sph", &do_sph, 1);
     SDFgetintOrDefault(csdfp, "do_diffusion", &do_diffusion, 0);
     SDFgetintOrDefault(csdfp, "do_cooling", &do_cooling, 0);
+    SDFgetintOrDefault(csdfp, "do_burning", &do_burning, 0);
     SDFgetintOrDefault(csdfp, "do_grav", &do_grav, 0);
     SDFgetintOrDefault(csdfp, "do_winds", &do_winds, 0);
     SDFgetintOrDefault(csdfp, "do_point_mass", &do_point_mass, 0);
@@ -629,6 +631,7 @@ main(int argc, char *argv[])
     if (do_cooling)
 	singlPrintf("int do_cooling = %d;\n", do_cooling);
     singlPrintf("int do_diffusion = %d;\n", do_diffusion);
+    singlPrintf("int do_burning = %d;\n", do_burning);
     if( do_output ){
 	if (short_output) singlPrintf("Short ");
 	singlPrintf("Output to %s.nnnn, every %d steps\n", 
