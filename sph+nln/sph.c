@@ -41,6 +41,7 @@ static void (*cellfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 
 extern int do_diffusion;
 extern int do_cooling;
+extern int do_burning;
 
 extern float *tablep; //added by CE
 extern float *ionfracp; //added by CE
@@ -525,12 +526,13 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
     fmass[NKERNEL_TABLE+1]=(double)1.0;
 }
 
+#include "Msgs.h"
 void
 update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 {
     SPHbody *p;
-    int i,j,k,l; /*coupla indices for loops*/
-    double u, n, lcool, temp;
+    int i,j,k; /*coupla indices for loops*/
+    double u, n, lcool, temp, ener_gen;
     double m = (double)massCF;  /* convert from user-units to cgs */
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
@@ -543,6 +545,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
     int cycles,cycle_count;
     //extern float *tablep; /*added by CE: holds cooling curve*/
     //extern float *ionfracp; /*ditto ion fractions*/
+    Msgf(("in sph, MH=%g\n",MH));
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -566,27 +569,28 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	      : 0.0 );
 
 /*perhaps set a do_burning flag to turn network on/off?*/
-
+        if(do_burning){
 /*prepare abundance array passed into network - more ugliness!*/
-        for(i=0;i<22;i++){
-            for(j=0;j<NISO;j++){
-                if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                    molfrac[i]=p->compos[j];
+            for(i=0;i<22;i++){
+                for(j=0;j<NISO;j++){
+                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                        molfrac[i]=p->compos[j];
+                    }   
                 }   
             }
-        }
 /* in here somewhere calc energy generation by nuclear burning? */
-        Fortran(solven)(&dt,&temp,&rho,&molfrac,&ener_gen);
-        p->udot += ener_gen;/*is ener_gen the rate of energy production???*/
+            /*Fortran(solven)(&dt,&temp,&rho,&molfrac,&ener_gen);*/
+            p->udot += ener_gen;/*is ener_gen the rate of energy production???*/
 
 /*update composition of particle from updated abundance array*/
-        for(i=0;i<22;i++){
-            for(j=0;j<NISO;j++){
-                if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                    p->compos[j] = molfrac[i];
-                }   
+            for(i=0;i<22;i++){
+                for(j=0;j<NISO;j++){
+                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                        p->compos[j] = molfrac[i];
+                    }   
+                }
             }
-        }
+        }  
 
 /*also can calculate rho,n of particle?*/
 
@@ -619,14 +623,11 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 		        /*for this sub-timestep*/
 		        dt1_tot += dt1;	/*keep track of time*/
 		        u += udot * dt1;	/*new u*/
-            /*update temperature*/
-		        temp = 2.0*MH *u /(2.5 *KBOLTZ);/*temp after dt1 timestep*/
-            /*update density*/
+		        temp = 2.0*MH *u /(2.5 *K_BOLTZ);/*temp after dt1 timestep*/
+            /*update density - how? where? -CE*/
 		        udot_tot += udot;
 		        /*for next sub-timestep*/
-            /*find new cooling term*/
 		        lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
-            /*add to total cooling for this timestep*/
 		        udot = lcool*n /(2.0*MH);	/*udot after this timestep*/
                         cycle_count++;
 		    } 
@@ -638,8 +639,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 
 /*CHECK: (p->u - u) = udot_tot*dt......... right??*/
 
-	    //this does the analytic cooling that was here before:
-	    //lcool = analytic_cool(temp);
+	    /*this does the analytic cooling that was here before:*/
+	    /*lcool = analytic_cool(temp);*/
 
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
 	//NOTE THE MINUS!!
@@ -649,7 +650,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	if (!finite(p->udot)) 
 	    Error("Bad value for udot\n");
 
-/*in here, do subcycling if necessary -CE*/
+/*in here, do subcycling if necessary -CE: no, since it's also checking 
+  the udot from the diffusion*/
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
 	if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {

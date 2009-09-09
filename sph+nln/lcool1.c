@@ -5,6 +5,7 @@ the calling routine-note
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include "physics_sph.h"
 #include "cool.h"
 #include "nrutil.h" /*ok to have this in*/
 

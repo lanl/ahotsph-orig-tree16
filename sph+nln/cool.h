@@ -1,4 +1,3 @@
-#include"physics_sph.h"
 
 //void calc_lcool(double temp, double lcool)
 //double calc_lcool(double temp,double uint,double dens,int numu,int numD);

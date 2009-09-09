@@ -104,7 +104,6 @@ $(objdir)/main$(objsuf): $(treedir)/include/verify.h $(treedir)/include/randoms.
 $(objdir)/main$(objsuf): $(treedir)/include/decomp.h $(treedir)/include/image.h $(treedir)/include/memfile.h
 $(objdir)/main$(objsuf): integrate.h
 $(objdir)/main$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
-$(objdir)/main$(objsuf): $(treedir)/sph+nln/units.h
 $(objdir)/physics$(objsuf): physics.h $(treedir)/include/tree.h
 $(objdir)/physics$(objsuf):
 $(objdir)/physics$(objsuf):

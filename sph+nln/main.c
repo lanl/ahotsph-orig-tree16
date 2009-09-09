@@ -564,6 +564,7 @@ main(int argc, char *argv[])
     }
             
     cosmo.GNewt = GRAV_C *((double)massCF/lengthCF *timeCF/lengthCF *timeCF/lengthCF);
+    Msgf(("in main, GRAV_C=%g\n",GRAV_C));
 
     singlPrintf("float errtol = %g;\n", tol);
     singlPrintf("float dt = %g;\n", dt);
@@ -677,7 +678,7 @@ main(int argc, char *argv[])
     init_CoolTable(); /*read in cooling curves and ion fraction tables*/
 
     /*set up network for burn code*/
-    Fortran(build)();
+    /*Fortran(build)();*/
 
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);

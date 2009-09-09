@@ -172,8 +172,8 @@ typedef struct {
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
     float compos[NISO];         /* composition (mole fractions) */\n\
-    int np[NISO];               /* A of isotope */\n\
-    int nn[NISO];               /* (Z-A) of isotope */\n\
+    int np[NISO];               /* Z of isotope */\n\
+    int nn[NISO];               /* (A-Z) of isotope */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -202,8 +202,8 @@ typedef struct {
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
     float compos[NISO];         /* composition (mole fractions) */\n\
-    int np[NISO];               /* A of isotope */\n\
-    int nn[NISO];               /* (Z-A) of isotope */\n\
+    int np[NISO];               /* Z of isotope */\n\
+    int nn[NISO];               /* (A-Z) of isotope */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
