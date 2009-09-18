@@ -337,6 +337,7 @@ main(int argc, char *argv[])
 		    if (do_restart) sprintf(iname, "%s_sph.restart", name);
 		    else SDFgetstring(csdfp, "SPHdatafile", iname, 
 				      sizeof(iname));
+/* this is where the SDF file is read in (?) -CE */
 		    sdfp = SPHRead(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 				   set_id, setpvel, new_h, new_u);
 		} else SPHgnobj = SPHnobj = 0;
@@ -504,7 +505,6 @@ main(int argc, char *argv[])
     SDFgetfloatOrDefault(csdfp, "massCF", &massCF, 1.0);/*mass conversion factor; CE*/
     SDFgetfloatOrDefault(csdfp, "lengthCF", &lengthCF, 1.0);/*length conversion factor; CE*/
     SDFgetfloatOrDefault(csdfp, "timeCF", &timeCF, 1.0);/*time conversion factor; CE*/
-    Msgf(("read in massCF= %g, lengthCF= %e, timeCF= %f\n",massCF,lengthCF,timeCF));
     if (adaptive_dt) {
 	SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
 	SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
@@ -564,7 +564,6 @@ main(int argc, char *argv[])
     }
             
     cosmo.GNewt = GRAV_C *((double)massCF/lengthCF *timeCF/lengthCF *timeCF/lengthCF);
-    Msgf(("in main, GRAV_C=%g\n",GRAV_C));
 
     singlPrintf("float errtol = %g;\n", tol);
     singlPrintf("float dt = %g;\n", dt);
@@ -2126,8 +2125,8 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 #endif
  	output_btab[i].nbrs = btab[i].nbrs;
 	output_btab[i].ident = btab[i].ident;
-        for(j=0;j<NISO;j++){ /*will this work? -CE*/
-            output_btab[i].compos[j] = btab[i].compos[j];
+        for(j=0;j<NISO;j++){ /*will this work? -CE: so far, it compiled and runs*/
+            output_btab[i].abund[j] = btab[i].abund[j];
             output_btab[i].np[j] = btab[i].np[j];
             output_btab[i].nn[j] = btab[i].nn[j];
         }
@@ -2156,6 +2155,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	output_h = 0.0;
 	output_R0 = sysradius;
     }
+/* I'm guessing this writes whatever is in output_btab, matched to SPHOUTBODYDESC -CE */
     SDFwrite(outname, output_gnobj, 
 	     output_nobj, output_btab, sizeof(SPHoutbody),
 	     SPHOUTBODYDESC,

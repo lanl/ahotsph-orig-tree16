@@ -680,7 +680,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
     float acoef;
     SPHbody *p;
    
-    acoef = A_COEFF * ((double)lengthCF * timeCF*timeCF / massCF);
+    acoef = A_COEFF * ((double)(lengthCF * timeCF*timeCF / massCF));
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -704,10 +704,12 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	    p->du_r = 0.0;
 
 	    /* Calculate diffusion coefficient */
-	    kes = KES_COEFF/MH *((double) massCF / (lengthCF*lengthCF));
+	    kes = KES_COEFF/MH *((double) (massCF / (lengthCF*lengthCF)));
 	    kff = (KFF_COEFF) * p->rho_est*pow(p->temp, -3.5)*
-                ((double)massCF*massCF /(lengthCF*lengthCF*lengthCF*lengthCF*lengthCF));
-	    p->D = C_LIGHT *((double)timeCF /lengthCF) / ( 3.0*(kes+kff)*p->rho_est );
+                ((double)(massCF /(lengthCF*lengthCF) * massCF 
+                         /(lengthCF*lengthCF*lengthCF)));
+	    p->D = C_LIGHT *((double)(timeCF /lengthCF)) 
+                           / ( 3.0*(kes+kff)*p->rho_est );
 
 	    /* Also, eventually, handle lightbulb approximation here */
 	}

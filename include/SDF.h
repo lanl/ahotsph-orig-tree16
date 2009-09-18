@@ -85,6 +85,8 @@ int SDFseekrdvecs(SDF *hdr, ...
 int SDFseekrdvecsv(SDF *hdr, va_list ap);
 int SDFseekrdvecsarr(SDF *hdr, int nreq, 
 	  char **names, int *starts, int *ns, void **addresses, int *strides);
+          /* nreq is the number of columns to work with (?) 
+             everything else is in arrays? CE */
 void SDF_Setiomode(int mode);
 
 /* These two subvert the SDF "abstraction" and tell you about */

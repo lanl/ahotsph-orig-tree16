@@ -46,15 +46,15 @@ extern double eos_u;
 
 double uvst(double t) {
     /*convert from cgs to user-units*/
-    double kB=K_BOLTZ /((double)massCF /lengthCF/lengthCF *timeCF*timeCF);
-    double acoef=A_COEFF/((double)massCF*lengthCF*timeCF*timeCF);
+    double kB=K_BOLTZ /((double)(massCF /lengthCF/lengthCF *timeCF*timeCF));
+    double acoef=A_COEFF/((double)(massCF*lengthCF*timeCF*timeCF));
     return 1.5*eos_n*(kB)*t + t*t*t*t*(acoef) - eos_u;
 }
 
 
 double duvst(double t) {
     /*convert from cgs to user-units*/
-    double kB=K_BOLTZ /((double)massCF /lengthCF/lengthCF *timeCF*timeCF);
-    double acoef=A_COEFF/((double)massCF*lengthCF*timeCF*timeCF);
+    double kB=K_BOLTZ /((double)(massCF /lengthCF/lengthCF *timeCF*timeCF));
+    double acoef=A_COEFF/((double)(massCF*lengthCF*timeCF*timeCF));
     return 1.5*eos_n*(kB) + 4.0*t*t*t*(acoef);
 }

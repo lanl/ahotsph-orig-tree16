@@ -16,7 +16,7 @@
 #include "singlio.h"
 #include "timers.h"
 
-#define MAXNAMES 64
+#define MAXNAMES 128
 
 extern Timer_t SDFreadTm;
 

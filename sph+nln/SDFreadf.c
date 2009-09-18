@@ -61,6 +61,7 @@ SDF *SDFreadf(char *name, void **btabp, int *gnobjp, int *nobjp,
     Msgf(("Proc %d starting at %d in file, reading %d of %d\n",
 	  MPMY_Procnum(), start, nobj, gnobj));
 
+/* this can only read in scalars (even pos[ndim] is in the form of x,y,z) -CE */
     nnames = 0;
     va_start(ap, stride);
     while(( names[nnames] = va_arg(ap, char *)) != NULL ){

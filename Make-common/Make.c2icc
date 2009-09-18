@@ -9,11 +9,12 @@ CC_SPECIFIC:=-g -DLONG_LONG_KEYS
 #-march=core2 -mcpu=core2
 FC_SPECIFIC:=
 #-cm -w95 -80
-ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC
+# ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC
+ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC
 
 # ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
 
-override OPTIMIZE=-O3 -static -no-prec-div -xW
+override OPTIMIZE=-O3 -static -no-prec-div -xP
 override AGGRESSIVE_OPT=
 #LDFLAGS:=-Qoption,ld,-rpath=/ss1-raid/opt/intel/compiler71/compiler70/ia32/lib
 LOADLIBES:=-lsvml
@@ -28,7 +29,8 @@ swsrc:=lsv.c swampi.c
 
 ifeq ($(PAROS),mpi)
 LOADLIBES:=-L/packages/intel-openmpi-1.2.7/lib -lmpi 
-PAROSCFLAGS:=-I/packages/intel-openmpi-1.2.7/include
+PAROSCFLAGS:=-I/packages/intel-openmpi-1.2.7/include 
+#-DUSE_MPIIO
 #PAROSCFLAGS:=-I/ss1-raid/local/mpich-1.2.5-ssh/include
 endif
 

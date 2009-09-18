@@ -165,7 +165,7 @@ SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
     SPHbody *btab, *p; 
     int nobj, gnobj;
     
-    singlPrintf("Reading \"%s\"\n", name);
+    singlPrintf("SPHReading \"%s\"\n", name);
     sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(SPHbody),
 		    "mass", offsetof(SPHbody, mass), &massconf,
 		    "x", offsetof(SPHbody, pos[0]), &xconf,
@@ -178,6 +178,142 @@ SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 		    "h", offsetof(SPHbody, h), &hconf,
 		    "ident", offsetof(SPHbody, ident), &identconf,
 		    "windid", offsetof(SPHbody, windid), &windidconf,
+		    NULL);
+    nobj = *nobjp;
+    gnobj = *gnobjp;
+    btab = *btabp;
+    Msgf(("Data read, SPHnobj=%d, SPHgnobj=%d\n", *nobjp, *gnobjp));
+    Msgf(("Nproc:%d, Procnum: %d, Doc: %d\n",
+	  MPMY_Nproc(), MPMY_Procnum(), ilog2(MPMY_Nproc())));
+    if (massconf==0 || xconf==0 || yconf==0 || zconf==0) {
+	SinglError("Could not find %s %s %s %s in data file!\n",
+		   (massconf==0)? "mass" : "",
+		   (xconf==0)? "x" : "",
+		   (yconf==0)? "y" : "",
+		   (zconf==0)? "z" : "");
+    }
+    if (vxconf != vyconf || vxconf != vzconf){
+	if (setpvel) SinglError("Missing velocity components!\n");
+    }
+    if (identconf == 0 || set_id){
+	SinglWarning("No \"ident\" in file, numbering sequentially\n");
+	SPHFixId(btab, nobj, gnobj);
+    }
+    if (windidconf == 0) {
+	SinglWarning("No \"windid\" in file; are you using wind source?\n");
+    }
+    if (new_h != (float)0.0) {
+	singlPrintf("Setting h to %f\n", new_h);
+	for (p = btab; p < btab+nobj; p++) p->h = new_h;
+    } else if (hconf == 0) {
+	SinglError("No h in data file\n");
+    }
+    if (new_u != (float)0.0) {
+	singlPrintf("Setting u to %f\n", new_u);
+	for (p = btab; p < btab+nobj; p++)  p->u = new_u;
+    } else if (uconf == 0) {
+	SinglError("No u in data file\n");
+    }
+    return sdfp;
+}
+
+/*read in file with abundance data */
+void *
+SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
+	int set_id, int setpvel, float new_h, float new_u)
+{
+    SDF *sdfp;
+    int massconf, xconf, yconf, zconf;
+    int vxconf, vyconf, vzconf;
+    int hconf, uconf;
+    int identconf, windidconf;
+    SPHbody *btab, *p; 
+    int nobj, gnobj;
+    
+    singlPrintf("SPHReading \"%s\"\n", name);
+    sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(SPHbody),
+		    "mass", offsetof(SPHbody, mass), &massconf,
+		    "x", offsetof(SPHbody, pos[0]), &xconf,
+		    "y", offsetof(SPHbody, pos[1]), &yconf,
+		    "z", offsetof(SPHbody, pos[2]), &zconf,
+		    "vx", offsetof(SPHbody, vel[0]), &vxconf,
+		    "vy", offsetof(SPHbody, vel[1]), &vyconf,
+		    "vz", offsetof(SPHbody, vel[2]), &vzconf,
+		    "u", offsetof(SPHbody, u), &uconf,
+		    "h", offsetof(SPHbody, h), &hconf,
+		    "ident", offsetof(SPHbody, ident), &identconf,
+		    "windid", offsetof(SPHbody, windid), &windidconf,
+/* let's do this the dummest, ugliest, most painful way possible. he. he. he. -CE */
+                    /*"f1", offsetof(SPHbody, composition[0].abund), &f1conf,*/
+                    /*"p1", offsetof(SPHbody, composition[0].np), &p1conf,*/
+                    /*"m1", offsetof(SPHbody, composition[0].nn), &m1conf,*/
+                    /* or .... */
+                    "f1", offsetof(SPHbody, abund[0]), &f1conf,
+                    "f2", offsetof(SPHbody, abund[1]), &f1conf,
+                    "f3", offsetof(SPHbody, abund[2]), &f1conf,
+                    "f4", offsetof(SPHbody, abund[3]), &f1conf,
+                    "f5", offsetof(SPHbody, abund[4]), &f1conf,
+                    "f6", offsetof(SPHbody, abund[5]), &f1conf,
+                    "f7", offsetof(SPHbody, abund[6]), &f1conf,
+                    "f8", offsetof(SPHbody, abund[7]), &f1conf,
+                    "f9", offsetof(SPHbody, abund[8]), &f1conf,
+                    "f10", offsetof(SPHbody, abund[9]), &f1conf,
+                    "f11", offsetof(SPHbody, abund[10]), &f1conf,
+                    "f12", offsetof(SPHbody, abund[11]), &f1conf,
+                    "f13", offsetof(SPHbody, abund[12]), &f1conf,
+                    "f14", offsetof(SPHbody, abund[13]), &f1conf,
+                    "f15", offsetof(SPHbody, abund[14]), &f1conf,
+                    "f16", offsetof(SPHbody, abund[15]), &f1conf,
+                    "f17", offsetof(SPHbody, abund[16]), &f1conf,
+                    "f18", offsetof(SPHbody, abund[17]), &f1conf,
+                    "f19", offsetof(SPHbody, abund[18]), &f1conf,
+                    "f20", offsetof(SPHbody, abund[19]), &f1conf,
+                    "f21", offsetof(SPHbody, abund[20]), &f1conf,
+                    "f22", offsetof(SPHbody, abund[21]), &f1conf,
+                    "p1", offsetof(SPHbody, np[0]), &p1conf,
+                    "p2", offsetof(SPHbody, np[1]), &p1conf,
+                    "p3", offsetof(SPHbody, np[2]), &p1conf,
+                    "p4", offsetof(SPHbody, np[3]), &p1conf,
+                    "p5", offsetof(SPHbody, np[4]), &p1conf,
+                    "p6", offsetof(SPHbody, np[5]), &p1conf,
+                    "p7", offsetof(SPHbody, np[6]), &p1conf,
+                    "p8", offsetof(SPHbody, np[7]), &p1conf,
+                    "p9", offsetof(SPHbody, np[8]), &p1conf,
+                    "p10", offsetof(SPHbody, np[9]), &p1conf,
+                    "p11", offsetof(SPHbody, np[10]), &p1conf,
+                    "p12", offsetof(SPHbody, np[11]), &p1conf,
+                    "p13", offsetof(SPHbody, np[12]), &p1conf,
+                    "p14", offsetof(SPHbody, np[13]), &p1conf,
+                    "p15", offsetof(SPHbody, np[14]), &p1conf,
+                    "p16", offsetof(SPHbody, np[15]), &p1conf,
+                    "p17", offsetof(SPHbody, np[16]), &p1conf,
+                    "p18", offsetof(SPHbody, np[17]), &p1conf,
+                    "p19", offsetof(SPHbody, np[18]), &p1conf,
+                    "p20", offsetof(SPHbody, np[19]), &p1conf,
+                    "p21", offsetof(SPHbody, np[20]), &p1conf,
+                    "p22", offsetof(SPHbody, np[21]), &p1conf,
+                    "m1", offsetof(SPHbody, nn[0]), &m1conf,
+                    "m2", offsetof(SPHbody, nn[1]), &m1conf,
+                    "m3", offsetof(SPHbody, nn[2]), &m1conf,
+                    "m4", offsetof(SPHbody, nn[3]), &m1conf,
+                    "m5", offsetof(SPHbody, nn[4]), &m1conf,
+                    "m6", offsetof(SPHbody, nn[5]), &m1conf,
+                    "m7", offsetof(SPHbody, nn[6]), &m1conf,
+                    "m8", offsetof(SPHbody, nn[7]), &m1conf,
+                    "m9", offsetof(SPHbody, nn[8]), &m1conf,
+                    "m10", offsetof(SPHbody, nn[9]), &m1conf,
+                    "m11", offsetof(SPHbody, nn[10]), &m1conf,
+                    "m12", offsetof(SPHbody, nn[11]), &m1conf,
+                    "m13", offsetof(SPHbody, nn[12]), &m1conf,
+                    "m14", offsetof(SPHbody, nn[13]), &m1conf,
+                    "m15", offsetof(SPHbody, nn[14]), &m1conf,
+                    "m16", offsetof(SPHbody, nn[15]), &m1conf,
+                    "m17", offsetof(SPHbody, nn[16]), &m1conf,
+                    "m18", offsetof(SPHbody, nn[17]), &m1conf,
+                    "m19", offsetof(SPHbody, nn[18]), &m1conf,
+                    "m20", offsetof(SPHbody, nn[19]), &m1conf,
+                    "m21", offsetof(SPHbody, nn[20]), &m1conf,
+                    "m22", offsetof(SPHbody, nn[21]), &m1conf,
 		    NULL);
     nobj = *nobjp;
     gnobj = *gnobjp;
