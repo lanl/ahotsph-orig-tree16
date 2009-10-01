@@ -160,8 +160,8 @@ int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 int do_burning;    /* used in sph.c, turns network on */
 
-float *tablep; //array to hold cooling curve table values
-float *ionfracp; //array to hold ionfraction table values
+float **tablep; //array to hold cooling curve table values
+float **ionfracp; //array to hold ionfraction table values
 
 #ifdef __PARAGON__
 void
@@ -193,8 +193,8 @@ chk_slow(int die)
 int
 main(int argc, char *argv[])
 {
-    extern float *tablep; //added by CE
-    extern float *ionfracp; //added by CE
+    extern float **tablep; //added by CE
+    extern float **ionfracp; //added by CE
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
@@ -289,6 +289,7 @@ main(int argc, char *argv[])
     int has_grav_data;
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
+    int Gridpts, Nel; 	/* for cooling tables */
 
     //openangle_wind=60.0; //added by CE
 
@@ -338,7 +339,7 @@ main(int argc, char *argv[])
 		    else SDFgetstring(csdfp, "SPHdatafile", iname, 
 				      sizeof(iname));
 /* this is where the SDF file is read in (?) -CE */
-		    sdfp = SPHRead(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
+		    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 				   set_id, setpvel, new_h, new_u);
 		} else SPHgnobj = SPHnobj = 0;
 
@@ -674,6 +675,7 @@ main(int argc, char *argv[])
     }
 
     /*IO of control file now done, start setting things up*/
+    /*init_CoolTable(&Gridpts, &Nel);*/ /*read in cooling curves and ion fraction tables*/
     init_CoolTable(); /*read in cooling curves and ion fraction tables*/
 
     /*set up network for burn code*/
@@ -972,6 +974,7 @@ main(int argc, char *argv[])
 	    singlPrintf("FindRho\n");
 	    WalkNT(&SPHtree);
 	    WalkTerminate();
+	    /*update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1]);*/
 	    update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);
 	    StopTimer(&RhoSPH);
 	    FreeTree(&SPHtree);

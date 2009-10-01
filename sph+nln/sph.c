@@ -43,8 +43,8 @@ extern int do_diffusion;
 extern int do_cooling;
 extern int do_burning;
 
-extern float *tablep; //added by CE
-extern float *ionfracp; //added by CE
+extern float **tablep; //added by CE
+extern float **ionfracp; //added by CE
 
 void
 SetSPHOffset(float *off, float *voff)
@@ -527,6 +527,7 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 }
 
 #include "Msgs.h"
+/*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 void
 update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 {
@@ -574,7 +575,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
             for(i=0;i<22;i++){
                 for(j=0;j<NISO;j++){
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i]=p->compos[j];
+                        molfrac[i]=p->abund[j];
                     }   
                 }   
             }
@@ -586,7 +587,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
             for(i=0;i<22;i++){
                 for(j=0;j<NISO;j++){
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->compos[j] = molfrac[i];
+                        p->abund[j] = molfrac[i];
                     }   
                 }
             }
@@ -605,6 +606,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
+	    /*lcool = calc_lcool1(p,temp,Gridpts,Nel,1);*/
 	    lcool = calc_lcool1(p,temp,1);
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
 	    udot = lcool*n/(2.0*MH);
@@ -627,6 +629,7 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
             /*update density - how? where? -CE*/
 		        udot_tot += udot;
 		        /*for next sub-timestep*/
+		        /*lcool = calc_lcool1(p,temp,Gridpts,Nel,1);*/	/*lcool at this temp (after dt1)*/
 		        lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
 		        udot = lcool*n /(2.0*MH);	/*udot after this timestep*/
                         cycle_count++;

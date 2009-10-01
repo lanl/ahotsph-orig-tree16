@@ -340,6 +340,7 @@ void update_point_SPHmass2(SPHbody *btab, int nobj, float smooth2, float newt, f
 /* In sphinit.c */
 void *DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
 void *SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
+void *SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
 void *InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
 	 SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 

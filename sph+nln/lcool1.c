@@ -92,7 +92,7 @@ double calc_lcool1(SPHbody *p,double temp,int extrapolate)
     for(n=0;n<Nel;n++) {X_el[n] = 0.;} /*initialize all to zero*/
     for(n=0;n<NISO;n++) {/*sum individual isotopes*/
         /*exclude neutrons only;in tablep/ionfracp index=0 is H*/
-        if(p->np[n] > 0) {X_el[p->np[n]-1] += p->compos[n];}
+        if(p->np[n] > 0) {X_el[p->np[n]-1] += p->abund[n];}
     }
 
     logtemp=log10(temp);

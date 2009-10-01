@@ -227,6 +227,7 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
     int vxconf, vyconf, vzconf;
     int hconf, uconf;
     int identconf, windidconf;
+    int f1conf, p1conf, m1conf;
     SPHbody *btab, *p; 
     int nobj, gnobj;
     
@@ -243,11 +244,11 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 		    "h", offsetof(SPHbody, h), &hconf,
 		    "ident", offsetof(SPHbody, ident), &identconf,
 		    "windid", offsetof(SPHbody, windid), &windidconf,
-/* let's do this the dummest, ugliest, most painful way possible. he. he. he. -CE */
                     /*"f1", offsetof(SPHbody, composition[0].abund), &f1conf,*/
                     /*"p1", offsetof(SPHbody, composition[0].np), &p1conf,*/
                     /*"m1", offsetof(SPHbody, composition[0].nn), &m1conf,*/
                     /* or .... */
+/* let's do this the dummest, ugliest, most painful way possible. he. he. he. -CE */
                     "f1", offsetof(SPHbody, abund[0]), &f1conf,
                     "f2", offsetof(SPHbody, abund[1]), &f1conf,
                     "f3", offsetof(SPHbody, abund[2]), &f1conf,
