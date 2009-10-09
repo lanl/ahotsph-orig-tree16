@@ -675,8 +675,8 @@ main(int argc, char *argv[])
     }
 
     /*IO of control file now done, start setting things up*/
-    /*init_CoolTable(&Gridpts, &Nel);*/ /*read in cooling curves and ion fraction tables*/
-    init_CoolTable(); /*read in cooling curves and ion fraction tables*/
+    init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/
+    /*init_CoolTable();*/ /*read in cooling curves and ion fraction tables*/
 
     /*set up network for burn code*/
     /*Fortran(build)();*/
@@ -974,8 +974,8 @@ main(int argc, char *argv[])
 	    singlPrintf("FindRho\n");
 	    WalkNT(&SPHtree);
 	    WalkTerminate();
-	    /*update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1]);*/
-	    update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);
+	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1]);
+	    /*update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);*/
 	    StopTimer(&RhoSPH);
 	    FreeTree(&SPHtree);
 	    singlPrintf("FreeTree done\n");

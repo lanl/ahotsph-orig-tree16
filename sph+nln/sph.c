@@ -528,8 +528,9 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 
 #include "Msgs.h"
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
+/*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
+update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -569,9 +570,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 	    ( (do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
 	      : 0.0 );
 
-/*perhaps set a do_burning flag to turn network on/off?*/
         if(do_burning){
-/*prepare abundance array passed into network - more ugliness!*/
+        /*prepare abundance array passed into network - more ugliness!*/
             for(i=0;i<22;i++){
                 for(j=0;j<NISO;j++){
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
@@ -579,11 +579,11 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
                     }   
                 }   
             }
-/* in here somewhere calc energy generation by nuclear burning? */
+            /* in here somewhere calc energy generation by nuclear burning? */
             /*Fortran(solven)(&dt,&temp,&rho,&molfrac,&ener_gen);*/
             p->udot += ener_gen;/*is ener_gen the rate of energy production???*/
 
-/*update composition of particle from updated abundance array*/
+            /*update composition of particle from updated abundance array*/
             for(i=0;i<22;i++){
                 for(j=0;j<NISO;j++){
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
@@ -606,8 +606,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
-	    /*lcool = calc_lcool1(p,temp,Gridpts,Nel,1);*/
-	    lcool = calc_lcool1(p,temp,1);
+	    lcool = calc_lcool1(p,temp,Gridpts,Nel,1);
+	    /*lcool = calc_lcool1(p,temp,1);*/
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
 	    udot = lcool*n/(2.0*MH);
 
@@ -621,7 +621,10 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
                 /*hopefully this condition will prevent it from not doing the last dt1
                   due to rounding errors in dt1_tot */
 	        while(abs(dt1_tot / t - dt) > 0.99*dt1) { /*ensures we go through the whole dt*/
-		    if (abs(dt1 * udot) < u * frac) { /*yes; update udot, calc new temperature */
+
+                    /*update udot, calc new temperature */
+		    if (abs(dt1 * udot) < u * frac) { 
+
 		        /*for this sub-timestep*/
 		        dt1_tot += dt1;	/*keep track of time*/
 		        u += udot * dt1;	/*new u*/
@@ -629,8 +632,8 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)
             /*update density - how? where? -CE*/
 		        udot_tot += udot;
 		        /*for next sub-timestep*/
-		        /*lcool = calc_lcool1(p,temp,Gridpts,Nel,1);*/	/*lcool at this temp (after dt1)*/
-		        lcool = calc_lcool1(p,temp,1);	/*lcool at this temp (after dt1)*/
+		        lcool = calc_lcool1(p,temp,Gridpts,Nel,1);	/*lcool at this temp (after dt1)*/
+		        /*lcool = calc_lcool1(p,temp,1);*/	/*lcool at this temp (after dt1)*/
 		        udot = lcool*n /(2.0*MH);	/*udot after this timestep*/
                         cycle_count++;
 		    } 

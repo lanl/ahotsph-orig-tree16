@@ -1,33 +1,49 @@
-/*purpose: take in any necessary values from calling routine, 
-and calculate the cooling, and return the cooling value to 
-the calling routine-note
--CE*/
+/************************************************************************
+ * PURPOSE:								*
+ *   to calculate the cooling term for a given temperature and 		*
+ *   composition, and return the cooling value to the calling routine.	*
+ *   Returns total cooling term in erg*cm^3/s.
+ *   The composition is taken directly from SPHbody->abund[i].		*
+ *   									*
+ * NOTE:								*
+ *   expects table* and ionfrac* to have been initialized by 		*
+ *   readintables.c							*
+ *   the analytic cooling routine is still in here as analytic_cool	*
+ *									*
+ * DOES:								*
+ *   - uses NR locate to find the index corresponding to the temperature*
+ *   - extrapolate or return analytic cooling term if outside table	*
+ *   - calculate cooling term for each element/ion and sum over those	*
+ *   - uses NR polint to interpolate over the tables. 			*
+ *   - it populates X_el from SPHbody->abund[i] and puts elements in 	*
+ *     ascending order of Z, and also sums over isotopes. Thus the order*
+ *     of isotopes/elements in SPHbody->abund does not matter. 		*
+ ************************************************************************/
+
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "physics_sph.h"
+/*#include "physics_sph.h"*/
 #include "cool.h"
 #include "nrutil.h" /*ok to have this in*/
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
 #endif
-#define NKERNEL_TABLE 80000
-#define MAX_INDEX (NKERNEL_TABLE+2)
 
-#define NO_UPDATE 2
 
-/******************************** NOTE: *******************************
+/*
  * take all command line outputs like error or status messages out for 
  * now. eventually should have a flag in the .ctl files to turn 
  * debugging on (i.e. with output messages) or off
- **********************************************************************/
+ */
+
 /*arrays in C: array[row-index][col-index]*/
 
-double calc_lcool1(SPHbody *p,double temp,int extrapolate)
+double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
 {
-    extern float *tablep;	/*global array with cooling values*/
-    extern float *ionfracp;	/*global array with ion fractions*/
+    extern float **tablep;	/*global array with cooling values*/
+    extern float **ionfracp;	/*global array with ion fractions*/
     double lcool;	/*holds final cooling term;returned*/
     double *lcoolp;	/*pointer to lcool*/
     double dy,df;	/*measure of accuracy returned from interp.*/
@@ -36,15 +52,14 @@ double calc_lcool1(SPHbody *p,double temp,int extrapolate)
     double ioncool=0.0;		/*hold intermediate cooling term*/
     double fracn;	/*holds ion fraction returned by interp. */
     double *fracnp;	/*pointer to frac*/
-    double rowarr[2],interp[2],fracns[2],temps[2];	/*temporary arrays for interp.*/
+    double rowarr[2],interp[2],fracns[2];	/*temporary arrays for interp.*/
+    float temps[Gridpts];
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
-    int Nel=ionfracp[1];	/*number of elements in table*/
-    int NMax=ionfracp[0];	/*number of grid points per ion in table*/
     float X_el[Nel];		/*element fraction*/
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
-    int n,m,offset,index; 	/*some indices for looping and arrays*/
+    int n,m,N,index; 	/*some indices for looping and arrays*/
 	
     /*initialize things so I don't get stupid warnings all the time:*/
     j=-999;
@@ -54,13 +69,17 @@ double calc_lcool1(SPHbody *p,double temp,int extrapolate)
     lcoolp=&lcool;
     dfp=&df;
     fracnp=&fracn;
-    offset=NMax+Nel;/*offset=51 temperatures + 30 elements*/
-	
+
+    /* we're doing temperature in logspace */
+    logtemp=log10(temp);
 
     /*locate the indices of the table;
       same for both tables as they go over the same range/grid points 
     */
-    locate(&tablep[30], NMax, temp, jp); 
+    for( n = 0; n < Gridpts; n++)
+	temps[n] = ionfracp[0][n];
+
+    locate(&temps[0], Gridpts, logtemp, jp); 
     j_prev=j;
 	
     /*if we're outside the table, do analytic cooling if extrapolate=0
@@ -75,43 +94,50 @@ double calc_lcool1(SPHbody *p,double temp,int extrapolate)
 	    /*printf("extrapolating......\n");*/
 	    /*reset j for extrapolation*/
 	    if (j==-2) j=0;
-	    /*now do interpolation, should automatically extrapolate as set up below*/
+	    /*now do interpolation, should automatically 
+	     * extrapolate as set up below*/
+
 	    /*reset j for extrapolation*/
-	    if (j==-99) j=NMax-1;
-	    /*now do interpolation, should automatically extrapolate as set up below*/
+	    if (j==-99) j=Gridpts-1;
+	    /*now do interpolation, should automatically 
+	     * extrapolate as set up below*/
 	}
 	else
 	    return analytic_cool(temp); /*we're done here*/
     } 
+
     /*technically, need to interpolate over every ion in every element
       then weigh by equil fraction at current T, and mix according to 
       composition.
       So, create array with element fractions from the SPHbody array of
       isotope fractions (mole fractions?)
     */
-    for(n=0;n<Nel;n++) {X_el[n] = 0.;} /*initialize all to zero*/
-    for(n=0;n<NISO;n++) {/*sum individual isotopes*/
+
+    for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
+
+    for( n = 0; n < NISO; n++) {/*sum individual isotopes*/
         /*exclude neutrons only;in tablep/ionfracp index=0 is H*/
-        if(p->np[n] > 0) {X_el[p->np[n]-1] += p->abund[n];}
+	/* this also puts X_el in order of ascending Z, if an element
+	 * does not exists in abund[i], it is just zero in X_el */
+        if(p->np[n] > 0) X_el[ p->np[n]-1 ] += p->abund[n];
     }
 
-    logtemp=log10(temp);
-
-    /*for (n=0;n<Nel;n++)*/	/*loop over elements*/
-    for (n=7;n<8;n++)	/*loop over oxygen (no abundance tracking yet)*/
+    for ( n = 0; n < Nel; n++)	
     {
-        for (m=0;m<=(n+1);m++)	/*loop over ions for each element,dont skip any*/
+	N = n+1;
+	/*loop over ions for each element,dont skip any*/
+        for ( m = 0; m < (N+1); m++)	
 	{
-	    index=(((n+1)*(n+2)>>1)-1+m)*51;	/*find row of element n, ion m*/
 	    /*re-assign table values so interpolation can be done in 
-	      double precision (table is floats).
-            */
-	    rowarr[0]=tablep[j+Nel];
-	    rowarr[1]=tablep[j+Nel+1];
-	    interp[0]=tablep[index+offset+j];
-	    interp[1]=tablep[index+offset+j+1];
+	      double precision (table is floats). */
+	    rowarr[0] = ionfracp[0][ j ];
+	    rowarr[1] = ionfracp[0][ j + 1 ];
+	    interp[0] = tablep[ N*(N+1)/2-1+m ][ j ];
+	    interp[1] = tablep[ N*(N+1)/2-1+m ][ j + 1 ];
+
 	    /*interpolate*/
-	    polint(rowarr,interp,2,temp,lcoolp,dyp);
+	    polint(rowarr,interp,2,logtemp,lcoolp,dyp);
+
 	    /*reset value if extrapolated to negative value*/
 	    if (lcool<0.0)
 	    {
@@ -119,19 +145,12 @@ double calc_lcool1(SPHbody *p,double temp,int extrapolate)
 		/*else fracn=1.0;*//*this case shouldn't happen*/
 	    }
 		
-	    /*find equil fraction of this ion:*/
-	    temps[0]=ionfracp[j+2];
-	    temps[1]=ionfracp[j+2+1];
-	    /*break-down of ionfracp index:
-	      -first two elements contain # grid points (NMax) and # of elements
-	      -then NMax temperature grid points, then the data.
-	      The data includes neutrals, skip these! (see read_ioncool-b.c) done
-	      with NMax*(n+1). change to *n to skip bare ions. 
-            */
-	    fracns[0]=ionfracp[2+NMax+index+j];
-	    fracns[1]=ionfracp[2+NMax+index+j+1];
+	    fracns[0] = ionfracp[ N*(N+1)/2+m ][ j ];
+	    fracns[1] = ionfracp[ N*(N+1)/2+m ][ j + 1 ];
+
 	    /*interpolate*/
-	    polint(temps,fracns,2,logtemp,fracnp,dfp);
+	    polint(rowarr,fracns,2,logtemp,fracnp,dfp);
+
 	    /*reset value if extrapolated to unphysical value*/
 	    if (fracn<0.0)
 	    {
@@ -139,7 +158,7 @@ double calc_lcool1(SPHbody *p,double temp,int extrapolate)
 		else fracn=1.0;
 	    }
 
-	    ioncool+=lcool*fracn*X_el[n]; /*assume pure O composition*/
+	    ioncool += lcool * fracn * X_el[n]; 
 	}
     }
     return ioncool;
@@ -174,7 +193,7 @@ double analytic_cool(double temp)
 j such that x is between xx[j] and xx[j+1]. xx must be monotonic,
 either increasing or decreasing. j=-2 or j=-99 is returned to indicate
 that x is out of range.*/
-/*includes: none*/
+/*#includes: none*/
 /*call syntax: locate(&xx, N, x, j) */
 /*~~~~~~~~~~~~~~~~WORKS!!! 04/23/2009~~~~~~~~~~~~~*/
 void 
@@ -218,7 +237,7 @@ locate(float xx[], long Nel, float x, long *j)
 routine returns a value y, and an error estimate dy. If P(xP) is the 
 polynomial of degree N-1 such that P(xa_i)=ya_i, i=1,...,n, then 
 the returned value y=P(x).*/
-/*includes: math.h, "nrutil.h"*/
+/*#includes: math.h, "nrutil.h"*/
 /*call syntax: polint(&xx[14],&yy[14],4,x,yp,dyp) for 4-point 
 interpolation between tabulated points [14..17]*/
 /*~~~~~~~~~~~~~~~~~ WORKS!!!! 04/23/2009 ~~~~~~~~~~~~~~~~~*/
@@ -299,7 +318,7 @@ submatrix of function values ya[1..m][1..n], tabulated at the grid points
 defined by x1a and x2a; and given values x1 and x2 of the independent 
 variables; this routine teturns as interpolated function value y, and an 
 accuracy idication dy (based only on the interpolation in the x1 direction)*/
-/*includes: "nrutil.h" */
+/*#includes: "nrutil.h" */
 /* call syntax: polin2d(&x1a[jj],&x2a[kk],&yap[0][0],2,2,x1,x2,yp,dyp) 
  * where x1a,x1, refers to rows and jj is the row number from which to 
  * start the interpolation, x2a,x2 refers to columns and kk is the column
