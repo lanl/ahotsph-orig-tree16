@@ -544,6 +544,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
     int inNW[2][22]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
                      {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
     float dt1_tot,udot_tot,frac,dt1,udot;
+    float m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     int cycles,cycle_count;
     //extern float *tablep; /*added by CE: holds cooling curve*/
     //extern float *ionfracp; /*ditto ion fractions*/
@@ -600,16 +601,20 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
 	    /* Check units, calculate temp = 2.0*mh*u / (2.5*k),
 	       calculate lcool, update udot */
             /* all this is done in cgs */
-	    n = p->rho * m / (l*l*l) / (2.0*MH);/*better way to find #density?*/
+            m_ave = 0;
+            for ( j = 0; j < 22; j++) 
+                  m_ave += p->abund[j] * ((float)(p->np[j] + p->nn[j])) * MH
+
+	    n = p->rho * m / (l*l*l) / m_ave;
 	    u = p->u * l*l /t*t; 
-	    temp = 2.0*MH * u / (2.5 * K_BOLTZ);
+	    temp = m_ave * u / (2.5 * K_BOLTZ);
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
 	    lcool = calc_lcool1(p,temp,Gridpts,Nel,1);
-	    /*lcool = calc_lcool1(p,temp,1);*/
+
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
-	    udot = lcool*n/(2.0*MH);
+	    udot = lcool*n/(m_ave);
 
             /*determine if we need subcycling*/
 	    if ( (udot * dt > frac * u) && !(p->ident & (1<<30)) ) {
@@ -628,13 +633,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
 		        /*for this sub-timestep*/
 		        dt1_tot += dt1;	/*keep track of time*/
 		        u += udot * dt1;	/*new u*/
-		        temp = 2.0*MH *u /(2.5 *K_BOLTZ);/*temp after dt1 timestep*/
+		        temp = m_ave * u /(2.5 *K_BOLTZ);/*temp after dt1 timestep*/
             /*update density - how? where? -CE*/
 		        udot_tot += udot;
 		        /*for next sub-timestep*/
 		        lcool = calc_lcool1(p,temp,Gridpts,Nel,1);	/*lcool at this temp (after dt1)*/
-		        /*lcool = calc_lcool1(p,temp,1);*/	/*lcool at this temp (after dt1)*/
-		        udot = lcool*n /(2.0*MH);	/*udot after this timestep*/
+		        udot = lcool*n / m_ave;	/*udot after this timestep*/
                         cycle_count++;
 		    } 
 		    else { /*no; subdivide further*/
@@ -650,7 +654,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
 
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
 	//NOTE THE MINUS!!
-            p->udot -= (p->u - u * t*t/(l*l))/dt;
+            p->udot -= (p->u - u * t*t/(l*l)) / dt;
 	}
 
 	if (!finite(p->udot)) 
