@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <Msgs.h>
+#include "singlio.h"
 #include "units.h"
 
 #define MAX_ITER 100
@@ -12,10 +13,10 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
     double xguess = 2.0*xl*xr/(xl+xr);
     int i;
    
-    Msgf(("in eos, K_BOLTZ=%g\n",K_BOLTZ));
+    singlPrintf(("in eos, K_BOLTZ=%g\n",K_BOLTZ));
 
     if ((*f)(xl)*(*f)(xr) > 0.0) {
-	Msgf(("Bisect: %1.1e and %1.1e do not bracket a root\n", xl, xr));
+	singlPrintf(("Bisect: %1.1e and %1.1e do not bracket a root\n", xl, xr));
     }
 
     for(i = 0; i <= MAX_ITER; i++) {
@@ -33,7 +34,7 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
     }
 
     if (i == MAX_ITER) 
-	Msgf(("Bisect: max iterations exceeded\n"));
+	singlPrintf(("Bisect: max iterations exceeded\n"));
 
     return (float)xguess;
 }

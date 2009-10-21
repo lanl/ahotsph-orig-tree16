@@ -2,6 +2,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<strings.h>
+#include"singlio.h"
 /*
 #include<assert.h>
 #include<time.h>
@@ -10,13 +11,12 @@
 #include"fastflpt.h"
 #include"Msgs.h"
 #include"physics.h"
-#include"physics_sph.h"
 #include"stk.h"
 #include"vop.h"
-#include"singlio.h"
 #include"mpmy.h"
 #include"timers.h"
 */
+#include"physics_sph.h"
 #include"cool.h"
 #include"nrutil.h"
 
@@ -55,7 +55,7 @@ void init_CoolTable(int *Gridpts, int *Nel)
            /*"/home/cellinge/SNSPH.dir/tree16/sph+nln/CHIANTI-COOLING.dat", "r");*/
     if (File1p == NULL) 
 	//Error("error opening cooling curves: %s\n",strerror(errno));
-	printf("error opening cooling curves: \n");
+	singlPrintf("error opening cooling curves: \n");
 
     /*open table with ion fractions*/
     file2p = fopen(
@@ -63,13 +63,13 @@ void init_CoolTable(int *Gridpts, int *Nel)
            /*"/home/cellinge/SNSPH.dir/tree16/sph+nln/mazzotta_etal_9.ioneq","r");*/
     if (file2p == NULL) 
 	//Error("error opening ion fractions: %s\n",strerror(errno));
-	printf("error opening ion fractions: \n");
+	singlPrintf("error opening ion fractions: \n");
 
     fscanf(file2p, "%i %i", Gridpts,Nel);
      
     /* (Nel*(Nel+1)/2 + Nel is total number of ions, incl. bare ions */
     tot_ion = (*Nel) * ( (*Nel)+3 ) / 2;
-    printf("total ions: %d\n", tot_ion);
+    /*singlPrintf("total ions: %d\n", tot_ion);*/
 
 
     /* for ionfracp, need (Nel*(Nel+1)/2 + Nel+1) by Gridpts array */

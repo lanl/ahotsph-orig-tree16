@@ -17,4 +17,5 @@ static const double KES_COEFF =6.6524586e-25;
 static const double KFF_COEFF =0.640000e+23;
 static const double K_BOLTZ =1.3806503e-18;
 static const double MH =1.67262158e-24;
+static const double N_AVOG = 6.02214179e23;
 #endif

@@ -1087,7 +1087,7 @@ main(int argc, char *argv[])
 	    WalkTerminate();
 	    singlPrintf("ForceSPH done\n");
 	    udot_limit[0] = udot_limit[1]  = 0;
-	    update_final(SPHsinkbtab, SPHsinknobj, dt, &udot_limit[0], &udot_limit[1]);
+	    update_final(SPHsinkbtab, SPHsinknobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1]);
 	    StopTimer(&ForceSPH);
 	    /* This should be the high-water mark for memory use */
 	    AddCounter(&MemCnt, malloc_used()/1024);

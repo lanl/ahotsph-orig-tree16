@@ -2,8 +2,9 @@
  * PURPOSE:								*
  *   to calculate the cooling term for a given temperature and 		*
  *   composition, and return the cooling value to the calling routine.	*
- *   Returns total cooling term in erg*cm^3/s.
- *   The composition is taken directly from SPHbody->abund[i].		*
+ *   Returns total cooling term in erg/s.				*
+ *   The composition is taken directly from SPHbody->abund[i] and	* 
+ *   converted from mass fraction to number density.			*
  *   									*
  * NOTE:								*
  *   expects table* and ionfrac* to have been initialized by 		*
@@ -23,7 +24,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
-/*#include "physics_sph.h"*/
+#include "physics_sph.h"
 #include "cool.h"
 #include "nrutil.h" /*ok to have this in*/
 
@@ -53,8 +54,9 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     double fracn;	/*holds ion fraction returned by interp. */
     double *fracnp;	/*pointer to frac*/
     double rowarr[2],interp[2],fracns[2];	/*temporary arrays for interp.*/
-    float temps[Gridpts];
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
+    float Navogadro = 6.0221415e23;
+    float temps[Gridpts];
     float X_el[Nel];		/*element fraction*/
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
@@ -116,10 +118,12 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
 
     for( n = 0; n < NISO; n++) {/*sum individual isotopes*/
-        /*exclude neutrons only;in tablep/ionfracp index=0 is H*/
+        /*exclude bare neutrons;in tablep/ionfracp index=0 is H*/
 	/* this also puts X_el in order of ascending Z, if an element
-	 * does not exists in abund[i], it is just zero in X_el */
-        if(p->np[n] > 0) X_el[ p->np[n]-1 ] += p->abund[n];
+	 * does not exist in abund[i], it is just zero in X_el */
+        if(p->np[n] > 0) 
+           X_el[ p->np[n]-1 ] += p->abund[n] * 
+               p->rho *Navogadro / ((float)(p->nn[n] + p->np[n]));
     }
 
     for ( n = 0; n < Nel; n++)	

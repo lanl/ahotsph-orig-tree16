@@ -328,7 +328,7 @@ void nbrMAC(SinkSPH *sink, hcell **src_vec, int *result, int n);
 void macRho(SinkSPH *sink, hcell **source, int *result, int n);
 void macSPH(SinkSPH *sink, hcell **source, int *result, int n);
 void InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp);
-void update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low);
+void update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low);
 void update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit);
 void SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2);
 /* void SPH_setup(int dim); */

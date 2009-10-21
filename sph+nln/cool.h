@@ -8,6 +8,7 @@ typedef struct{
 } SPHbody;
 */
 
+/*in physics_sph.h: double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate);*/
 double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate);
 double calc_lcool2(double temp,double uint,double dens,int numu,int numD);
 

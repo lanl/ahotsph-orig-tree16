@@ -5,6 +5,7 @@
 #include "fastflpt.h"
 #include "timers.h"
 #include "error.h"
+#include "singlio.h"
 #include "cool.h"
 #include "nrutil.h"
 #include "units.h"
@@ -530,7 +531,7 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -538,17 +539,16 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
     double m = (double)massCF;  /* convert from user-units to cgs */
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
-    float molfrac[22]; /*float or double?? */
+    float molfrac[Nel]; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
-    int inNW[2][22]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
-                     {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
+    int inNW[2][NISO]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
+                      {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
     float dt1_tot,udot_tot,frac,dt1,udot;
     float m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     int cycles,cycle_count;
     //extern float *tablep; /*added by CE: holds cooling curve*/
     //extern float *ionfracp; /*ditto ion fractions*/
-    Msgf(("in sph, MH=%g\n",MH));
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -573,7 +573,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
 
         if(do_burning){
         /*prepare abundance array passed into network - more ugliness!*/
-            for(i=0;i<22;i++){
+            for(i=0;i<Nel;i++){
                 for(j=0;j<NISO;j++){
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
                         molfrac[i]=p->abund[j];
@@ -585,7 +585,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
             p->udot += ener_gen;/*is ener_gen the rate of energy production???*/
 
             /*update composition of particle from updated abundance array*/
-            for(i=0;i<22;i++){
+            for(i=0;i<Nel;i++){
                 for(j=0;j<NISO;j++){
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
                         p->abund[j] = molfrac[i];
@@ -602,20 +602,27 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
 	       calculate lcool, update udot */
             /* all this is done in cgs */
             m_ave = 0;
-            for ( j = 0; j < 22; j++) 
-                  m_ave += p->abund[j] * ((float)(p->np[j] + p->nn[j])) * MH
+            n = 0;
+            for ( j = 0; j < Nel; j++) {
+                  /*m_ave += p->abund[j] * ((float)(p->np[j] + p->nn[j])) * MH;*/
+                  n += p->rho * N_AVOG * p->abund[j] / (p->np[j] + p->nn[j]) *
+                       (p->np[j] + 1.0); /*b/c we also have electrons!*/
+            }
 
-	    n = p->rho * m / (l*l*l) / m_ave;
+	    /*n = p->rho * m / (l*l*l) / m_ave;*/
+            m_ave = p->rho / n;
 	    u = p->u * l*l /t*t; 
-	    temp = m_ave * u / (2.5 * K_BOLTZ);
+	    /*temp = m_ave * u / (2.5 * K_BOLTZ);*/
+            temp = p->temp;
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
 	    lcool = calc_lcool1(p,temp,Gridpts,Nel,1);
 
 	    /* lcool has units of erg cm^3/s, need erg/g/s */
-	    udot = lcool*n/(m_ave);
+	    udot = lcool / m_ave;
 
+            singlPrintf("T: %g lcool: %g udot: %g u: %g\n",temp,lcool,udot,u);
             /*determine if we need subcycling*/
 	    if ( (udot * dt > frac * u) && !(p->ident & (1<<30)) ) {
 	        dt1=dt * t / 2.;
@@ -638,7 +645,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
 		        udot_tot += udot;
 		        /*for next sub-timestep*/
 		        lcool = calc_lcool1(p,temp,Gridpts,Nel,1);	/*lcool at this temp (after dt1)*/
-		        udot = lcool*n / m_ave;	/*udot after this timestep*/
+		        udot = lcool / m_ave;	/*udot after this timestep*/
                         cycle_count++;
 		    } 
 		    else { /*no; subdivide further*/
@@ -670,6 +677,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit
  * update temperature and density, go back up and do cooling again, check 
  * the new udot, subcycle if necessary, and then add all the individual 
  * udots to the final udot for this time step. */ 
+            singlPrintf("udot: %f   u: %f\n", p->udot,p->u);
 	    p->udot = p->u/dt;
  	    ++*limit_high;
 	}
@@ -687,7 +695,8 @@ void
 update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
-    float acoef;
+    float acoef, m_ave;
+    int j;
     SPHbody *p;
    
     acoef = A_COEFF * ((double)(lengthCF * timeCF*timeCF / massCF));
@@ -705,11 +714,14 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 
 	    /* Calculate temperature from u, then "create" photons (a*T^4) */
             /* keep these in user-units */
-	    eos_n = ((double)(p->rho_est))/(MH/massCF);/*better way to find this?*/
+            eos_n = 0;
+            for( j = 0; j < NISO; j++)
+                eos_n += ((double)(p->rho_est))*N_AVOG* p->abund[j] / 
+                         (p->np[j] + p->nn[j]) * (p->np[j] + 1.0);/* accounts for electrons!*/
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(4.0e4, 1.5e7, eos_u*1.0e-6, uvst, duvst);
+	    p->temp = newtraph(1.0e4, 2.5e10, eos_u*1.0e-6, uvst, duvst);
 	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 
