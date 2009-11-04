@@ -1,8 +1,8 @@
 /* all physical constants go in here */
 /* all physical constants IN CGS UNITS PLEASE!!! */
 /* the conversion factors assume that all internal physics is done 
- * in cgs, and convert FROM CGS TO USER-UNITS. They are set in the 
- * .ctl file. ADD */
+ * in  user-units, and convert FROM CGS TO USER-UNITS. They are 
+ * set in the .ctl file. ADD */
 
 extern float massCF;
 extern float lengthCF;

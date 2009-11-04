@@ -528,6 +528,9 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 }
 
 #include "Msgs.h"
+double eos_n, eos_u;
+
+
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
@@ -535,20 +538,22 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
-    double u, n, lcool, temp, ener_gen;
+    double u, n, lcool, temp, deltah;
     double m = (double)massCF;  /* convert from user-units to cgs */
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
+    double kB; 
     float molfrac[Nel]; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
     int inNW[2][NISO]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
                       {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
     float dt1_tot,udot_tot,frac,dt1,udot;
-    float m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
+    double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
+    float abund_renorm;
     int cycles,cycle_count;
-    //extern float *tablep; /*added by CE: holds cooling curve*/
-    //extern float *ionfracp; /*ditto ion fractions*/
+
+    kB = K_BOLTZ * t * t / m / ( l*l );
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -571,113 +576,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ( (do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
 	      : 0.0 );
 
-        if(do_burning){
-        /*prepare abundance array passed into network - more ugliness!*/
-            for(i=0;i<Nel;i++){
-                for(j=0;j<NISO;j++){
-                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i]=p->abund[j];
-                    }   
-                }   
-            }
-            /* in here somewhere calc energy generation by nuclear burning? */
-            /*Fortran(solven)(&dt,&temp,&rho,&molfrac,&ener_gen);*/
-            p->udot += ener_gen;/*is ener_gen the rate of energy production???*/
-
-            /*update composition of particle from updated abundance array*/
-            for(i=0;i<Nel;i++){
-                for(j=0;j<NISO;j++){
-                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i];
-                    }   
-                }
-            }
-        }  
-
-/*also can calculate rho,n of particle?*/
-
-
-	if (do_cooling) {
-	    /* Check units, calculate temp = 2.0*mh*u / (2.5*k),
-	       calculate lcool, update udot */
-            /* all this is done in cgs */
-            m_ave = 0;
-            n = 0;
-            for ( j = 0; j < Nel; j++) {
-                  /*m_ave += p->abund[j] * ((float)(p->np[j] + p->nn[j])) * MH;*/
-                  n += p->rho * N_AVOG * p->abund[j] / (p->np[j] + p->nn[j]) *
-                       (p->np[j] + 1.0); /*b/c we also have electrons!*/
-            }
-
-	    /*n = p->rho * m / (l*l*l) / m_ave;*/
-            m_ave = p->rho / n;
-	    u = p->u * l*l /t*t; 
-	    /*temp = m_ave * u / (2.5 * K_BOLTZ);*/
-            temp = p->temp;
-
-	    /*this does the table look-up:
-	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
-	    lcool = calc_lcool1(p,temp,Gridpts,Nel,1);
-
-	    /* lcool has units of erg cm^3/s, need erg/g/s */
-	    udot = lcool / m_ave;
-
-            singlPrintf("T: %g lcool: %g udot: %g u: %g\n",temp,lcool,udot,u);
-            /*determine if we need subcycling*/
-	    if ( (udot * dt > frac * u) && !(p->ident & (1<<30)) ) {
-	        dt1=dt * t / 2.;
-                dt1_tot = 0.;
-                cycles = 2; /*total number of cycles*/
-                cycle_count = 0; /*keep track of cycles gone through*/
-/*nothing prevents this from being infinite, but I'm hoping it won't be. It shouldn't be...CE*/
-                /*hopefully this condition will prevent it from not doing the last dt1
-                  due to rounding errors in dt1_tot */
-	        while(abs(dt1_tot / t - dt) > 0.99*dt1) { /*ensures we go through the whole dt*/
-
-                    /*update udot, calc new temperature */
-		    if (abs(dt1 * udot) < u * frac) { 
-
-		        /*for this sub-timestep*/
-		        dt1_tot += dt1;	/*keep track of time*/
-		        u += udot * dt1;	/*new u*/
-		        temp = m_ave * u /(2.5 *K_BOLTZ);/*temp after dt1 timestep*/
-            /*update density - how? where? -CE*/
-		        udot_tot += udot;
-		        /*for next sub-timestep*/
-		        lcool = calc_lcool1(p,temp,Gridpts,Nel,1);	/*lcool at this temp (after dt1)*/
-		        udot = lcool / m_ave;	/*udot after this timestep*/
-                        cycle_count++;
-		    } 
-		    else { /*no; subdivide further*/
-		        dt1=dt1/2.0; 
-                    }
-                }
-            }
-
-/*CHECK: (p->u - u) = udot_tot*dt......... right??*/
-
-	    /*this does the analytic cooling that was here before:*/
-	    /*lcool = analytic_cool(temp);*/
-
-	    /* lcool has units of erg cm^3/s, need erg/g/s */
-	//NOTE THE MINUS!!
-            p->udot -= (p->u - u * t*t/(l*l)) / dt;
-	}
-
 	if (!finite(p->udot)) 
 	    Error("Bad value for udot\n");
 
-/*in here, do subcycling if necessary -CE: no, since it's also checking 
-  the udot from the diffusion*/
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
 	if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {
-/* this loop checks if udot is too large. basically, put subcycling here. 
- * if udot*dt too large, try dt/2, dt/4, ... until good, then use that to 
- * update temperature and density, go back up and do cooling again, check 
- * the new udot, subcycle if necessary, and then add all the individual 
- * udots to the final udot for this time step. */ 
-            singlPrintf("udot: %f   u: %f\n", p->udot,p->u);
 	    p->udot = p->u/dt;
  	    ++*limit_high;
 	}
@@ -685,17 +589,114 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    p->udot = -0.333*p->u/dt;
 	    ++*limit_low;
 	}
+
+
+        if(do_burning){
+        /*prepare abundance array passed into network - more ugliness!*/
+            for(i=0;i<Nel;i++){
+                for(j=0;j<NISO;j++){
+                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                        molfrac[i]=p->abund[j]/((double)(p->np[j]+p->nn[j]));
+                    }   
+                }   
+            }
+            /* in here somewhere calc energy generation by nuclear burning? */
+            /*Fortran(solven)(&dt,&temp,&rho,&molfrac,&deltah);*/
+            p->udot += deltah/dt;
+
+            /*update composition of particle from updated abundance array*/
+            for(i=0;i<Nel;i++){
+                for(j=0;j<NISO;j++){
+                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                        p->abund[j] = molfrac[i]*((double)(p->np[j]+p->nn[j]));
+                    }   
+                }
+            }
+        }  
+
+
+/*also can calculate rho,n of particle?*/
+	if (do_cooling) {
+	    /* Check units, calculate temp = 2.0*mh*u / (2.5*k),
+	       calculate lcool, update udot */
+            /* all this is done in user-units */
+            m_ave = 0;
+            n = 0;
+            abund_renorm = 0;
+            for ( j = 0; j < Nel; j++) {
+                  m_ave += ((double)(p->np[j] + p->nn[j])) /N_AVOG/m * p->abund[j];
+                  /* what's wrong with this? why 4 ord. of mag. off?*/
+                  n += (double)(p->rho * 
+                       m * N_AVOG / (double)(p->np[j] + p->nn[j]) *
+                       p->abund[j] * (double)(p->abund[j] + 1.0)); /*b/c we also have electrons!*/
+                  abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
+            }
+
+            m_ave = (double)(m_ave/abund_renorm); 
+            singlPrintf("m_ave: %e  n: %e  rho: %e\n", m_ave, n, p->rho);
+            n = p->rho/m_ave;
+	    u = p->u; 
+            eos_n = (double)n; /*needed in newtraph; in user-units */
+	    eos_u = ((double)(p->u))*((double)(p->rho));
+
+	    /* Figure out good upper and lower limits for temp */
+	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+            temp = p->temp;
+            singlPrintf("udot: %e   u*rho: %e  T: %e  \n", p->udot,u*n*m_ave,temp);
+
+	    /*this does the table look-up:
+	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
+	    lcool = calc_lcool1(p,temp,Gridpts,Nel,1);
+
+	    /* lcool has units of erg/s, need energy/mass/time in user-units */
+	    udot = -1.0*lcool *t*t /m /(l*l) / m_ave;
+
+            /*determine if we need subcycling*/
+	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
+	        dt1 = dt / 2.;
+                dt1_tot = 0.;
+                cycles = 2; /*total number of cycles*/
+                cycle_count = 0; /*keep track of cycles gone through*/
+
+	        while(cycle_count < cycles) { 
+
+		    if (abs(dt1 * udot) < u * frac) { 
+
+                        /*this sub-timestep*/
+		        dt1_tot += dt1;	
+		        u += udot * dt1;	
+		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+		        temp = p->temp;
+            /*update density - how? where? -CE: with rho=rho+drhodt*dt*/
+		        udot_tot += udot;
+
+                        /*next sub-timestep*/
+		        lcool = calc_lcool1(p,temp,Gridpts,Nel,1);	
+	                udot = -1.0*lcool *t*t /m /(l*l) / m_ave;
+                        cycle_count++;
+		    } 
+		    else { /*no; subdivide further*/
+		        dt1=dt1/2.0; 
+                        cycles = cycle_count + (cycles-cycle_count)*2; /*double remaining number of cycles*/
+                    }
+                }
+            }
+
+/*CHECK: (p->u - u) = udot_tot*dt......... right??*/
+
+            singlPrintf("---------subcycles: %d\n", cycles); 
+            p->udot = (p->u - u) / dt;
+
+	}
     }
 }
 
-
-double eos_n, eos_u;
 
 void
 update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
-    float acoef, m_ave;
+    float acoef;
     int j;
     SPHbody *p;
    
@@ -716,20 +717,19 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
             /* keep these in user-units */
             eos_n = 0;
             for( j = 0; j < NISO; j++)
-                eos_n += ((double)(p->rho_est))*N_AVOG* p->abund[j] / 
-                         (p->np[j] + p->nn[j]) * (p->np[j] + 1.0);/* accounts for electrons!*/
+                eos_n += ((double)(p->rho_est))*N_AVOG * massCF / (double)(p->np[j] + p->nn[j]) * 
+                          p->abund[j] * (double)(p->np[j] + 1.0);/* accounts for electrons!*/
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(1.0e4, 2.5e10, eos_u*1.0e-6, uvst, duvst);
+	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
 	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 
-	    /* Calculate diffusion coefficient */
+	    /* Calculate diffusion coefficient in user-units */
 	    kes = KES_COEFF/MH *((double) (massCF / (lengthCF*lengthCF)));
 	    kff = (KFF_COEFF) * p->rho_est*pow(p->temp, -3.5)*
-                ((double)(massCF /(lengthCF*lengthCF) * massCF 
-                         /(lengthCF*lengthCF*lengthCF)));
+                ((double)(massCF /(lengthCF*lengthCF))); 
 	    p->D = C_LIGHT *((double)(timeCF /lengthCF)) 
                            / ( 3.0*(kes+kff)*p->rho_est );
 

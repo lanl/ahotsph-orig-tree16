@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "physics_sph.h"
+#include "units.h"
 #include "cool.h"
 #include "nrutil.h" /*ok to have this in*/
 
@@ -55,9 +56,8 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     double *fracnp;	/*pointer to frac*/
     double rowarr[2],interp[2],fracns[2];	/*temporary arrays for interp.*/
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
-    float Navogadro = 6.0221415e23;
     float temps[Gridpts];
-    float X_el[Nel];		/*element fraction*/
+    float X_el[Nel];		/*element fraction, i.e. number density*/
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
@@ -121,9 +121,11 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
         /*exclude bare neutrons;in tablep/ionfracp index=0 is H*/
 	/* this also puts X_el in order of ascending Z, if an element
 	 * does not exist in abund[i], it is just zero in X_el */
-        if(p->np[n] > 0) 
+        if(p->np[n] > 0) {
            X_el[ p->np[n]-1 ] += p->abund[n] * 
-               p->rho *Navogadro / ((float)(p->nn[n] + p->np[n]));
+               p->rho * massCF / (lengthCF * lengthCF * lengthCF) *
+               N_AVOG / ((float)(p->nn[n] + p->np[n]));
+        }
     }
 
     for ( n = 0; n < Nel; n++)	
@@ -162,6 +164,7 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
 		else fracn=1.0;
 	    }
 
+            /*lcool is in erg*cm^3/s, convert to user-units*/
 	    ioncool += lcool * fracn * X_el[n]; 
 	}
     }

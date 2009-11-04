@@ -117,6 +117,7 @@ typedef struct {
     float mass;			/* mass of body */
     float vel[NDIM];		/* velocity of body */
     float u;
+    float temp;
     float h;
     float rho;
     float drho_dt;
@@ -160,6 +161,7 @@ typedef struct {
     float mass;			/* mass of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
     float u;			/* internal energy */\n\
+    float temp;			/* temperature */\n\
     float h;			/* smoothing length */\n\
     float rho;			/* density */\n\
     float drho_dt;              /* time derivative of rho */\n\
@@ -194,6 +196,7 @@ typedef struct {
     float mass;			/* mass of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
     float u;			/* internal energy */\n\
+    float temp;			/* temperature */\n\
     float h;			/* smoothing length */\n\
     float rho;			/* density */\n\
     float drho_dt;              /* time derivative of rho */\n\

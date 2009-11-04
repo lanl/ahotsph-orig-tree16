@@ -2116,6 +2116,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	VV(output_btab[i].pos, = btab[i].pos);
 	VV(output_btab[i].vel, = btab[i].vel);
 	output_btab[i].u = btab[i].u;
+        output_btab[i].temp = btab[i].temp;
 	output_btab[i].h = btab[i].h;
 	output_btab[i].rho = btab[i].rho;
   	output_btab[i].drho_dt = btab[i].drho_dt;
