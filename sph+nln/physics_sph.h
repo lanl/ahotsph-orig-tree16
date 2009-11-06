@@ -117,7 +117,6 @@ typedef struct {
     float mass;			/* mass of body */
     float vel[NDIM];		/* velocity of body */
     float u;
-    float temp;
     float h;
     float rho;
     float drho_dt;
@@ -131,6 +130,8 @@ typedef struct {
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
+    float temp;
+    float u_r;
     float abund[NISO];
     int np[NISO];
     int nn[NISO];
@@ -161,7 +162,6 @@ typedef struct {
     float mass;			/* mass of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
     float u;			/* internal energy */\n\
-    float temp;			/* temperature */\n\
     float h;			/* smoothing length */\n\
     float rho;			/* density */\n\
     float drho_dt;              /* time derivative of rho */\n\
@@ -173,6 +173,8 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float u_r;                  /* for alignment */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
     int p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22; \n\
     int m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22; \n\
@@ -196,7 +198,6 @@ typedef struct {
     float mass;			/* mass of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
     float u;			/* internal energy */\n\
-    float temp;			/* temperature */\n\
     float h;			/* smoothing length */\n\
     float rho;			/* density */\n\
     float drho_dt;              /* time derivative of rho */\n\
@@ -204,6 +205,8 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float u_r;                  /* for alignment */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
     int p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22; \n\
     int m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22; \n\

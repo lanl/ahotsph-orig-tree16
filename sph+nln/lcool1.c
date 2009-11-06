@@ -58,6 +58,7 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
     float temps[Gridpts];
     float X_el[Nel];		/*element fraction, i.e. number density*/
+    float ndens = 0.;	/* total number density */
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
@@ -125,6 +126,8 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
            X_el[ p->np[n]-1 ] += p->abund[n] * 
                p->rho * massCF / (lengthCF * lengthCF * lengthCF) *
                N_AVOG / ((float)(p->nn[n] + p->np[n]));
+	   ndens += (double)(p->rho * massCF /(lengthCF*lengthCF*lengthCF) * 
+	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]); 
         }
     }
 
@@ -164,8 +167,8 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
 		else fracn=1.0;
 	    }
 
-            /*lcool is in erg*cm^3/s, convert to user-units*/
-	    ioncool += lcool * fracn * X_el[n]; 
+            /*lcool is in erg*cm^3/s, X_el/ndens is the number abundance per element*/
+	    ioncool += lcool * fracn * X_el[n]/ndens; 
 	}
     }
     return ioncool;

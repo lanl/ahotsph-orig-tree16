@@ -551,7 +551,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     float dt1_tot,udot_tot,frac,dt1,udot;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     float abund_renorm;
-    int cycles,cycle_count;
+    int cycles=0,cycle_count=0;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
@@ -624,32 +624,28 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             n = 0;
             abund_renorm = 0;
             for ( j = 0; j < Nel; j++) {
-                  m_ave += ((double)(p->np[j] + p->nn[j])) /N_AVOG/m * p->abund[j];
-                  /* what's wrong with this? why 4 ord. of mag. off?*/
+                  m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
                   n += (double)(p->rho * 
-                       m * N_AVOG / (double)(p->np[j] + p->nn[j]) *
-                       p->abund[j] * (double)(p->abund[j] + 1.0)); /*b/c we also have electrons!*/
+                       (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
+                       (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
                   abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
             }
 
-            m_ave = (double)(m_ave/abund_renorm); 
-            singlPrintf("m_ave: %e  n: %e  rho: %e\n", m_ave, n, p->rho);
-            n = p->rho/m_ave;
+            m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) ); 
 	    u = p->u; 
             eos_n = (double)n; /*needed in newtraph; in user-units */
-	    eos_u = ((double)(p->u))*((double)(p->rho));
+	    eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	    /* Figure out good upper and lower limits for temp */
 	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
             temp = p->temp;
-            singlPrintf("udot: %e   u*rho: %e  T: %e  \n", p->udot,u*n*m_ave,temp);
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
-	    lcool = calc_lcool1(p,temp,Gridpts,Nel,1);
+	    lcool = calc_lcool1(p,p->temp,Gridpts,Nel,1);
 
-	    /* lcool has units of erg/s, need energy/mass/time in user-units */
-	    udot = -1.0*lcool *t*t /m /(l*l) / m_ave;
+	    /* lcool has units of erg*cm^3/s, need energy/mass/time in user-units */
+	    udot = -1.0*lcool * t* t* l/ m/ p->mass;
 
             /*determine if we need subcycling*/
 	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
@@ -671,8 +667,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		        udot_tot += udot;
 
                         /*next sub-timestep*/
-		        lcool = calc_lcool1(p,temp,Gridpts,Nel,1);	
-	                udot = -1.0*lcool *t*t /m /(l*l) / m_ave;
+		        lcool = calc_lcool1(p,p->temp,Gridpts,Nel,1);	
+		        udot = -1.0*lcool * t* t* l/ m/ p->mass;
                         cycle_count++;
 		    } 
 		    else { /*no; subdivide further*/
@@ -684,8 +680,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 /*CHECK: (p->u - u) = udot_tot*dt......... right??*/
 
-            singlPrintf("---------subcycles: %d\n", cycles); 
-            p->udot = (p->u - u) / dt;
+            p->udot += (u - p->u) / dt;
 
 	}
     }
@@ -717,7 +712,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
             /* keep these in user-units */
             eos_n = 0;
             for( j = 0; j < NISO; j++)
-                eos_n += ((double)(p->rho_est))*N_AVOG * massCF / (double)(p->np[j] + p->nn[j]) * 
+                eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(p->np[j] + p->nn[j]) *
                           p->abund[j] * (double)(p->np[j] + 1.0);/* accounts for electrons!*/
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 

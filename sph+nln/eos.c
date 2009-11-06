@@ -6,6 +6,9 @@
 
 #define MAX_ITER 100
 
+extern double eos_n;
+extern double eos_u;
+
 /* Need to change printf's to Msgfs or whatever */
 
 float newtraph(double xl, double xr, double prec, double (*f)(double x), 
@@ -39,9 +42,6 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 
 
 #include "physics_sph.h"
-
-extern double eos_n;
-extern double eos_u;
 
 double uvst(double t) {
     /*convert from cgs to user-units*/
