@@ -6,9 +6,6 @@
 
 #define MAX_ITER 100
 
-extern double eos_n;
-extern double eos_u;
-
 /* Need to change printf's to Msgfs or whatever */
 
 float newtraph(double xl, double xr, double prec, double (*f)(double x), 
@@ -41,19 +38,24 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 }
 
 
+extern double eos_n;
+extern double eos_u;
+
 #include "physics_sph.h"
 
 double uvst(double t) {
     /*convert from cgs to user-units*/
-    double kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
-    double acoef=A_COEFF*((double)(lengthCF*timeCF*timeCF/massCF));
+    double kB, acoef;
+    kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
+    acoef=A_COEFF*((double)(lengthCF*timeCF*timeCF/massCF));
     return 1.5*eos_n*(kB)*t + t*t*t*t*(acoef) - eos_u;
 }
 
 
 double duvst(double t) {
     /*convert from cgs to user-units*/
-    double kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
-    double acoef=A_COEFF*((double)(lengthCF*timeCF*timeCF/massCF));
+    double kB, acoef;
+    kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
+    acoef=A_COEFF*((double)(lengthCF*timeCF*timeCF/massCF));
     return 1.5*eos_n*(kB) + 4.0*t*t*t*(acoef);
 }

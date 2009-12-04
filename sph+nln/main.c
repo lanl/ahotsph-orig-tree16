@@ -975,6 +975,7 @@ main(int argc, char *argv[])
 	    WalkNT(&SPHtree);
 	    WalkTerminate();
 	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1]);
+            singlPrintf("updated final\n");
 	    /*update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);*/
 	    StopTimer(&RhoSPH);
 	    FreeTree(&SPHtree);

@@ -538,7 +538,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
-    double u, n, lcool, temp, deltah;
+    double u, n, lcool, deltah;
     double m = (double)massCF;  /* convert from user-units to cgs */
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
@@ -548,9 +548,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
  * should be included in the burning. This is UGLY!! */
     int inNW[2][NISO]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
                       {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
-    float dt1_tot,udot_tot,frac,dt1,udot;
+    double dt1_tot,udot_tot,dt1,udot,frac=0.1;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    float abund_renorm;
+    double abund_renorm;
     int cycles=0,cycle_count=0;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
@@ -590,6 +590,24 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ++*limit_low;
 	}
 
+/*
+        n = 0.;
+        m_ave = 0.0;
+        abund_renorm = 0.0;
+        for ( j = 0; j < Nel; j++) {
+           m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));
+           abund_renorm += p->abund[j]; 
+        }
+        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) ); 
+*/
+        m_ave = 10./(N_AVOG*m);
+
+        eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
+	eos_u = ((double)(p->u)) * ((double)(p->rho));
+
+	/* Figure out good upper and lower limits for temp */
+	p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+
 
         if(do_burning){
         /*prepare abundance array passed into network - more ugliness!*/
@@ -601,8 +619,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }   
             }
             /* in here somewhere calc energy generation by nuclear burning? */
+            /* deltah= erg/g for this timestep */
             /*Fortran(solven)(&dt,&temp,&rho,&molfrac,&deltah);*/
-            p->udot += deltah/dt;
+            p->udot += deltah * (t*t) / (l*l) / dt;
 
             /*update composition of particle from updated abundance array*/
             for(i=0;i<Nel;i++){
@@ -621,34 +640,35 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	       calculate lcool, update udot */
             /* all this is done in user-units */
             m_ave = 0;
-            n = 0;
+            n = 0.;
             abund_renorm = 0;
-            for ( j = 0; j < Nel; j++) {
-                  m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
-                  n += (double)(p->rho * 
-                       (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
-                       (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
-                  abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
-            }
+//            for ( j = 0; j < Nel; j++) {
+//                  m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+//                  n += (double)(p->rho * 
+//                       (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
+//                       (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
+//                  abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
+//            }
 
-            m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) ); 
+            /*m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );*/ 
+            m_ave = 10./(N_AVOG*m);
+
 	    u = p->u; 
-            eos_n = (double)n; /*needed in newtraph; in user-units */
+            eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	    eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	    /* Figure out good upper and lower limits for temp */
 	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
-            temp = p->temp;
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
-	    lcool = calc_lcool1(p,p->temp,Gridpts,Nel,1);
+	    lcool = calc_lcool1(p,p->temp,Gridpts,Nel,0);
 
-	    /* lcool has units of erg*cm^3/s, need energy/mass/time in user-units */
-	    udot = -1.0*lcool * t* t* l/ m/ p->mass;
+	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
+	    udot = 1.0*lcool * ( t*t*t* l/ m ) / p->rho;
 
             /*determine if we need subcycling*/
-	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
+	    if ((abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
 	        dt1 = dt / 2.;
                 dt1_tot = 0.;
                 cycles = 2; /*total number of cycles*/
@@ -662,13 +682,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		        dt1_tot += dt1;	
 		        u += udot * dt1;	
 		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
-		        temp = p->temp;
             /*update density - how? where? -CE: with rho=rho+drhodt*dt*/
 		        udot_tot += udot;
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(p,p->temp,Gridpts,Nel,1);	
-		        udot = -1.0*lcool * t* t* l/ m/ p->mass;
+	                udot = 1.0*lcool * ( t*t*t* l/ m ) / p->rho;
                         cycle_count++;
 		    } 
 		    else { /*no; subdivide further*/
@@ -676,6 +695,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                         cycles = cycle_count + (cycles-cycle_count)*2; /*double remaining number of cycles*/
                     }
                 }
+                singlPrintf("subcycles: %d  %d\n",cycle_count, cycles);
             }
 
 /*CHECK: (p->u - u) = udot_tot*dt......... right??*/

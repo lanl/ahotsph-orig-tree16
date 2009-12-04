@@ -2,7 +2,7 @@
  * PURPOSE:								*
  *   to calculate the cooling term for a given temperature and 		*
  *   composition, and return the cooling value to the calling routine.	*
- *   Returns total cooling term in erg/s.				*
+ *   Returns total cooling term in erg*cm^3/s.				*
  *   The composition is taken directly from SPHbody->abund[i] and	* 
  *   converted from mass fraction to number density.			*
  *   									*
@@ -58,7 +58,8 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
     float temps[Gridpts];
     float X_el[Nel];		/*element fraction, i.e. number density*/
-    float ndens = 0.;	/* total number density */
+    float ndens = 0.;	/* total ion number density */
+    float n_e = 0.;	/* total electron number density */
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
@@ -128,6 +129,9 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
                N_AVOG / ((float)(p->nn[n] + p->np[n]));
 	   ndens += (double)(p->rho * massCF /(lengthCF*lengthCF*lengthCF) * 
 	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]); 
+	   n_e += (double)(p->rho * massCF /(lengthCF*lengthCF*lengthCF) * 
+	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]) * 
+               (p->np[j]); 
         }
     }
 
@@ -163,12 +167,13 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
 	    /*reset value if extrapolated to unphysical value*/
 	    if (fracn<0.0)
 	    {
-	        if ((fracns[0]-fracns[1]) <0) fracn=1.0e-30;
+	        if ((fracns[0]-fracns[1]) <0) fracn=1.0e-40;
 		else fracn=1.0;
 	    }
 
-            /*lcool is in erg*cm^3/s, X_el/ndens is the number abundance per element*/
-	    ioncool += lcool * fracn * X_el[n]/ndens; 
+            /*lcool is in erg*cm^3/s, X_el/ndens is n_i/n_tot */
+            /*multiplying by n_e * n_totalion hopefully converts to erg/cm^3/s */
+	    ioncool += lcool * fracn * X_el[n]/ndens * (n_e * ndens); 
 	}
     }
     return ioncool;
