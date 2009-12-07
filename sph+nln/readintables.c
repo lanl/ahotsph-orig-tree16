@@ -144,7 +144,6 @@ void init_CoolTable(int *Gridpts, int *Nel)
 	mychar=fgetc(File1p);//get second trailing new-line
     }
 
-
     //close file
     fclose(File1p);
     fclose(file2p);

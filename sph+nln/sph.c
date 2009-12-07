@@ -543,14 +543,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
     double kB; 
-    float molfrac[Nel]; /*float or double?? */
+    double molfrac[Nel+1]; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
-    int inNW[2][NISO]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28},/*Z*/
-                      {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30}}; /*A-Z*/
+    int inNW[2][NISO+1]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28,0},/*Z*/
+                      {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30,0}}; /*A-Z*/
     double dt1_tot,udot_tot,dt1,udot,frac=0.1;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    double abund_renorm;
+    double abund_renorm,temp,rho, dtd;
     int cycles=0,cycle_count=0;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
@@ -618,10 +618,15 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                     }   
                 }   
             }
+            molfrac[NISO] = p->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
-            /*Fortran(solven)(&dt,&temp,&rho,&molfrac,&deltah);*/
+            temp = (double)p->temp;
+            rho = (double)p->rho;
+            dtd = (double)dt;
+            solven_(&dtd,&temp,&rho,molfrac,&deltah);
             p->udot += deltah * (t*t) / (l*l) / dt;
+            
 
             /*update composition of particle from updated abundance array*/
             for(i=0;i<Nel;i++){
@@ -631,6 +636,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                     }   
                 }
             }
+            p->Y_el = molfrac[NISO];
         }  
 
 

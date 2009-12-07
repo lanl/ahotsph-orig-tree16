@@ -7,9 +7,12 @@ src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
 	SDFreadf.c nrutil.c readintables.c lcool1.c 
 
+fsrc=build.f solven.f
+
 programname=sph
 else
 src=$(prog).c
+fsrc=$(prog).f
 programname=$(prog)
 endif
 

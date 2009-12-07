@@ -679,7 +679,7 @@ main(int argc, char *argv[])
     /*init_CoolTable();*/ /*read in cooling curves and ion fraction tables*/
 
     /*set up network for burn code*/
-    /*Fortran(build)();*/
+    build_();
 
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
@@ -2130,7 +2130,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
  	output_btab[i].nbrs = btab[i].nbrs;
 	output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
-        output_btab[i].u_r = btab[i].u_r;
+        output_btab[i].Y_el = btab[i].Y_el;
         for(j=0;j<NISO;j++){ /*will this work? -CE: so far, it compiled and runs*/
             output_btab[i].abund[j] = btab[i].abund[j];
             output_btab[i].np[j] = btab[i].np[j];

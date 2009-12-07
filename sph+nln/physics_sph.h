@@ -49,7 +49,7 @@ typedef struct {
     float grav_acc[NDIM];
     float acc_last[NDIM];
     /* Do these need to go between nodes?  Can things above come down here? */
-    float u_r;                  /* radiation energy density */
+    float u_r;                  /* electron fraction */
     float du_r;                 /* change in u_r this timestep */
     float D;                    /* Diffusion coefficient */
     float phi;
@@ -72,6 +72,7 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
+    double Y_el;
     float abund[NISO]; 
     int np[NISO];
     int nn[NISO];
@@ -131,7 +132,7 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
     float temp;
-    float u_r;
+    float Y_el;
     float abund[NISO];
     int np[NISO];
     int nn[NISO];
@@ -174,7 +175,7 @@ typedef struct {
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
-    float u_r;                  /* for alignment */\n\
+    float Y_el;                  /* for alignment */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
     int p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22; \n\
     int m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22; \n\
@@ -206,7 +207,7 @@ typedef struct {
     unsigned int ident;		/* unique identifier */\n\
     unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
-    float u_r;                  /* for alignment */\n\
+    float Y_el;                  /* for alignment */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
     int p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22; \n\
     int m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22; \n\
@@ -368,6 +369,10 @@ double duvst(double t);
 /* In newtraph.c */
 float newtraph(double xl, double xr, double prec, double (*f)(double x), 
 	     double (*df)(double x));
+
+/* in solven.f */
+void solven_(double *dtstar, double *temp, double *rho, double *y, double *deltah);
+void build_(void);
 
 /*
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22,f23,f24,f25,f26,f27,f28,f29,f30,f31,f32,f33,f34,f35,f36,f37,f38,f39,f40,f41,f42,f43,f44,f45,f46,f47,f48,f49,f50;      \n\

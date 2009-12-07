@@ -227,11 +227,12 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
     int vxconf, vyconf, vzconf;
     int hconf, uconf;
     int identconf, windidconf;
-    int f1conf, p1conf, m1conf;
+    int f1conf, p1conf, m1conf, Y_elconf;
     SPHbody *btab, *p; 
     int nobj, gnobj;
     
     singlPrintf("SPHReading \"%s\"\n", name);
+    singlPrintf("if you get Y_el related error, check in file sphinit.c");
     sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(SPHbody),
 		    "mass", offsetof(SPHbody, mass), &massconf,
 		    "x", offsetof(SPHbody, pos[0]), &xconf,
@@ -244,6 +245,8 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 		    "h", offsetof(SPHbody, h), &hconf,
 		    "ident", offsetof(SPHbody, ident), &identconf,
 		    "windid", offsetof(SPHbody, windid), &windidconf,
+/* comment this line out if no Y_el in sdf file */
+                    /*"Y_el", offsetof(SPHbody, Y_el), &Y_elconf;*/
                     /*"f1", offsetof(SPHbody, composition[0].abund), &f1conf,*/
                     /*"p1", offsetof(SPHbody, composition[0].np), &p1conf,*/
                     /*"m1", offsetof(SPHbody, composition[0].nn), &m1conf,*/

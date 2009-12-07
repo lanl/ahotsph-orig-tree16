@@ -3,11 +3,11 @@
 #use icc
 
 defaultCC:=icc
-defaultFC:=ifort -nofor_main 
+defaultFC:=ifort 
 
 CC_SPECIFIC:=-g -DLONG_LONG_KEYS 
 #-march=core2 -mcpu=core2
-FC_SPECIFIC:=-fsource-case-preserve -warn alignments -align all -align rec8byte
+FC_SPECIFIC:=-c -nofor_main -fpp -f77rtl -warn alignments -align all -align rec8byte -names as_is -assume nounderscore
 #-cm -w95 -80
 ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC
 # ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC
@@ -16,7 +16,7 @@ ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC
 
 override OPTIMIZE=-O3 -static -no-prec-div -xP
 override AGGRESSIVE_OPT=
-#LDFLAGS:=-Qoption,ld,-rpath=/ss1-raid/opt/intel/compiler71/compiler70/ia32/lib
+LDFLAGS:=-L/packages/intel/fce/10.1.015/lib
 LOADLIBES:=-lsvml
 LEX:=flex
 YACC:=bison -y
