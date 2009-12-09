@@ -137,8 +137,9 @@ c..   executed once on each call
       theta = 0.1013d0 * rho9 /t932
       tk    = t9/11.605d0
       tin   = t9*1.0d9
-      yense    = ye
-      eta = 1.0d0 - 2.0d0*ye
+c added (1) CIE
+      yense    = ye(1)
+      eta = 1.0d0 - 2.0d0*ye(1)
 c----------------------------------
       if( iachain .ne. 0 )then
 c----------------------------------

@@ -8,7 +8,7 @@ src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	SDFreadf.c nrutil.c readintables.c lcool1.c 
 
 #fsrc=build.f solven.f
-fsrc=find.f getfkt.f abinit.f masses.f sparse_ma28.f naray.f weakread.f build.f locate.f partfun.f weakintp.f rate.f rhside.f jacob.f dtnuc.f nse.f leqs.f rated.f solven.f
+fsrc=find.f getfkt.f abinit.f masses.f sparse_ma28.f naray.f weakread.f build.f locate.f partfun.f bilenshort.f weakintp.f rate.f rhside.f jacob.f dtnuc.f nse.f leqs.f rated.f solven.f
 
 programname=sph
 else
