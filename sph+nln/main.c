@@ -680,6 +680,7 @@ main(int argc, char *argv[])
 
     /*set up network for burn code*/
     build_();
+    singlPrintf("successfully built network library\n");
 
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
