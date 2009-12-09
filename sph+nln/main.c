@@ -679,8 +679,10 @@ main(int argc, char *argv[])
     /*init_CoolTable();*/ /*read in cooling curves and ion fraction tables*/
 
     /*set up network for burn code*/
-    build_();
-    singlPrintf("successfully built network library\n");
+    if(do_burning) {
+        build_();
+        singlPrintf("successfully built network library\n");
+    }
 
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);

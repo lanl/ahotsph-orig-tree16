@@ -668,8 +668,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
-	    /*lcool = calc_lcool1(p,p->temp,Gridpts,Nel,0);*/
-            lcool = analytic_cool(p->temp);
+	    lcool = calc_lcool1(p,p->temp,Gridpts,Nel,0);
+            /*lcool = analytic_cool(p->temp);*/
 
 	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
 	    udot = 1.0*lcool * ( t*t*t* l/ m ) / p->rho;

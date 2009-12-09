@@ -134,8 +134,8 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
 	   n_e += (double)(p->rho * massCF /(lengthCF*lengthCF*lengthCF) * 
 	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]) * 
                (p->np[j]); 
-*/
         }
+*/
     }
 
     for ( n = 0; n < Nel; n++)	
