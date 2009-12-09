@@ -7,7 +7,8 @@ src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
 	SDFreadf.c nrutil.c readintables.c lcool1.c 
 
-fsrc=build.f solven.f
+#fsrc=build.f solven.f
+fsrc=find.f getfkt.f abinit.f masses.f sparse_ma28.f naray.f weakread.f build.f locate.f partfun.f weakintp.f rate.f rhside.f jacob.f dtnuc.f nse.f leqs.f rated.f solven.f
 
 programname=sph
 else
@@ -35,6 +36,14 @@ $(objdir)/sph$(objsuf) : sph.c
 	-@mv sph$(objsuf) $(objdir)
 
 # DO NOT DELETE THIS LINE -- make depend depends on it.
+
+$(objdir)/find$(objsuf) : find.f
+	$(FC) $(FFLAGS) $(LDFLAGS) -c find.f
+	-@mv find$(objsuf) $(objdir)
+
+$(objdir)/abinit$(objsuf) : abinit.f
+	$(FC) $(FFLAGS) $(LDFLAGS) -c abinit.f
+	-@mv abinit$(objsuf) $(objdir)
 
 $(objdir)/cofm$(objsuf):
 $(objdir)/cofm$(objsuf):
