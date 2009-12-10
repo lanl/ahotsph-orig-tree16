@@ -648,16 +648,19 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             m_ave = 0;
             n = 0.;
             abund_renorm = 0;
-//            for ( j = 0; j < Nel; j++) {
-//                  m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
-//                  n += (double)(p->rho * 
-//                       (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
-//                       (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
-//                  abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
-//            }
+            for ( j = 0; j < Nel; j++) {
+                  m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
+                  n += (double)(btab->rho * 
+                       (N_AVOG*m) / (double)(btab->np[j] + btab->nn[j]) * btab->abund[j] * 
+                       (double)(btab->np[j] + 1.0)); /*b/c we also have electrons!*/
+                  abund_renorm += btab->abund[j]; /* so that sum(abund) = 1 */
+            }
 
             /*m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );*/ 
-            m_ave = 10./(N_AVOG*m);
+//            m_ave = 10./(N_AVOG*m);
+
+            singlPrintf("p   : 0=%E 5=%E 21=%E   \nbtab: 0=%E 5=%E 21=%E\n",p->abund[0],
+                  p->abund[5], p->abund[21],btab->abund[0],btab->abund[5],btab->abund[21]);
 
 	    u = p->u; 
             eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
@@ -665,6 +668,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 	    /* Figure out good upper and lower limits for temp */
 	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+
+            singlPrintf("T: p= %E  btab=%E\n",p->temp, btab->temp);
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/

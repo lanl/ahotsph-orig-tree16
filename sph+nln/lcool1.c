@@ -118,13 +118,12 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     */
 
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
-    X_el[5] = 1.; /*hopefully this is O16*/
+    //X_el[5] = 1.; /*hopefully this is O16*/
 
     for( n = 0; n < NISO; n++) {/*sum individual isotopes*/
         /*exclude bare neutrons;in tablep/ionfracp index=0 is H*/
 	/* this also puts X_el in order of ascending Z, if an element
 	 * does not exist in abund[i], it is just zero in X_el */
-/*
         if(p->np[n] > 0) {
            X_el[ p->np[n]-1 ] += p->abund[n] * 
                p->rho * massCF / (lengthCF * lengthCF * lengthCF) *
@@ -135,7 +134,6 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
 	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]) * 
                (p->np[j]); 
         }
-*/
     }
 
     for ( n = 0; n < Nel; n++)	

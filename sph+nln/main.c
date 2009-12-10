@@ -291,6 +291,7 @@ main(int argc, char *argv[])
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts, Nel; 	/* for cooling tables */
 
+    //argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
     //openangle_wind=60.0; //added by CE
 
     MPMY_Init(&argc, &argv);
