@@ -297,6 +297,7 @@ main(int argc, char *argv[])
     MPMY_Init(&argc, &argv);
     singlPrintf("Welcome to the variable O() integrator running on %d procs\n",
 		MPMY_Nproc());
+
     csdfp = startup(argc, argv);
 
     SetBoundary(30); /* From integrate.c; if you change this, also change
@@ -675,18 +676,21 @@ main(int argc, char *argv[])
 	singlPrintf("float R0 = %f;\n", R0);
     }
 
-    /*IO of control file now done, start setting things up*/
-    init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/
-    /*init_CoolTable();*/ /*read in cooling curves and ion fraction tables*/
+    singlFflush();
+    if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
-    /*set up network for burn code*/
+    if(do_cooling) {
+        singlPrintf("reading in cooling tables .... ");
+        init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/
+        singlPrintf("successfully read in cooling functions\n");
+    }
+
+    /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
+        singlPrintf("building network library .... ");
         build_();
         singlPrintf("successfully built network library\n");
     }
-
-    singlFflush();
-    if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
     SetupTree(&thetree, NDIM,
 	      sizeof(body), sizeof(cell), TBODYSZ, sizeof(cofmdata),

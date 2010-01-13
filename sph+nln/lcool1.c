@@ -24,6 +24,8 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <Msgs.h>
+#include <singlio.h>
 #include "physics_sph.h"
 #include "units.h"
 #include "cool.h"
@@ -42,7 +44,7 @@
 
 /*arrays in C: array[row-index][col-index]*/
 
-double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
+double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, double rho, int Gridpts,int Nel,int extrapolate)
 {
     extern float **tablep;	/*global array with cooling values*/
     extern float **ionfracp;	/*global array with ion fractions*/
@@ -63,6 +65,7 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
+    //int nparr[Nel], nnarr[Nel];	/*array for A,N numbers for each isotope*/
     int n,m,N,index; 	/*some indices for looping and arrays*/
 	
     /*initialize things so I don't get stupid warnings all the time:*/
@@ -117,24 +120,26 @@ double calc_lcool1(SPHbody *p,double temp,int Gridpts,int Nel,int extrapolate)
       isotope fractions (mole fractions?)
     */
 
+    singlPrintf("cool: 1: %E   21: %E\n", abundarr[1], abundarr[21]);
+
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
-    //X_el[5] = 1.; /*hopefully this is O16*/
 
     for( n = 0; n < NISO; n++) {/*sum individual isotopes*/
         /*exclude bare neutrons;in tablep/ionfracp index=0 is H*/
 	/* this also puts X_el in order of ascending Z, if an element
 	 * does not exist in abund[i], it is just zero in X_el */
-        if(p->np[n] > 0) {
-           X_el[ p->np[n]-1 ] += p->abund[n] * 
-               p->rho * massCF / (lengthCF * lengthCF * lengthCF) *
-               N_AVOG / ((float)(p->nn[n] + p->np[n]));
-	   ndens += (double)(p->rho * massCF /(lengthCF*lengthCF*lengthCF) * 
-	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]); 
-	   n_e += (double)(p->rho * massCF /(lengthCF*lengthCF*lengthCF) * 
-	       N_AVOG / (double)(p->np[j] + p->nn[j]) * p->abund[j]) * 
-               (p->np[j]); 
+        if(nparr[n] > 0) {
+           X_el[ nparr[n]-1 ] += abundarr[n] * 
+               rho * massCF / (lengthCF * lengthCF * lengthCF) *
+               N_AVOG / ((float)(nnarr[n] + nparr[n]));
+	   ndens += (double)(rho * massCF /(lengthCF*lengthCF*lengthCF) * 
+	       N_AVOG / (double)(nparr[j] + nnarr[j]) * abundarr[j]); 
+	   n_e += (double)(rho * massCF /(lengthCF*lengthCF*lengthCF) * 
+	       N_AVOG / (double)(nparr[j] + nnarr[j]) * abundarr[j]) * 
+               (nparr[j]); 
         }
     }
+    singlPrintf("ndens= %E    n_e= %E\n", ndens, n_e);
 
     for ( n = 0; n < Nel; n++)	
     {

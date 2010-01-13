@@ -232,7 +232,7 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
     int nobj, gnobj;
     
     singlPrintf("SPHReading \"%s\"\n", name);
-    singlPrintf("if you get Y_el related error, check in file sphinit.c");
+    singlPrintf("if you get Y_el related error, check in file sphinit.c\n");
     sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(SPHbody),
 		    "mass", offsetof(SPHbody, mass), &massconf,
 		    "x", offsetof(SPHbody, pos[0]), &xconf,
