@@ -290,8 +290,9 @@ main(int argc, char *argv[])
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts, Nel; 	/* for cooling tables */
+    int status, done;
 
-    //argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
+    argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
     //openangle_wind=60.0; //added by CE
 
     MPMY_Init(&argc, &argv);
@@ -679,6 +680,7 @@ main(int argc, char *argv[])
     singlFflush();
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
+    /* read in necessary files on all processors */
     if(do_cooling) {
         singlPrintf("reading in cooling tables .... ");
         init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/

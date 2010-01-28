@@ -13,7 +13,7 @@ c..nrtype = number of reaction types(do not change without recoding)
 c..ndim   = dimension of composition arrays (include e- for Ye)
 c..set nnuc to the value given by Numnuc in burn.dir
       integer*4 nnuc, nreac, nrtype, ndim, wkreac, tsize, rhosize
-      parameter (nnuc=22, nreac=1000, nrtype=15, ndim=nnuc+1, 
+      parameter (nnuc=20, nreac=1000, nrtype=15, ndim=nnuc+1, 
      1           wkreac=500, tsize=13, rhosize=11)
 c      parameter (nnuc=177, nreac=6000, nrtype=15, ndim=nnuc+1, 
 c     1           wkreac=500, tsize=13, rhosize=11)

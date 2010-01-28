@@ -129,8 +129,8 @@ c..force values if new network (ag88m)
             endif
          enddo
 
-         write(*,'(a30,2(a5,1pe12.3))')'forcing values:','zpop',zpop,
-     1        'zhyd',zhyd
+c         write(*,'(a30,2(a5,1pe12.3))')'forcing values:','zpop',zpop,
+c     1        'zhyd',zhyd
 
 c..   adjust elemental helium to fit
          do n = 1, netsize
@@ -147,21 +147,21 @@ c..   adjust elemental helium to fit
      1        sum-1.0d0
 
 c..   mole fractions
-         do n = 1, netsize
-            y(n) = xx(n)/xa(n)
-         enddo
-         y(netsize+1) = 0.0d0
-         do n = 1, netsize
-            y(netsize+1) =  y(netsize+1) + y(n)*dble(lz(n))
-         enddo
-         write(*,*)'Ye =',y(netsize+1)
+c         do n = 1, netsize
+c            y(n) = xx(n)/xa(n)
+c         enddo
+c         y(netsize+1) = 0.0d0
+c         do n = 1, netsize
+c            y(netsize+1) =  y(netsize+1) + y(n)*dble(lz(n))
+c         enddo
+c         write(*,*)'Ye =',y(netsize+1)
 
 c..   spead over spatial grid 
-         do k = 2, kk+1
-            do n = 1, netsize+1
-               x(n,k) = y(n)
-            enddo
-         enddo
+c         do k = 2, kk+1
+c            do n = 1, netsize+1
+c               x(n,k) = y(n)
+c            enddo
+c         enddo
 
 c..   redefine net.rc values
          open(30,file='net.rc')
@@ -229,17 +229,15 @@ c..define solar metallicity from solar tables for consistency
       endif
 
 c..   define Ye
-      do k = 2, kk
          x(netsize+1,k) = 0.0d0
          do n = 1, netsize
             x(netsize+1,k) = x(netsize+1,k) + x(n,k)*dble(lz(n))
          enddo
          if( x(netsize+1,k) .lt. 0.0d0 
      1        .or. x(netsize+1,k) .gt. 1.0d0)then
-            write(*,*)' abinit: Ye error, k ', x(netsize+1,k), k
+            write(*,*)' abinit: Ye error ', x(netsize+1,k)
             stop'abinit: Ye error'
          endif
-      enddo
 
 c..adjust nucp array to control which nuclei are monitored.............
 

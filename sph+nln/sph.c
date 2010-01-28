@@ -1,5 +1,6 @@
 #include <math.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "physics_sph.h"
 #include "vop.h"
 #include "fastflpt.h"
@@ -548,7 +549,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
  * should be included in the burning. This is UGLY!! */
     int inNW[2][NISO+1]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28,0},/*Z*/
                       {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30,0}}; /*A-Z*/
-    double dt1_tot,udot_tot,dt1,udot,frac=0.1;
+    double dt1_tot,udot_tot,dt1,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dtd;
     int cycles=0,cycle_count=0;
@@ -649,11 +650,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             n = 0.;
             abund_renorm = 0;
             for ( j = 0; j < Nel; j++) {
-                  m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
-                  n += (double)(btab->rho * 
-                       (N_AVOG*m) / (double)(btab->np[j] + btab->nn[j]) * btab->abund[j] * 
-                       (double)(btab->np[j] + 1.0)); /*b/c we also have electrons!*/
-                  abund_renorm += btab->abund[j]; /* so that sum(abund) = 1 */
+                m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
+                n += (double)(btab->rho * 
+                     (N_AVOG*m) / (double)(btab->np[j] + btab->nn[j]) * btab->abund[j] * 
+                     (double)(btab->np[j] + 1.0)); /*b/c we also have electrons!*/
+                abund_renorm += btab->abund[j]; /* so that sum(abund) = 1 */
             }
 
             m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
@@ -668,50 +669,69 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
             btab->temp = p->temp;
 
-            //singlPrintf("----: 1: %E   21: %E\n", btab->abund[1], btab->abund[21]);
-
 	    /*this does the table look-up:
-	      0=use analytic outside table, 1=extrapolate (NR's linear polint)*/
+	      0=use analytic outside table, 1=extrapolate (NR's linear polint)
+              lcool contains energy lost as positive value */
 	    lcool = calc_lcool1(btab->abund,btab->np,btab->nn,p->rho,p->temp,Gridpts,Nel,0);
             /*lcool = analytic_cool(p->temp);*/
 
 	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-	    udot = 1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+	    udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+            if ( udot != udot ) udot = 0.0;
 
             /*determine if we need subcycling*/
-	    if ((abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
+	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
 	        dt1 = dt / 2.;
                 dt1_tot = 0.;
                 cycles = 2; /*total number of cycles*/
                 cycle_count = 0; /*keep track of cycles gone through*/
+		printf("subcycling %d times, u= %E  udot*dt1= %E\n",cycles,u*frac, udot*dt1);
+             } else {
+                cycles = 0;
+                cycle_count = 0;
+		//printf("no subcycling u= %E  udot= %E\n",u, lcool);
+             }
 
+             /* if so, then subcycle */ 
 	        while(cycle_count < cycles) { 
 
-		    if (abs(dt1 * udot) < u * frac) { 
-
+		printf("frac= %E  u*frac= %E  udot= %E  udot*dt1= %E\n",frac,u*frac,udot,udot*dt1);
+		    if ( abs( dt1 * udot ) < ( frac * u) ) { 
+                        printf("subcycling %d times, u= %E  udot*dt1= %E\n",cycles,u*frac, udot*dt1);
                         /*this sub-timestep*/
 		        dt1_tot += dt1;	
 		        u += udot * dt1;	
+	                eos_u = ((double)(u)) * ((double)(p->rho));
 		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+                        btab->temp = p->temp;
             /*update density - how? where? -CE: with rho=rho+drhodt*dt*/
-		        udot_tot += udot;
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(
                                 btab->abund,btab->np,btab->nn,p->rho,p->temp,Gridpts,Nel,0);
-	                udot = 1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+	                udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+                        if ( udot != udot ) udot = 0.0;
                         cycle_count++;
-		    } 
-		    else { /*no; subdivide further*/
-		        dt1=dt1/2.0; 
+		    } else { 
+		        dt1 = dt1/2.0; 
                         cycles = cycle_count + (cycles-cycle_count)*2; /*double remaining number of cycles*/
+                        printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", p->temp,dt1, cycles,u*frac,udot*dt1);
                     }
+		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? */
+ 		/* add condition that increases dt1 again if udot*dt1 < minfrac*u */
+                    /* only if too small && less that dt && even subcycle */
+/*
+                    if ((abs(dt1 * udot) < u * minfrac) && (dt1 < dt) && (!(cycle_count % 2))) {
+                        dt1=dt1*2;
+                        cycles = cycle_count + (int)((cycles-cycle_count)/2);
+                        printf("increasing dt: %E, %d\n", dt1, cycles);
+                    }
+*/
                 }
-                singlPrintf("subcycles: %d  %d\n",cycle_count, cycles);
-            }
+           /*     printf("subcycles: %d  %d\n",cycle_count, cycles);*/
+            
 
-/*CHECK: (p->u - u) = udot_tot*dt......... right??*/
-
+            btab->temp = p->temp;
             p->udot += (u - p->u) / dt;
 
 	}

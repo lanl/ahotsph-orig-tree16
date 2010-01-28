@@ -120,8 +120,6 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
       isotope fractions (mole fractions?)
     */
 
-    singlPrintf("cool: 1: %E   21: %E\n", abundarr[1], abundarr[21]);
-
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
 
     for( n = 0; n < NISO; n++) {/*sum individual isotopes*/
@@ -139,7 +137,6 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
                (nparr[j]); 
         }
     }
-    singlPrintf("ndens= %E    n_e= %E\n", ndens, n_e);
 
     for ( n = 0; n < Nel; n++)	
     {
