@@ -19,7 +19,7 @@ c..and echo to standard i/o
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
 c..from reaction rates available
-      idebug = 0
+c      idebug = 1
       call getfkt(idebug)
 
       write(*,*)'return from getfkt'
@@ -114,7 +114,7 @@ c..   find multiple reaction lines per reaction link
       include 'cburn'
 
       integer*4 i, j, k
-      real*8 i1, i2, i3, i4, i5, i6, tmpdbl
+      real*8 i1, i2, i3, i4, i5, i6
 c..   irev  is the index of the reverse rate
 c..   iline is the ordering number for subrates of a given reaction
 c..   (this includes nonresonant and resonant rates)
@@ -124,9 +124,7 @@ c..   isum  is a dummy variable for counting
 c---------------------------------------------------------------
 c..set up A=Z+N in double precision
       do i = 1, itot
-c         anuc(i) = dble( nz(i) + nn(i) ) compiler doesn't understand dble?
-         tmpdbl = nz(i) + nn(i)
-         anuc(i) = tmpdbl
+         anuc(i) = dble( nz(i) + nn(i) )
       enddo
 c..find multiple lines
       do k = 1, nreac

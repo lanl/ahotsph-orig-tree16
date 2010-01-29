@@ -984,6 +984,7 @@ main(int argc, char *argv[])
 	    singlPrintf("FindRho\n");
 	    WalkNT(&SPHtree);
 	    WalkTerminate();
+            singlPrintf("updating final ....");
 	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1]);
             singlPrintf("updated final\n");
 	    /*update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);*/

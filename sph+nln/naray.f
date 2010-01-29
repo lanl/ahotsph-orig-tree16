@@ -9,8 +9,8 @@
       integer*4 idebug, i, j, k, l, k1, k2, inv, iflag
       character*5 blank
 
-      real*8 sparse_tmp(nnuc*nnuc)
-      integer*4 iloc_tmp(nnuc*nnuc),jloc_tmp(nnuc*nnuc)
+      real*8 sparse_tmp(nnuc*nnuc*10)
+      integer*4 iloc_tmp(nnuc*nnuc*10),jloc_tmp(nnuc*nnuc*10)
 c..set up interger identification of reactants
 
 c..1-->1 reaction (deck=1)
@@ -30,6 +30,8 @@ c..zero nrr array and write nonzero indexes for real reactants
           nrr(j,k) = 0
         enddo
       enddo
+
+      idebug = 1
       
       do j = 1, nreac
           iloc(j) = 0
@@ -340,7 +342,7 @@ c..3-->1 (and 2) reaction (deck=8)
             ivect(nlinks) = iloc(nlinks)
             jvect(nlinks) = jloc(nlinks)
             if(iloc(nlinks) .ne. jloc(nlinks))then
-               write(*,*)iloc(nlinks)
+               write(*,*)iloc(nlinks),jloc(nlinks),nvecs,nlinks
                sparse_dfdy(nlinks) = 1.0d-10
             endif
          endif

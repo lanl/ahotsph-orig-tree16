@@ -547,8 +547,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double molfrac[Nel+1]; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
-    int inNW[2][NISO+1]={{0,1,2,6,7,8,10,12,14,15,16,18,20,20,22,24,26,26,26,27,28,28,0},/*Z*/
-                      {1,0,2,6,7,8,10,12,14,16,16,18,20,24,22,24,26,30,32,29,28,30,0}}; /*A-Z*/
+    int inNW[2][NISO+1]={{0,1,2,6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0},/*Z*/
+                         {1,0,2,6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,0}}; /*A-Z*/
     double dt1_tot,udot_tot,dt1,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dtd;
@@ -614,31 +614,37 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         /*prepare abundance array passed into network - more ugliness!*/
             for(i=0;i<Nel;i++){
                 for(j=0;j<NISO;j++){
-                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i]=p->abund[j]/((double)(p->np[j]+p->nn[j]));
+                    if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
+                        molfrac[i]=btab->abund[j]/((double)(btab->np[j]+btab->nn[j]));
+                        printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
                     }   
                 }   
             }
-            molfrac[NISO] = p->Y_el;
+            molfrac[NISO] = btab->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
             temp = (double)p->temp;
             rho = (double)p->rho;
             dtd = (double)dt;
+            printf("calling solven ...... ");
             solven_(&dtd,&temp,&rho,molfrac,&deltah);
-            p->udot += deltah * (t*t) / (l*l) / dt;
+            printf("called solven\n");
+            btab->udot += deltah * (t*t) / (l*l) / dt;
+            printf("udot: %E   \n",btab->udot);
             
 
             /*update composition of particle from updated abundance array*/
             for(i=0;i<Nel;i++){
                 for(j=0;j<NISO;j++){
-                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i]*((double)(p->np[j]+p->nn[j]));
+                    if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
+                        btab->abund[j] = molfrac[i]*((double)(btab->np[j]+btab->nn[j]));
                     }   
                 }
             }
             p->Y_el = molfrac[NISO];
+            printf("Ye = %E\n",molfrac[NISO]);
         }  
+        printf("done burning\n");
 
 
 /*also can calculate rho,n of particle?*/
@@ -681,9 +687,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
             /*determine if we need subcycling*/
 	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
-	        dt1 = dt / 2.;
+	        dt1 = dt / 4.;
                 dt1_tot = 0.;
-                cycles = 2; /*total number of cycles*/
+                cycles = 4; /*total number of cycles*/
                 cycle_count = 0; /*keep track of cycles gone through*/
 		printf("subcycling %d times, u= %E  udot*dt1= %E\n",cycles,u*frac, udot*dt1);
              } else {
@@ -713,11 +719,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                         if ( udot != udot ) udot = 0.0;
                         cycle_count++;
 		    } else { 
-		        dt1 = dt1/2.0; 
-                        cycles = cycle_count + (cycles-cycle_count)*2; /*double remaining number of cycles*/
+		        dt1 = dt1/4.0; 
+                        cycles = cycle_count + (cycles-cycle_count)*4; /*double remaining number of cycles*/
                         printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", p->temp,dt1, cycles,u*frac,udot*dt1);
                     }
-		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? */
+		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? - very! */
  		/* add condition that increases dt1 again if udot*dt1 < minfrac*u */
                     /* only if too small && less that dt && even subcycle */
 /*

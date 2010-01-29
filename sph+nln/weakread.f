@@ -13,7 +13,8 @@ c..   defined in dimenfile      parameter(tsize = 13, rhosize = 11)
       real*8 ratin(tsize,rhosize), 
      1       enuin(tsize,rhosize)
       
-      character*72 null
+      character*72 cdumblong
+      character*64 cdumbshort
       character*5 ci1,ci2
       character*4 clrat
 c-----------------------------------------------------------------
@@ -26,16 +27,18 @@ c..loop over decks 1 and 2 which have weak rates
 
 c..   location in netweak data set
             rloc = iffn(k) 
+            write(*,*)"about to open netweak"
 c..   open file starts at the beginning
             open(19,file='netweak')
-
+            write(*,*)"netweak open with rloc=",rloc
             do i = 1, rloc-1
-               read(19,*)null
+               read(19,'(a64)')cdumbshort
+               write(*,*)i,rloc,cdumbshort
                do j = 1,32
-                  read(19,*)null
+                  read(19,'(a72)')cdumblong
                enddo
             enddo   
-            read(19,*)null
+            read(19,'(a64)')cdumbshort
 
 c..   weak rate and neutrino energy emission arrays (in log10)
 c..   netweak data is listed as
