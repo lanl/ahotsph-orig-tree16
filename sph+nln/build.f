@@ -49,7 +49,7 @@ c..   setup identifier integers for reactants
       call naray(idebug,irank)
 
 c..   find inverse reactions
-      call inverses
+      call inverses(irank)
 
 c     .weak interaction data
       call weakread
@@ -93,7 +93,7 @@ c..si28
 
       nnxdt = 9
 
-      write(*,*)'BUILD: ending, called ',
+      if(irank.eq.0) write(*,*)'BUILD: ending, called ',
      1     'GETFKT,MASSES,NARAY,INVERSES'
 
       return
@@ -114,6 +114,8 @@ c..   find multiple reaction lines per reaction link
       include 'ceoset'
       include 'cburn'
 
+      integer*4 irank
+
       integer*4 i, j, k
       real*8 i1, i2, i3, i4, i5, i6
 c..   irev  is the index of the reverse rate
@@ -131,7 +133,7 @@ c..find multiple lines
       do k = 1, nreac
          iline(k) = 0
       enddo
-      write(*,*)
+      if(irank.eq.0) write(*,*)
      1     'INVERSES: finding rates with more than one reaction line'
 
 c..deck 1: 1-->1
@@ -151,7 +153,7 @@ c..repeat
 c         write(*,'(i5,2a6,2i5,a5,f8.3)')k,rname(1,k),rname(2,k),
 c     1           iline(k),iffn(k),rlkh(k),qval(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 1'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 1'
 
 c..deck 2: 1-->2
       iline(k1deck(2)) = 1
@@ -171,7 +173,7 @@ c..repeat
 c         write(*,'(i5,3a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 2'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 2'
 c..deck 3: 1-->3
       iline(k1deck(3)) = 1
       do k = k1deck(3)+1,k2deck(3)
@@ -192,7 +194,7 @@ c..new rate
 c         write(*,'(i5,4a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        rname(4,k),iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 3'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 3'
 
 c..deck 4: 2-->1
       iline(k1deck(4)) = 1
@@ -213,7 +215,7 @@ c..new rate
 c         write(*,'(i5,3a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 4'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 4'
 
 c..deck 5: 2-->2
       iline(k1deck(5)) = 1
@@ -235,7 +237,7 @@ c..new rate
 c         write(*,'(i5,4a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        rname(4,k),iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 5'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 5'
 
 
 c..deck 6: 2-->3
@@ -259,7 +261,7 @@ c..new rate
 c         write(*,'(i5,5a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        rname(4,k),rname(5,k),iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 6'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 6'
 
 c..deck 7: 2-->4
       iline(k1deck(7)) = 1
@@ -283,7 +285,7 @@ c..new rate
 c         write(*,'(i5,6a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        rname(4,k),rname(5,k),rname(6,k),iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 7'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 7'
 
 c..deck 8: 3-->1 and 2
       iline(k1deck(8)) = 1
@@ -306,7 +308,7 @@ c..new rate
 c         write(*,'(i5,5a6,i5)')k,rname(1,k),rname(2,k),rname(3,k),
 c     1        rname(4,k),rname(5,k),iline(k)
       enddo
-      write(*,*)isum,' multiline rates in deck 8'
+      if(irank.eq.0) write(*,*)isum,' multiline rates in deck 8'
 
 c.................................................................
 c..find inverse rates
@@ -467,27 +469,31 @@ c     2                    j,irev(j),iline(j),iline(k)
          enddo
       enddo
 
-      write(*,*)'These rates do not have inverses in netsu or netweak'
-      write(*,'(10x,2a5,6a6,5x,a6,2a2,2a5)')'j','deck','i1','i2',
+      if(irank.eq.0) write(*,*)
+     1   'These rates do not have inverses in netsu or netweak'
+      if(irank.eq.0) write(*,'(10x,2a5,6a6,5x,a6,2a2,2a5)')
+     1   'j','deck','i1','i2',
      1     'i3','i4','i5','i6','rlkh ','vw','rn','irev',
      2     'iffn'
 c..   seek unmatched rates
       do j  = k1deck(1),k2deck(8)
          if( irev(j) .eq. 0 )then
-         write(*,'(10x,2i5,6a6,5x,a6,2a2,2i5)')j,ideck(j),
+         if(irank.eq.0) write(*,'(10x,2i5,6a6,5x,a6,2a2,2i5)')
+     1      j,ideck(j),
      1        (rname(i,j),i=1,6),rlkh(j),rvw(j),rnr(j),
      2        irev(j),iffn(j)
          endif
       enddo
-      write(*,'(10x,2a5,6a6,5x,a6,2a2,2a5)')'j','deck','i1','i2',
+      if(irank.eq.0) write(*,'(10x,2a5,6a6,5x,a6,2a2,2a5)')
+     1   'j','deck','i1','i2',
      1     'i3','i4','i5','i6','rlkh ','vw','rn','irev',
      2     'iffn'
       i = 0
       do j = 1, nreac
          if( irev(j) .ne. 0 )i=i+1
       enddo
-      write(*,*)i,' reactions have inverses'
-      write(*,*)'leaving ',k2deck(8)-i,
+      if(irank.eq.0) write(*,*)i,' reactions have inverses'
+      if(irank.eq.0) write(*,*)'leaving ',k2deck(8)-i,
      1     ' extra lone rates listed above, which do not'
       
 
