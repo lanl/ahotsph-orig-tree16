@@ -52,7 +52,7 @@ c..   find inverse reactions
       call inverses(irank)
 
 c     .weak interaction data
-      call weakread
+      call weakread(irank)
 
 c..set up identification for nuclei to use in tycho timestep control
       do j = 1, itot

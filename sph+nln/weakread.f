@@ -1,4 +1,4 @@
-      subroutine weakread
+      subroutine weakread(irank)
 
 c..   read netweak and set up arrays interpolation in t9, rho
 
@@ -7,6 +7,8 @@ c..   read netweak and set up arrays interpolation in t9, rho
       include 'dimen'
       include 'crate'
       include 'comcsolve'
+
+      integer*4 irank
 
       integer*4 rloc, i,j,k,l, kup, klo, rdex
 c..   defined in dimenfile      parameter(tsize = 13, rhosize = 11)
@@ -27,13 +29,13 @@ c..loop over decks 1 and 2 which have weak rates
 
 c..   location in netweak data set
             rloc = iffn(k) 
-            write(*,*)"about to open netweak"
+            if(irank.eq.0) write(*,*)"about to open netweak"
 c..   open file starts at the beginning
             open(19,file='netweak')
-            write(*,*)"netweak open with rloc=",rloc
+            if(irank.eq.0) write(*,*)"netweak open with rloc=",rloc
             do i = 1, rloc-1
                read(19,'(a64)')cdumbshort
-               write(*,*)i,rloc,cdumbshort
+c               if(irank.eq.0) write(*,*)i,rloc,cdumbshort
                do j = 1,32
                   read(19,'(a72)')cdumblong
                enddo
