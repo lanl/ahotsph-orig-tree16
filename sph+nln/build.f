@@ -30,7 +30,7 @@ ccccccccccccccccccccccc
       
 c..actual size of network (number of nuclei)
       netsize = itot
-      call abinit
+      call abinit(irank)
       
 c..setup binding energies and 2J+1 factors
       call masses(qq,w,itot)

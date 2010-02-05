@@ -1,9 +1,11 @@
-      subroutine abinit
+      subroutine abinit(irank)
 
       implicit none
 
       include 'dimen'
       include 'comod'
+
+      integer*4 irank
 
       real*8 y(ndim),xx(ndim)
 
@@ -45,19 +47,20 @@ c..special nuclei to be used in diagnostics and i/o
 
 c-------------------------------------------------------------------
 
-      write(*,*)'ENTERING ABINIT, netsize ',netsize
+      if(irank.eq.0) write(*,*)'ENTERING ABINIT, netsize ',netsize
 ccccccccccccccccccccccccccccc
 
 c..   resource file for analysis programs
       inquire(file='net.rc',exist=tobe)
       if( .not. tobe )then
-         write(*,*)'abinit: no net.rc'
+         if(irank.eq.0) write(*,*)'abinit: no net.rc'
          newnet = 1
       endif
 
       if( newnet .ne. 0 )then
 
-         write(*,*)"abinit: newnet =",newnet,', redefining abundances'
+         if(irank.eq.0) write(*,*)
+     1      "abinit: newnet =",newnet,', redefining abundances'
 
          do j = 1, netsize
             cnuc(j) = xid(j)
@@ -106,7 +109,8 @@ c..   always choose H1 and He4
             if( xx(n) .gt. 0.0d0 .and. j+1 .le. nucpg )then
                j = j+1
                nucp(j) = n
-               write(*,'(5i5,a5,1p8e12.3)')j,n,nucp(j),lz(n),ln(n),
+               if(irank.eq.0) write(*,'(5i5,a5,1p8e12.3)')
+     1              j,n,nucp(j),lz(n),ln(n),
      1              cnuc(n),xx(n)
             endif
          enddo
@@ -155,7 +159,7 @@ c..   mole fractions
          do n = 1, netsize
             y(netsize+1) =  y(netsize+1) + y(n)*dble(lz(n))
          enddo
-         write(*,*)'Ye =',y(netsize+1)
+         if(irank.eq.0) write(*,*)'Ye =',y(netsize+1)
 
 c..   spead over spatial grid 
 c         do k = 2, kk+1
@@ -179,12 +183,13 @@ c..   by many routines
 
          close(30)
 
-         write(*,*)'abinit: new network and abundances defined'
+         if(irank.eq.0) write(*,*)
+     1      'abinit: new network and abundances defined'
          newnet = 0
 
       else
 
-         write(*,*)'abinit: checking netrc'
+         if(irank.eq.0) write(*,*)'abinit: checking netrc'
 
          open(30,file='net.rc',status='old')
          ibu = 1
@@ -194,12 +199,15 @@ c..initializing qex and solarx
          if( izbu(ibu) .ne. nz(ibu) .or.
      1        inbu(ibu) .ne. nn(ibu) )then
 c..   different net.rc
-            write(*,*)'net.rc'
-            write(*,'(3i5,a5)')ibu,izbu(ibu),inbu(ibu),cbu
-            write(*,*)'abinit'
-            write(*,'(3i5,a5)')ibu,nz(ibu),nn(ibu),xid(ibu)
-            write(*,*)'abinit: different net.rc'
-            write(*,*)'rm net.rc or change its name, and rerun'
+            if(irank.eq.0) write(*,*)'net.rc'
+            if(irank.eq.0) write(*,'(3i5,a5)')
+     1         ibu,izbu(ibu),inbu(ibu),cbu
+            if(irank.eq.0) write(*,*)'abinit'
+            if(irank.eq.0) write(*,'(3i5,a5)')
+     1         ibu,nz(ibu),nn(ibu),xid(ibu)
+            if(irank.eq.0) write(*,*)'abinit: different net.rc'
+            if(irank.eq.0) write(*,*)
+     1         'rm net.rc or change its name, and rerun'
             stop'abinit: reading net.rc'
          endif
          if( izbu(ibu) .eq. 2 .and. inbu(ibu) .eq. 2 )goto 101
@@ -225,7 +233,8 @@ c..define solar metallicity from solar tables for consistency
             endif
          enddo
 
-         write(*,*)'abinit: net.rc exists and is left unchanged'
+         if(irank.eq.0) write(*,*)
+     1      'abinit: net.rc exists and is left unchanged'
          close(30)
       endif
 
@@ -237,7 +246,8 @@ c..   define Ye
          enddo
          if( x(netsize+1,k) .lt. 0.0d0 
      1        .or. x(netsize+1,k) .gt. 1.0d0)then
-            write(*,*)' abinit: Ye error, k ', x(netsize+1,k), k
+            if(irank.eq.0) write(*,*)
+     1         ' abinit: Ye error, k ', x(netsize+1,k), k
             stop'abinit: Ye error'
          endif
       enddo
@@ -254,19 +264,21 @@ c..find special nuclei
                go to 110
             endif
          enddo
-         write(*,'(a8,i5,a3,i5,a3,i5,a15)')'nucleus',i,
+         if(irank.eq.0) write(*,'(a8,i5,a3,i5,a3,i5,a15)')'nucleus',i,
      1        'Z',nspz(i),'N',nspn(i),'not found'
  110     continue
       enddo
-      write(*,*)j
+      if(irank.eq.0) write(*,*)j
       if( j .eq. nsp )then
          do i = 1, nsp
-               write(*,'(3i5,a5,1p8e12.3)')i,nspz(i),nspn(i),
+               if(irank.eq.0) write(*,'(3i5,a5,1p8e12.3)')
+     1            i,nspz(i),nspn(i),
      1              cnuc(nucp(i))
          enddo
-         write(*,*)'ABINIT: All special nuclei found'
+         if(irank.eq.0) write(*,*)'ABINIT: All special nuclei found'
       else
-         write(*,*)'ABINIT: ',nsp-mnucpg,'  special nuclei NOT found'
+         if(irank.eq.0) write(*,*)
+     1      'ABINIT: ',nsp-mnucpg,'  special nuclei NOT found'
       endif
 
 c      j = mnucpg
@@ -285,11 +297,11 @@ c..   avoid duplication
  120     continue
       enddo
 c..j has been increased to include some stable isotopes, up to nucpg=60
-      write(*,*)j,' nuclei chosen'
-      write(*,'(20a6)')(cnuc(nucp(i)),i=1, j)
+      if(irank.eq.0) write(*,*)j,' nuclei chosen'
+      if(irank.eq.0) write(*,'(20a6)')(cnuc(nucp(i)),i=1, j)
 
 c..reorder by charge and atomic number
-      write(*,*)'begin reordering'
+      if(irank.eq.0) write(*,*)'begin reordering'
       do n = 1, j
          nscr(n) = nucp(n)
       enddo
@@ -306,13 +318,13 @@ c..switch n and n+1 in nscr (index array)
             endif
          enddo
          if( itno .le. 0 )then
-            write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
+            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
             goto 130
          endif
       enddo
  130  continue
       jz = j-1
-      write(*,*)'reordered in Z in ',jz,' steps'
+      if(irank.eq.0) write(*,*)'reordered in Z in ',jz,' steps'
 
       do j = 1, nucpg
          itno = 0
@@ -329,18 +341,18 @@ c..switch n and n+1 in nscr (index array)
          enddo
 
          if( itno .le. 0 )then
-            write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
+            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
             goto 140
          endif
       enddo
  140  continue
       ja = j-1
-      write(*,*)'reordered in A in ',ja,' steps'
+      if(irank.eq.0) write(*,*)'reordered in A in ',ja,' steps'
 
       do n = 1, nucpg
          nucp(n) = nscr(n)
       enddo
-      write(*,*)'replaced original by reordered index'
+      if(irank.eq.0) write(*,*)'replaced original by reordered index'
 c..   reordering finished
 
       if( jz .ne. 0 .or. ja .ne. 0 )then
@@ -356,10 +368,11 @@ c..   by many routines
             write(30,'(10i5)')(nucp(i),i=j,j+9)
          enddo
          close(30)
-         write(*,*)'net.rc adjusted for new nucp index array'
+         if(irank.eq.0) write(*,*)
+     1      'net.rc adjusted for new nucp index array'
       endif
 
-      write(*,*)'LEAVING ABINIT'
+      if(irank.eq.0) write(*,*)'LEAVING ABINIT'
       return
       end
 
