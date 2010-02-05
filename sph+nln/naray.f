@@ -1,10 +1,12 @@
-      subroutine naray(idebug)
+      subroutine naray(idebug,irank)
 
       implicit none
 
       include 'dimen'
       include 'crate'
       include 'comcsolve'
+
+      integer*4 irank
 
       integer*4 idebug, i, j, k, l, k1, k2, inv, iflag
       character*5 blank
@@ -71,7 +73,7 @@ c..1-->1 reaction (deck=1)
 
       if( idebug .ne. 0 )then
       do k = k1,k2
-        write(*,'(i5,a5,2x,a5,2x,a5,5x,a4,2a1)') k,
+       if(irank.eq.0)  write(*,'(i5,a5,2x,a5,2x,a5,5x,a4,2a1)') k,
      1   xid(nrr(1,k))," --> ",
      1   xid(nrr(2,k)),rlkh(k),rnr(k),rvw(k)
       enddo
@@ -102,7 +104,7 @@ c..1-->2 reaction (deck=2)
 
       if( idebug .ne. 0 )then
       do k = k1,k2
-        write(*,'(i5,4(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,4(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k))," --> ",
      1   xid(nrr(2,k)),xid(nrr(3,k)),rlkh(k),rnr(k),rvw(k)
       enddo
@@ -134,7 +136,7 @@ c..1-->3 reaction (deck=3)
 
       if( idebug .ne. 0 )then
       do k = k1,k2
-        write(*,'(i5,5(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,5(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k))," --> ",
      1   xid(nrr(2,k)),xid(nrr(3,k)),xid(nrr(4,k)),
      1   rlkh(k),rnr(k),rvw(k)
@@ -167,7 +169,7 @@ c..2-->1 reaction (deck=4)
 
       if( idebug .ne. 0 )then
       do k = k1,k2
-        write(*,'(i5,4(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,4(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k)),xid(nrr(2,k))," --> ",
      1   xid(nrr(3,k)),
      1   rlkh(k),rnr(k),rvw(k)
@@ -200,7 +202,7 @@ c..2-->2 reaction (deck=5)
 c
       if( idebug .ne. 0 )then
       do k = k1,k2
-        write(*,'(i5,5(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,5(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k)),xid(nrr(2,k))," --> ",
      1   xid(nrr(3,k)),xid(nrr(4,k)),
      1   rlkh(k),rnr(k),rvw(k)
@@ -232,7 +234,7 @@ c..2-->3 reaction (deck=6)
 
         if( idebug .ne. 0 )then
         do k = k1,k2
-          write(*,'(i5,6(a5,2x),3x,a4,2a1)') k,
+          if(irank.eq.0) write(*,'(i5,6(a5,2x),3x,a4,2a1)') k,
      1     xid(nrr(1,k)),xid(nrr(2,k))," --> ",
      1     xid(nrr(3,k)),xid(nrr(4,k)),xid(nrr(5,k)),
      1     rlkh(k),rnr(k),rvw(k)
@@ -267,7 +269,7 @@ c..2-->4 reaction (deck=7)
 
       if( idebug .ne. 0 )then
       do k = k1,k2
-        write(*,'(i5,7(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,7(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k)),xid(nrr(2,k))," --> ",
      1   xid(nrr(3,k)),xid(nrr(4,k)),xid(nrr(5,k)),xid(nrr(6,k)),
      1   rlkh(k),rnr(k),rvw(k)
@@ -342,7 +344,6 @@ c..3-->1 (and 2) reaction (deck=8)
             ivect(nlinks) = iloc(nlinks)
             jvect(nlinks) = jloc(nlinks)
             if(iloc(nlinks) .ne. jloc(nlinks))then
-               write(*,*)iloc(nlinks),jloc(nlinks),nvecs,nlinks
                sparse_dfdy(nlinks) = 1.0d-10
             endif
          endif
@@ -356,12 +357,12 @@ c..3-->1 (and 2) reaction (deck=8)
       if( idebug .ne. 0 )then
       do k = k1,k2
         if( nrr(5,k) .gt. 0 )then
-        write(*,'(i5,6(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,6(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k)),xid(nrr(2,k)),xid(nrr(3,k))," --> ",
      1   xid(nrr(4,k)),xid(nrr(5,k)),
      1   rlkh(k),rnr(k),rvw(k)
         else
-        write(*,'(i5,5(a5,2x),3x,a4,2a1)') k,
+        if(irank.eq.0) write(*,'(i5,5(a5,2x),3x,a4,2a1)') k,
      1   xid(nrr(1,k)),xid(nrr(2,k)),xid(nrr(3,k))," --> ",
      1   xid(nrr(4,k)),
      1   rlkh(k),rnr(k),rvw(k)
@@ -374,21 +375,22 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccc
       if( inv .eq. 0 )return
 cccccccccccccccccccccccccccccccccccccccccccccccccccccc
 c..identify inverse rates
-      write(*,*)'deck = 1'
+      if(irank.eq.0) write(*,*)'deck = 1'
       inv = 0
       do k = k1deck(1), k2deck(1)
          do i = k1deck(1), k2deck(1)
             if( nrr(1,k) .eq. nrr(2,i) .and. 
      1           nrr(2,k) .eq. nrr(1,i) )then
-               write(*,'(i5,5x,6i5,5x,i5,5x,6i5)') k,(nrr(j,k),j=1,6),
+               if(irank.eq.0) write(*,'(i5,5x,6i5,5x,i5,5x,6i5)') 
+     1            k,(nrr(j,k),j=1,6),
      1             i, (nrr(j,i), j=1,6 )
                inv = inv + 1
             endif
          enddo
       enddo
-      write(*,*)inv,' inverses found in deck 1'
+      if(irank.eq.0) write(*,*)inv,' inverses found in deck 1'
 
-      write(*,*)'deck = 2 and deck = 4'
+      if(irank.eq.0) write(*,*)'deck = 2 and deck = 4'
 
       inv = 0
       do k = k1deck(2), k2deck(2)
@@ -401,10 +403,13 @@ c       do k = 139, 143
                
                if( rnr(k) .eq. rnr(i) )then
                   if( rcoef(5,k) .eq. rcoef(5,i) )then
-                     write(*,'(1p7e12.4)')(rcoef(j,k),j=1,7)
-                     write(*,'(1p7e12.4)')(rcoef(j,i),j=1,7)
+                     if(irank.eq.0) write(*,'(1p7e12.4)')
+     1                  (rcoef(j,k),j=1,7)
+                     if(irank.eq.0) write(*,'(1p7e12.4)')
+     1                  (rcoef(j,i),j=1,7)
                      inv = inv + 1
-                     write(*,'(i5,2x,2(i5,4(a5,2x),3x,a4,2a1,10x))') 
+                     if(irank.eq.0) write(*,
+     1                  '(i5,2x,2(i5,4(a5,2x),3x,a4,2a1,10x))') 
      1                    inv,k,
      1                    xid(nrr(1,k))," --> ",xid(nrr(2,k)),
      1                    xid(nrr(3,k)),
@@ -418,14 +423,14 @@ c       do k = 139, 143
 
          enddo
       enddo
-      write(*,*)inv,' inverses found in deck 2'
-      write(*,*)'deck 2 ',k2deck(2)-k1deck(1)+1
-      write(*,*)'deck 4 ',k2deck(4)-k1deck(4)+1
+      if(irank.eq.0) write(*,*)inv,' inverses found in deck 2'
+      if(irank.eq.0) write(*,*)'deck 2 ',k2deck(2)-k1deck(1)+1
+      if(irank.eq.0) write(*,*)'deck 4 ',k2deck(4)-k1deck(4)+1
 
 
-      write(*,*)ndeck
-      write(*,*)k1deck
-      write(*,*)k2deck
+      if(irank.eq.0) write(*,*)ndeck
+      if(irank.eq.0) write(*,*)k1deck
+      if(irank.eq.0) write(*,*)k2deck
 
 
 

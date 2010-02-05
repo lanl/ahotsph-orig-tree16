@@ -33,7 +33,7 @@ c..actual size of network (number of nuclei)
       call abinit(irank)
       
 c..setup binding energies and 2J+1 factors
-      call masses(qq,w,itot)
+      call masses(qq,w,itot,irank)
 c..   save mass excesses for cburn
       do n = 1, ndim
          qex(n) = qq(n)
@@ -46,7 +46,7 @@ c..   initialize reaction rate array
       enddo
 
 c..   setup identifier integers for reactants
-      call naray(idebug)
+      call naray(idebug,irank)
 
 c..   find inverse reactions
       call inverses

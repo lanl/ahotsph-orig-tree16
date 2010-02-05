@@ -1,10 +1,12 @@
-      subroutine masses(qq,w,itot)
+      subroutine masses(qq,w,itot,irank)
       implicit none
 
 c..sets up the binding energies using Friedel's NETWInV file.
 c..searches for n,p,alpha and puts at end of list
 
       include 'dimen'
+
+      integer*4 irank
 
       character*5  nuc(nnuc)
       character*5  cdummy
@@ -23,7 +25,8 @@ c--------------------------------------------------------------
 
       inquire(file='netwinv',exist=tobe)
       if( .not. tobe )then
-         write(*,*)'masses.f: no netwinv file in this directory'
+         if(irank.eq.0) write(*,*)
+     1      'masses.f: no netwinv file in this directory'
       endif
 
       open (12, file='netwinv', status='old')
@@ -62,7 +65,7 @@ c..     update count for reading next line
 c..     All nuclei read
  2000 inuc = i-1
 
-      print *,'MASSES:', inuc, ' nuclei found'
+      if(irank.eq.0) print *,'MASSES:', inuc, ' nuclei found'
 
 c..construct binding energy from mass excesses
 c..use mass excesses
