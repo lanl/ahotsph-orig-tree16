@@ -1,4 +1,4 @@
-      subroutine getfkt(ibug)
+      subroutine getfkt(ibug,irank)
 
 c..reads Thielemann file format
 c..identifies symbol in Z,N
@@ -11,6 +11,8 @@ c---------------------------------------------------------------
       implicit real*8 (a-h,o-z)
 
       include 'dimen'
+
+      integer*4 irank
 
 c..these values apply to fkt reaclib 1988
 c      parameter(niso = 806)
@@ -46,7 +48,7 @@ c............................................
 c..get isotope names, Z and N
       inquire(file='isotope.lib',exist=tobe)
       if( .not. tobe )then
-         write(*,*)'No file isotope.lib found'
+         if(irank.eq.0) write(*,*)'No file isotope.lib found'
          stop'getfkt.f'
       endif
       open(12,file='isotope.lib')
@@ -58,7 +60,7 @@ c      write(*,'(a5,2i4)')inam(i),isoz(i),ison(i)
       goto 10
 11    continue
       i = i-1
-      write(*,*)'isotope.lib read,',i,' isotopes'
+      if(irank.eq.0) write(*,*)'isotope.lib read,',i,' isotopes'
 c      write(3,*)'isotope.lib read,',i,' isotopes'
       close(12)
 
@@ -138,7 +140,8 @@ c--deck 1--------------------------------------------
          ncharge = izr(2) - izr(1)
          nnucleon = ncharge +  inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
+          if(irank.eq.0) write(*,
+     1        '(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        ncharge,nnucleon,lkh,nr,vw
@@ -149,11 +152,11 @@ c--deck 1--------------------------------------------
         endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype,kk
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype,kk
            stop
          endif
          if( ncharge .eq. 0 )then
-           write(*,*)'charge nonconservation',ktype,kk
+           if(irank.eq.0) write(*,*)'charge nonconservation',ktype,kk
            stop
          endif
          if( ncharge .eq. 1 )then
@@ -161,8 +164,9 @@ c..check reaction identities
             if( lkh .ne. ' ffn' )then
              if( lkh .ne. 'bkmo' )then
               if( lkh .ne. 'mo92' )then
-              write(*,*)'error in beta decay'
-              write(*,'(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
+              if(irank.eq.0) write(*,*)'error in beta decay'
+              if(irank.eq.0) write(*,
+     1            '(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
      1            rnam(1),izr(1),inr(1),id(1),
      1            rnam(2),izr(2),inr(2),id(2),
      1            ncharge,nnucleon,lkh,nr,vw
@@ -180,8 +184,9 @@ c             stop
                 if( lkh .ne. ' ffn')then
                  if( lkh .ne. 'bkmo' )then
                   if( lkh .ne. 'btyk' )then
-                  write(*,*)'error in positron decay'
-                  write(*,'(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
+                  if(irank.eq.0) write(*,*)'error in positron decay'
+                  if(irank.eq.0) write(*,
+     1            '(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
      1            rnam(1),izr(1),inr(1),id(1),
      1            rnam(2),izr(2),inr(2),id(2),
      1            ncharge,nnucleon,lkh,nr,vw
@@ -227,7 +232,7 @@ c--deck 2--------------------------------------------
          ncharge = izr(3) + izr(2) - izr(1)
          nnucleon = ncharge + inr(3) + inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(3(a5,3i5,5x),2i5,2x,a4,2a1)')
+          if(irank.eq.0) write(*,'(3(a5,3i5,5x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -240,19 +245,21 @@ c--deck 2--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'2error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1       '2error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
             if( lkh .ne. ' ffn')then
              if( lkh .ne. 'bkmo' )then
               if( lkh .ne. 'mo92' )then
-               write(*,*)'2error in beta decay'
-               write(*,'(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
+               if(irank.eq.0) write(*,*)'2error in beta decay'
+               if(irank.eq.0) write(*,
+     1            '(a5,3i5,10x,a5,3i5,10x,2i5,2x,a4,2a1)')
      1            rnam(1),izr(1),inr(1),id(1),
      1            rnam(2),izr(2),inr(2),id(2),
      1            ncharge,nnucleon,lkh,nr,vw
@@ -269,7 +276,7 @@ c             stop
                 if( lkh .ne. ' ffn')then
                  if( lkh .ne. 'bkmo' )then
                   if( lkh .ne. 'btyk' )then
-                 write(*,*)'2error in positron decay'
+                 if(irank.eq.0) write(*,*)'2error in positron decay'
 c                 stop
                   endif
                  endif
@@ -322,7 +329,7 @@ c--deck 3--------------------------------------------
          nnucleon = ncharge
      1            + inr(4) + inr(3) + inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(4(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
+          if(irank.eq.0) write(*,'(4(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -337,18 +344,19 @@ c--deck 3--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'3error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1        '3error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
             if( lkh .ne. ' ffn')then
              if( lkh .ne. 'bkmo' )then
               if( lkh .ne. 'mo92' )then
-               write(*,*)'3error in beta decay'
+               if(irank.eq.0) write(*,*)'3error in beta decay'
 c             stop
               endif
              endif
@@ -362,7 +370,7 @@ c             stop
                 if( lkh .ne. ' ffn')then
                  if( lkh .ne. 'bkmo' )then
                   if( lkh .ne. 'btyk' )then
-                 write(*,*)'3error in positron decay'
+                 if(irank.eq.0) write(*,*)'3error in positron decay'
 c                 stop
                   endif
                  endif
@@ -405,7 +413,7 @@ c--deck 4--------------------------------------------
          ncharge = izr(3) - izr(2) - izr(1)
          nnucleon = ncharge + inr(3) - inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(3(a5,3i5,5x),2i5,2x,a4,2a1)')
+          if(irank.eq.0) write(*,'(3(a5,3i5,5x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -418,15 +426,16 @@ c--deck 4--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+          if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'4error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1        '4error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
-             write(*,*)'4error in beta decay'
+             if(irank.eq.0) write(*,*)'4error in beta decay'
              stop
            endif
          endif
@@ -434,7 +443,7 @@ c..check reaction identities
            if( lkh .ne. 'bet+')then
              if( lkh .ne. ' bec')then
                if( lkh .ne. '  ec')then
-                 write(*,*)'4error in positron decay'
+                 if(irank.eq.0) write(*,*)'4error in positron decay'
                  stop
                endif
              endif
@@ -484,7 +493,7 @@ c--deck 5--------------------------------------------
          nnucleon = ncharge
      1            + inr(4) + inr(3) - inr(2) - inr(1)
          if( ibug .ne. 0 )then
-         write(*,'(4(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
+         if(irank.eq.0) write(*,'(4(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -499,15 +508,16 @@ c--deck 5--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'5error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1       '5error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
-             write(*,*)'5error in beta decay'
+             if(irank.eq.0) write(*,*)'5error in beta decay'
              stop
            endif
          endif
@@ -515,7 +525,7 @@ c..check reaction identities
            if( lkh .ne. 'bet+')then
              if( lkh .ne. ' bec')then
                if( lkh .ne. '  ec')then
-                 write(*,*)'5error in positron decay'
+                 if(irank.eq.0) write(*,*)'5error in positron decay'
                  stop
                endif
              endif
@@ -574,7 +584,7 @@ c--deck 6--------------------------------------------
          nnucleon = ncharge
      1            + inr(5) + inr(4) + inr(3) - inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(5(a5,2i3,i4,2x),2i5,1x,a4,2a1)')
+          if(irank.eq.0) write(*,'(5(a5,2i3,i4,2x),2i5,1x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -591,15 +601,16 @@ c--deck 6--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'6error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1        '6error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
-             write(*,*)'6error in beta decay'
+             if(irank.eq.0) write(*,*)'6error in beta decay'
              stop
            endif
          endif
@@ -607,7 +618,7 @@ c..check reaction identities
            if( lkh .ne. 'bet+')then
              if( lkh .ne. ' bec')then
                if( lkh .ne. '  ec')then
-                 write(*,*)'6error in positron decay'
+                 if(irank.eq.0) write(*,*)'6error in positron decay'
                  stop
                endif
              endif
@@ -676,7 +687,7 @@ c--deck 7--------------------------------------------
      1            + inr(6) + inr(5) + inr(4)
      2            + inr(3) - inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(6(a5,2i3,i4,2x),2i5,1x,a4,2a1)')
+          if(irank.eq.0) write(*,'(6(a5,2i3,i4,2x),2i5,1x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -695,15 +706,16 @@ c--deck 7--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'7error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1        '7error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
-             write(*,*)'7error in beta decay'
+             if(irank.eq.0) write(*,*)'7error in beta decay'
              stop
            endif
          endif
@@ -711,7 +723,7 @@ c..check reaction identities
            if( lkh .ne. 'bet+')then
              if( lkh .ne. ' bec')then
                if( lkh .ne. '  ec')then
-                 write(*,*)'7error in positron decay'
+                 if(irank.eq.0) write(*,*)'7error in positron decay'
                  stop
                endif
              endif
@@ -770,7 +782,7 @@ c--deck 8--------------------------------------------
          nnucleon = ncharge
      1            + inr(5) + inr(4) - inr(3) - inr(2) - inr(1)
          if( ibug .ne. 0 )then
-          write(*,'(5(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
+          if(irank.eq.0) write(*,'(5(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
@@ -787,15 +799,16 @@ c--deck 8--------------------------------------------
          endif
 c..check reaction identities
          if( nnucleon .ne. 0 )then
-           write(*,*)'nucleon nonconservation',ktype
+           if(irank.eq.0) write(*,*)'nucleon nonconservation',ktype
            stop
          endif
          if( ncharge .gt. 1 .or. ncharge .lt. -1 )then
-           write(*,*)'8error in beta decay, ncharge=',ncharge
+           if(irank.eq.0) write(*,*)
+     1        '8error in beta decay, ncharge=',ncharge
          endif
          if( ncharge .eq. 1 )then
            if( lkh .ne. 'bet-' )then
-             write(*,*)'8error in beta decay'
+             if(irank.eq.0) write(*,*)'8error in beta decay'
              stop
            endif
          endif
@@ -803,7 +816,7 @@ c..check reaction identities
            if( lkh .ne. 'bet+')then
              if( lkh .ne. ' bec')then
                if( lkh .ne. '  ec')then
-                 write(*,*)'8error in positron decay'
+                 if(irank.eq.0) write(*,*)'8error in positron decay'
                  stop
                endif
              endif
@@ -832,7 +845,7 @@ c-------------------------------------------------------
 90    continue
       close(5)
 c      close(6)
-      write(*,*)' getfkt has finished reading netsu',
+      if(irank.eq.0) write(*,*)' getfkt has finished reading netsu',
      1      kk,' reaction entries'
 
 c      write(3,*)' getfkt has finished reading netsu',
@@ -847,7 +860,8 @@ c--------------------------------------------------------------------
 c..do not count alpha as nucleus
           if(nnn(i,j) .ne. 0 .and. nnn(i,j) .ne. 6 )then
             number = number + 1
-            write(*,'(4i5,a6)')i,j,nnn(i,j),number,inam(nnn(i,j))
+            if(irank.eq.0) write(*,'(4i5,a6)')
+     1         i,j,nnn(i,j),number,inam(nnn(i,j))
 cccccccccccccccccccccc
 
 
@@ -856,15 +870,16 @@ cccccccccccccccccccccc
       enddo
       itot = number + 3
 
-      write(*,*)itot,' nuclei',nzmax,nnmax
+      if(irank.eq.0) write(*,*)itot,' nuclei',nzmax,nnmax
 c      stop'sssssssssssssss'
 
       if( itot+1 .gt. ndim )then
-        write(*,'(a20,2(a10,i5))')'getfkt:','itot+1',itot+1,'ndim',ndim
-        write(*,*)'network too large for dimensions'
-        write(*,*)'in dimenfile,'
-        write(*,*)'change ndim to .ge. ',itot+1
-        write(*,*)'change nreac to .ge. ',kk
+        if(irank.eq.0) write(*,'(a20,2(a10,i5))')
+     1     'getfkt:','itot+1',itot+1,'ndim',ndim
+        if(irank.eq.0) write(*,*)'network too large for dimensions'
+        if(irank.eq.0) write(*,*)'in dimenfile,'
+        if(irank.eq.0) write(*,*)'change ndim to .ge. ',itot+1
+        if(irank.eq.0) write(*,*)'change nreac to .ge. ',kk
 
         stop'getfkt 1'
       endif
@@ -883,7 +898,8 @@ c..do not count alpha as nucleus
               nn(l) = ison(k)
               xid(l) = inam(k)
               if( ibug .ne. 0 )then
-                write(*,'(3i5,2x,a5)')l,nz(l),nn(l),xid(l)
+                if(irank.eq.0) write(*,'(3i5,2x,a5)')
+     1             l,nz(l),nn(l),xid(l)
 c                write(3,'(3i5,2x,a5)')l,nz(l),nn(l),xid(l)
               endif
             endif
@@ -908,7 +924,7 @@ c electrons are in number + 4 = ndim usually
 
       if( ibug .ne. 0 )then
         do l = number+1, number+3
-              write(*,'(3i5,2x,a5)')l,nz(l),nn(l),xid(l)
+              if(irank.eq.0) write(*,'(3i5,2x,a5)')l,nz(l),nn(l),xid(l)
 c              write(3,'(3i5,2x,a5)')l,nz(l),nn(l),xid(l)
         enddo
       endif
@@ -923,18 +939,20 @@ c..count number of reactions of each type (deck)
         enddo
       enddo
 
-      write(*,*)
+      if(irank.eq.0) write(*,*)
      1 'number of reactions ndeck(n) in each deck (n=1 to 8)'
-      write(*,'(8i5)')ndeck
+      if(irank.eq.0) write(*,'(8i5)')ndeck
       if( ndeck(2) .ne. ndeck(4) )then
-        write(*,'(a50)')
+        if(irank.eq.0) write(*,'(a50)')
      1 'WARNING: 1-->2+3 does not match inverse 2+3-->1'
-        write(*,'(a50)')'         because ndeck(2) .ne. ndeck(4)'
+        if(irank.eq.0) write(*,'(a50)')
+     1     '         because ndeck(2) .ne. ndeck(4)'
       endif
       if( mod( ndeck(5),2 ) .ne. 0 )then
-        write(*,'(a50)')
+        if(irank.eq.0) write(*,'(a50)')
      1 'WARNING: 1-->2+3 does not match inverse 2+3-->1'
-        write(*,'(a50)')'         because ndeck(2) .ne. ndeck(4)'
+        if(irank.eq.0) write(*,'(a50)')
+     1     '         because ndeck(2) .ne. ndeck(4)'
       endif
 
 c      write(3,*)'number of reactions in each deck (1 to 8)'
