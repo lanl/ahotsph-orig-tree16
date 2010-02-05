@@ -1,4 +1,4 @@
-      subroutine build
+      subroutine build(irank,idbug)
 
 c..reads Thielemann file format
 c..identifies symbol in Z,N
@@ -14,6 +14,7 @@ c..and echo to standard i/o
       include 'cburn'
       include 'ctmstp'
 
+      integer*4 irank,idbug
       integer*4 idebug,n,i,j
 
 c---------------------------------------------------------------
@@ -22,7 +23,7 @@ c..from reaction rates available
 c      idebug = 1
       call getfkt(idebug)
 
-      write(*,*)'return from getfkt'
+      if(irank.eq.0) write(*,*)'return from getfkt'
       
 ccccccccccccccccccccccc
       itot = nnuc

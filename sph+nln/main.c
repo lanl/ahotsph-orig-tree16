@@ -290,7 +290,7 @@ main(int argc, char *argv[])
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts, Nel; 	/* for cooling tables */
-    int status, done;
+    int status, done,rank,idbug;
 
     argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
     //openangle_wind=60.0; //added by CE
@@ -690,7 +690,8 @@ main(int argc, char *argv[])
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
         singlPrintf("building network library .... ");
-        build_();
+        rank = MPMY_Procnum();
+        build_(&rank,&idbug);
         singlPrintf("successfully built network library\n");
     }
 
