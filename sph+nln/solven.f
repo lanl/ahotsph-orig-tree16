@@ -1,4 +1,4 @@
-      subroutine solven(dtstar,tempin, rho, yin, deltah)
+      subroutine solven(dtstar,tempin, rho, yin, deltah,irank)
 
 c..   evaluates rates, sets up matrix equations,
 c..   and solves reaction network over time interval dth,
@@ -18,6 +18,9 @@ c..   (deltah)
       include 'cdeuter'
       include 'cburn'
       include 'cconst'
+
+      integer*4 irank
+      integer*4 iDbug
 
       real*8  yold(ndim), yin(ndim)
 c..   instantaneous rate of energy generation
@@ -62,11 +65,15 @@ c     aeps,y               (via commons caeps, comcsolve)
 c     aepst,aepsv
 
 c-------------------------------------------------------------
+      iDbug = 1
+c-------------------------------------------------------------
 
       dth0   = 0.0d0
       inegs  = 0
 
 c---------------------------------------------------------------
+      if(irank.eq.0) write(*,*)'solven, received abundances:'
+c-------------------------------------------------------------
 c..   full network solution with abundance update (implicit), or
 c..   energy generation rate from right hand side evaluation (explicit)
 
@@ -78,6 +85,7 @@ c..   yin passed through call
 
       do n =1, ndim
          y(n) = yin(n)
+         write(*,*)y(n)
       enddo
 
       temp = tempin
@@ -577,6 +585,7 @@ c..   DNE is 3/2 kT for new particles
 
 
       icall = 1
+      write(*,*)'deltah=',deltah
       return
 
  101  continue

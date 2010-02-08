@@ -535,7 +535,7 @@ double eos_n, eos_u;
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -613,7 +613,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
-		printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
+	//	printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
                     if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
                         molfrac[i] = btab->abund[j]/((double)(btab->np[j]+btab->nn[j]));
                     }   
@@ -626,7 +626,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             rho = (double)p->rho;
             dtd = (double)dt;
             printf("calling solven ...... ");
-            solven_(&dtd,&temp,&rho,&molfrac,&deltah);
+            solven_(&dtd,&temp,&rho,&molfrac,&deltah,&rank);
             printf("called solven\n");
             btab->udot += deltah * (t*t) / (l*l) / dt;
             printf("udot: %E   \n",btab->udot);
