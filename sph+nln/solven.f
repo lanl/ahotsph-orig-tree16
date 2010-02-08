@@ -86,7 +86,7 @@ c..   yin passed through call
 
       do n =1, ndim
          y(n) = yin(n)
-         if(irank.eq.0) write(*,*)y(n)
+c         if(irank.eq.0) write(*,*)y(n)
       enddo
 
       temp = tempin
