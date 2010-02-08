@@ -33,6 +33,8 @@ c..Z and N for special nuclei
       integer*4 nspz(nsp), nspn(nsp)
 c..   nscr=scratch array for index reordering
       integer*4 nscr(ndim),iscr,itno,jz,ja
+ 
+      integer*4 lun
 
       logical tobe
 
@@ -109,9 +111,9 @@ c..   always choose H1 and He4
             if( xx(n) .gt. 0.0d0 .and. j+1 .le. nucpg )then
                j = j+1
                nucp(j) = n
-               if(irank.eq.0) write(*,'(5i5,a5,1p8e12.3)')
-     1              j,n,nucp(j),lz(n),ln(n),
-     1              cnuc(n),xx(n)
+c               if(irank.eq.0) write(*,'(5i5,a5,1p8e12.3)')
+c     1              j,n,nucp(j),lz(n),ln(n),
+c     1              cnuc(n),xx(n)
             endif
          enddo
 
@@ -169,19 +171,20 @@ c            enddo
 c         enddo
 
 c..   redefine net.rc values
-         open(30,file='net.rc')
+         lun = 30+irank
+         open(lun,file='net.rc')
          do j = 1, netsize
-            write(30,'(3i5,a5,0pf10.4,1pe12.4)')
+            write(lun,'(3i5,a5,0pf10.4,1pe12.4)')
      1           j,nz(j),nn(j),xid(j),qex(j),solarx(j)
          enddo
 c..   write whole array, including zeros, for ease in reading
 c..   by many routines
          do j = 1, nucpg, 10
-            write(30,'(10i5)')(nucp(i),i=j,j+9)
+            write(lun,'(10i5)')(nucp(i),i=j,j+9)
          enddo
 
 
-         close(30)
+         close(lun)
 
          if(irank.eq.0) write(*,*)
      1      'abinit: new network and abundances defined'
@@ -191,10 +194,10 @@ c..   by many routines
 
          if(irank.eq.0) write(*,*)'abinit: checking netrc'
 
-         open(30,file='net.rc',status='old')
+         open(lun,file='net.rc',status='old')
          ibu = 1
 c..initializing qex and solarx
- 100     read(30,'(3i5,a5,0pf10.4,1pe12.4)',end=101)
+ 100     read(lun,'(3i5,a5,0pf10.4,1pe12.4)',end=101)
      1        idummy,izbu(ibu),inbu(ibu),cbu,qex(ibu),solarx(ibu)
          if( izbu(ibu) .ne. nz(ibu) .or.
      1        inbu(ibu) .ne. nn(ibu) )then
@@ -215,7 +218,7 @@ c..   different net.rc
          goto 100
  101     continue
 c..   net.rc is consistent
-         read(30,'(10i5)')nucp
+         read(lun,'(10i5)')nucp
 
 c..   determine nonzero entries
          mnucpg = 0
@@ -235,7 +238,7 @@ c..define solar metallicity from solar tables for consistency
 
          if(irank.eq.0) write(*,*)
      1      'abinit: net.rc exists and is left unchanged'
-         close(30)
+         close(lun)
       endif
 
 c..   define Ye
@@ -357,17 +360,17 @@ c..   reordering finished
 
       if( jz .ne. 0 .or. ja .ne. 0 )then
 c..   redefine net.rc values
-         open(30,file='net.rc')
+         open(lun,file='net.rc')
          do j = 1, netsize
-            read(30,'(3i5,a5,0pf10.4,1pe12.4)')
+            read(lun,'(3i5,a5,0pf10.4,1pe12.4)')
      1           i,nz(j),nn(j),xid(j),qex(j),solarx(j)
          enddo
 c..   overwrite array, including zeros, for ease in reading
 c..   by many routines
          do j = 1, nucpg, 10
-            write(30,'(10i5)')(nucp(i),i=j,j+9)
+            write(lun,'(10i5)')(nucp(i),i=j,j+9)
          enddo
-         close(30)
+         close(lun)
          if(irank.eq.0) write(*,*)
      1      'net.rc adjusted for new nucp index array'
       endif
