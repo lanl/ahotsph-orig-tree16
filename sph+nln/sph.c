@@ -595,9 +595,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         abund_renorm = 0.0;
         m_ave = 0.;//10./(N_AVOG*m);
 
-        for ( j = 0; j < Nel; j++) {
-            m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
-            abund_renorm += btab->abund[j]; /* so that sum(abund) = 1 */
+        for ( j = 0; j < NISO; j++) {
+            m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+            abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
 
         m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
@@ -614,12 +614,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
 	//	printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
-                    if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
-                        molfrac[i] = btab->abund[j]/((double)(btab->np[j]+btab->nn[j]));
+                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                        molfrac[i] = p->abund[j]/((double)(p->np[j]+p->nn[j]));
                     }   
                 }   
             }
-            molfrac[NNETW] = btab->Y_el;
+            molfrac[NNETW] = p->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
             temp = (double)p->temp;
@@ -628,19 +628,19 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             printf("calling solven ...... ");
             solven_(&dtd,&temp,&rho,&molfrac,&deltah,&rank);
             printf("called solven\n");
-            btab->udot += deltah * (t*t) / (l*l) / dt;
-            printf("udot: %E   \n",btab->udot);
+            p->udot += deltah * (t*t) / (l*l) / dt;
+            printf("udot: %E   \n",p->udot);
             
 
             /*update composition of particle from updated abundance array*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
-                    if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
-                        btab->abund[j] = molfrac[i]*((double)(btab->np[j]+btab->nn[j]));
+                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                        p->abund[j] = molfrac[i]*((double)(p->np[j]+p->nn[j]));
                     }   
                 }
             }
-            btab->Y_el = molfrac[NNETW];
+            p->Y_el = molfrac[NNETW];
             printf("Ye = %E\n",molfrac[NISO]);
         }  
         //printf("done burning\n");
@@ -654,7 +654,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             m_ave = 0;
             n = 0.;
             abund_renorm = 0;
-            for ( j = 0; j < Nel; j++) {
+            for ( j = 0; j < NISO; j++) {
                 m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
                 n += (double)(btab->rho * 
                      (N_AVOG*m) / (double)(btab->np[j] + btab->nn[j]) * btab->abund[j] * 

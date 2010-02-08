@@ -72,7 +72,7 @@ c-------------------------------------------------------------
       inegs  = 0
 
 c---------------------------------------------------------------
-      if(irank.eq.0) write(*,*)'solven, received abundances:'
+      if(irank.eq.0) write(*,*)'solven, received T and abundances:'
 c-------------------------------------------------------------
 c..   full network solution with abundance update (implicit), or
 c..   energy generation rate from right hand side evaluation (explicit)
@@ -80,12 +80,13 @@ c..   energy generation rate from right hand side evaluation (explicit)
       ncycle = 0
 c..   T,rho passed through call
       t9     = temp*1.0d-9
+      if(irank.eq.0) write(*,*)'T=',temp
 
 c..   yin passed through call
 
       do n =1, ndim
          y(n) = yin(n)
-         write(*,*)y(n)
+         if(irank.eq.0) write(*,*)y(n)
       enddo
 
       temp = tempin
@@ -585,7 +586,7 @@ c..   DNE is 3/2 kT for new particles
 
 
       icall = 1
-      write(*,*)'deltah=',deltah
+      if(irank.eq.0) write(*,*)'deltah=',deltah
       return
 
  101  continue
