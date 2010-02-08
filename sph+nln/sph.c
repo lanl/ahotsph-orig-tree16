@@ -626,7 +626,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             rho = (double)p->rho;
             dtd = (double)dt;
             printf("calling solven ...... ");
-            solven_(&dtd,&temp,&rho,molfrac,&deltah);
+            solven_(&dtd,&temp,&rho,&molfrac,&deltah);
             printf("called solven\n");
             btab->udot += deltah * (t*t) / (l*l) / dt;
             printf("udot: %E   \n",btab->udot);
@@ -643,7 +643,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             btab->Y_el = molfrac[NNETW];
             printf("Ye = %E\n",molfrac[NISO]);
         }  
-        printf("done burning\n");
+        //printf("done burning\n");
 
 
 /*also can calculate rho,n of particle?*/
