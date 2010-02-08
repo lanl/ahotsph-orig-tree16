@@ -7,7 +7,8 @@
 #include "timers.h"
 
 #define NDIM 3
-#define NISO 22 /*number of isotopes to include*/
+#define NISO 22 	/* number of isotopes tracked */
+#define NNETW 20	/* number of isotopes in network */
 #define SPH_SAVE_ACC
 #define POS_IS_DOUBLE
 #define SPH_GRAV

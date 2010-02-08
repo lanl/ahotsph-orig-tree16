@@ -544,10 +544,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
     double kB; 
-    double molfrac[Nel+1]; /*float or double?? */
+    double molfrac[NNETW+1]; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
-    int inNW[2][NISO+1]={{0,1,2,6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0},/*Z*/
+    int inNW[2][NNETW+1]={{0,1,2,6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0},/*Z*/
                          {1,0,2,6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,0}}; /*A-Z*/
     double dt1_tot,udot_tot,dt1,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
@@ -591,17 +591,16 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ++*limit_low;
 	}
 
-/*
         n = 0.;
-        m_ave = 0.0;
         abund_renorm = 0.0;
+        m_ave = 0.;//10./(N_AVOG*m);
+
         for ( j = 0; j < Nel; j++) {
-           m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));
-           abund_renorm += p->abund[j]; 
+            m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
+            abund_renorm += btab->abund[j]; /* so that sum(abund) = 1 */
         }
-        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) ); 
-*/
-        m_ave = 10./(N_AVOG*m);
+
+        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
 
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
@@ -612,15 +611,15 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
         if(do_burning){
         /*prepare abundance array passed into network - more ugliness!*/
-            for(i=0;i<Nel;i++){
-                for(j=0;j<NISO;j++){
+            for( i = 0; i < NNETW; i++ ) {
+                for( j = 0; j < NISO; j++ ) {
+		printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
                     if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
-                        molfrac[i]=btab->abund[j]/((double)(btab->np[j]+btab->nn[j]));
-                        printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
+                        molfrac[i] = btab->abund[j]/((double)(btab->np[j]+btab->nn[j]));
                     }   
                 }   
             }
-            molfrac[NISO] = btab->Y_el;
+            molfrac[NNETW] = btab->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
             temp = (double)p->temp;
@@ -634,14 +633,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             
 
             /*update composition of particle from updated abundance array*/
-            for(i=0;i<Nel;i++){
-                for(j=0;j<NISO;j++){
+            for( i = 0; i < NNETW; i++ ) {
+                for( j = 0; j < NISO; j++ ) {
                     if((btab->np[j] == inNW[0][i]) && (btab->nn[j] == inNW[1][i])){
                         btab->abund[j] = molfrac[i]*((double)(btab->np[j]+btab->nn[j]));
                     }   
                 }
             }
-            p->Y_el = molfrac[NISO];
+            btab->Y_el = molfrac[NNETW];
             printf("Ye = %E\n",molfrac[NISO]);
         }  
         printf("done burning\n");
@@ -682,6 +681,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             /*lcool = analytic_cool(p->temp);*/
 
 	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
+            /* and lcool is positive for energy loss */
 	    udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
             if ( udot != udot ) udot = 0.0;
 
@@ -710,18 +710,19 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	                eos_u = ((double)(u)) * ((double)(p->rho));
 		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
                         btab->temp = p->temp;
-            /*update density - how? where? -CE: with rho=rho+drhodt*dt*/
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(
                                 btab->abund,btab->np,btab->nn,p->rho,p->temp,Gridpts,Nel,0);
 	                udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
-                        if ( udot != udot ) udot = 0.0;
+                        if ( udot != udot ) udot = 0.0; /* trying to catch stupid NaN's */
                         cycle_count++;
-		    } else { 
+		    } else if (cycles <= 1024) { 
 		        dt1 = dt1/4.0; 
                         cycles = cycle_count + (cycles-cycle_count)*4; /*double remaining number of cycles*/
                         printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", p->temp,dt1, cycles,u*frac,udot*dt1);
+                    } else {
+                        break;
                     }
 		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? - very! */
  		/* add condition that increases dt1 again if udot*dt1 < minfrac*u */
