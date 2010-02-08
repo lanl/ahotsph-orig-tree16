@@ -20,7 +20,7 @@ c..and echo to standard i/o
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
 c..from reaction rates available
-c      idebug = 1
+      idebug = 0
       call getfkt(idebug,irank)
 
       if(irank.eq.0) write(*,*)'return from getfkt'
