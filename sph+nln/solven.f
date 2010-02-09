@@ -136,8 +136,8 @@ c..   insure time interval does not overshoot
 
          if( dth .le. 0.0d0 )then
             write(*,'(5a12)')
-     1           'dth','dth0','dtleft','ncycle','k'
-            write(*,'(1p3e12.3,2i12)')dth,dth0,dtleft,ncycle,k
+     1           'dth','dth0','dtleft','T','ncycle','k'
+            write(*,'(1p4e12.3,2i12)')dth,dth0,dtleft,temp,ncycle,k
             stop'solven dth'
          endif
 
@@ -178,7 +178,7 @@ c..   see sparse_ma28.f
          
 
 c..   evaluate next time step
-         call dtnuc(dth0,dth,1)
+         call dtnuc(dth0,tempin,dth,1)
 
 c..   check result for excessive changes
          sumd = 0

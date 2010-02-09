@@ -609,7 +609,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
 
 
-        if(0){
+        if(do_burning){
         /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
