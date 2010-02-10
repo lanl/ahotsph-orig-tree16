@@ -625,11 +625,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             temp = (double)p->temp;
             rho = (double)p->rho;
             dtd = (double)dt;
-            printf("calling solven ...... ");
+            printf("calling solven from proc %d ...... ",rank);
             solven_(&dtd,&temp,&rho,&molfrac,&deltah,&rank);
             printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
-            printf("udot: %E   \n",p->udot);
+            printf("udot: %E   ",p->udot);
             
 
             /*update composition of particle from updated abundance array*/
@@ -643,7 +643,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             p->Y_el = molfrac[NNETW];
             printf("Ye = %E\n",molfrac[NNETW]);
         }  
-        printf("done burning\n");
+        //printf("done burning\n");
 
 
 /*also can calculate rho,n of particle?*/
@@ -671,8 +671,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 	    /* Figure out good upper and lower limits for temp */
 	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
-
-            btab->temp = p->temp;
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)
@@ -709,7 +707,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		        u += udot * dt1;	
 	                eos_u = ((double)(u)) * ((double)(p->rho));
 		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
-                        btab->temp = p->temp;
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(

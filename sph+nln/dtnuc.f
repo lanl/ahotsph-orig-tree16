@@ -18,7 +18,7 @@ c..   else        after leqs, b(n) = dY(n)
 
       integer*4 n, nflag
 
-c      data delchi/0.5d0/, chimin/1.0d-8/, fdtn/3.0d0/,
+      data delchi/0.5d0/, chimin/1.0d-8/, fdtn/3.0d0/
       data fdysum/2.0d-3/
 c-------------------------------------------------------------
 c..DELCHI is maximum fractional change allowed in number density

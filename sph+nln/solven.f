@@ -72,7 +72,8 @@ c-------------------------------------------------------------
       inegs  = 0
 
 c---------------------------------------------------------------
-      if(irank.eq.0) write(*,*)'solven, received T and abundances:'
+      if(irank.eq.0 .and. iDbug) write(*,*)
+     1   'solven, received T and abundances:'
 c-------------------------------------------------------------
 c..   full network solution with abundance update (implicit), or
 c..   energy generation rate from right hand side evaluation (explicit)
@@ -80,7 +81,7 @@ c..   energy generation rate from right hand side evaluation (explicit)
       ncycle = 0
 c..   T,rho passed through call
       t9     = temp*1.0d-9
-      if(irank.eq.0) write(*,*)'T=',temp
+      if(irank.eq.0 .and. iDbug) write(*,*)'T=',temp
 
 c..   yin passed through call
 
@@ -91,6 +92,7 @@ c         if(irank.eq.0) write(*,*)y(n)
 
       temp = tempin
 
+c     if1: t9 sufficient for reactions
       if( t9 .gt. 1.0d-2 .and. t9 .lt. tnse)then
 c..   full network
          do j = 1, itot
@@ -110,7 +112,7 @@ c..   reaclib fit is bad below 2.9d7 K
 c         if( t9 .lt. 0.029d0 )then
 c            sig(lkal26) = 3.051d-14 
 c         endif
-c.. commented out by CIE
+c.. commented out by CIE - lkal26 not defined anywhere
 cccccccccccccc
 
 
@@ -135,9 +137,9 @@ c..   insure time interval does not overshoot
          endif
 
          if( dth .le. 0.0d0 )then
-            write(*,'(5a12)')
-     1           'dth','dth0','dtleft','T','ncycle','k'
-            write(*,'(1p4e12.3,2i12)')dth,dth0,dtleft,temp,ncycle,k
+            write(*,'(6a12)')
+     1           'dtstar','dth','dth0','dtleft','T9','ncycle','k'
+            write(*,'(1p5e12.5,2i12)')dtstar,dth,dth0,dtleft,t9,ncycle,k
             stop'solven dth'
          endif
 
@@ -178,7 +180,7 @@ c..   see sparse_ma28.f
          
 
 c..   evaluate next time step
-         call dtnuc(dth0,tempin,dth,1)
+         call dtnuc(dth0,t9*1.d9,dth,1)
 
 c..   check result for excessive changes
          sumd = 0
@@ -367,11 +369,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      3              negflag
             endif
          endif
+c     end if1?     
 
 c..   total matrix solutions
          ncytot = ncytot + ncycle
 
 
+c     if2: t9 sufficient for NSE
       elseif( t9 .eq. tnse )then
 c..   itbrn(i) = 3 ...............................................
 c..   nse solver plus weak interactions......................
@@ -492,8 +496,10 @@ c..   DNE is 3/2 kT for new particles
          deltah = aeps*dtstar
 
 
+c     end if2?
 
 
+c     if3: t9 not sufficient for any burning, just decays
       elseif( t9 .lt. 1.0d-2 )then
 c..   itbrn(i) = 0 ...............................................
 c..   network solution for decays only......................
@@ -583,6 +589,7 @@ c..   DNE is 3/2 kT for new particles
 
 
       endif
+c     end if3
 
 
       icall = 1
