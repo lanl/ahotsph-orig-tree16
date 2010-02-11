@@ -4,7 +4,7 @@ c..changed to one zone for SPH network
 
 c      real*8    aeps(kdm), aenu(kdm), aex(ndim,kdm), temp(kdm), 
 c     1	den(kdm), aepst(kdm), aepsv(kdm), aye(kdm)
-      real*8    aeps, aenu, aex(ndim), temp, 
+      real*8    aeps, aenu, aex(ndim), 
      1	den, aepst, aepsv, aye, aenucnu
       real*8 xdep(ndim),xxdep,xprod(ndim),xxprod
       real*8 axdcon(ndim,kdm)
@@ -23,7 +23,7 @@ c      integer*4 itbrn(kdm)
       integer*4 itbrn
 
       common /caeps/
-     1	 aeps, aenu, aenucnu, aex, temp, den, aepst, aepsv, aye,
+     1	 aeps, aenu, aenucnu, aex, den, aepst, aepsv, aye,
      1 xdep, xxdep, xprod, xxprod, axdcon, modeb, nucdep, nucprod, 
      2 nuck, nucpk, itbrn
 

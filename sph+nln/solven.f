@@ -35,7 +35,7 @@ c..   instantaneous rate of energy generation
       real*8 enc,yoldsum,ynewsum,yesum, t9old(kdm)
 
       integer*4 inegs
-      integer*4 idebug, ncycle, k, j, negflag, leq, jnb
+      integer*4 idebug, ncycle, k, j, negflag, leq, n
       integer*4 it, kk, kreac
 
       integer*4 indx(ndim), i
@@ -73,7 +73,7 @@ c-------------------------------------------------------------
 
 c---------------------------------------------------------------
       if(irank.eq.0 .and. iDbug) write(*,*)
-     1   'solven, received T and abundances:'
+     1   'solven, received T:'
 c-------------------------------------------------------------
 c..   full network solution with abundance update (implicit), or
 c..   energy generation rate from right hand side evaluation (explicit)
@@ -92,8 +92,6 @@ c..   yin passed through call
 c         if(irank.eq.0) write(*,*)y(n)
       enddo
 
-c      temp = tempin
-
 c     if1: t9 sufficient for reactions
       if( t9 .gt. 1.0d-2 .and. t9 .lt. tnse)then
 c..   full network
@@ -102,7 +100,7 @@ c..   full network
             bt(j)   = 0.0d0
             bv(j)   = 0.0d0
             yold(j) = y(j)
-            ydcon(j) = axdcon(j)
+            ydcon(j) = axdcon(j,k)
          enddo
          
 c..   evaluate rates and put in sig array

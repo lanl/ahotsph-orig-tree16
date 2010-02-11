@@ -619,17 +619,17 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                     }   
                 }   
             }
-            molfrac[NNETW] = p->Y_el;
+            molfrac[NNETW] = 0.5;//p->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
             temp = (double)p->temp;
             rho = (double)p->rho;
             dtd = (double)dt;
-            printf("calling solven from proc %d ...... ",rank);
+            //printf("calling solven from proc %d ...... ",rank);
             solven_(&dtd,&temp,&rho,&molfrac,&deltah,&rank);
-            printf("called solven\n");
+            //printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
-            printf("udot: %E   ",p->udot);
+            //printf("udot: %E   ",p->udot);
             
 
             /*update composition of particle from updated abundance array*/

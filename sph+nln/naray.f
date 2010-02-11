@@ -33,7 +33,7 @@ c..zero nrr array and write nonzero indexes for real reactants
         enddo
       enddo
 
-      idebug = 1
+c      idebug = 1
       
       do j = 1, nreac
           iloc(j) = 0
