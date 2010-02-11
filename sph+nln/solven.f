@@ -1,4 +1,4 @@
-      subroutine solven(dtstar,tempin, rho, yin, deltah,irank)
+      subroutine solven(dtstar,temp, rho, yin, deltah,irank)
 
 c..   evaluates rates, sets up matrix equations,
 c..   and solves reaction network over time interval dth,
@@ -26,7 +26,7 @@ c..   (deltah)
 c..   instantaneous rate of energy generation
       real*8  ssi(kdm)
 
-      real*8 tempin
+      real*8 temp
       real*8 tiny, t9, rho, dtstar, dth
       real*8 time, dtleft, dth0, rdt, sumd, suma, eb, dn, en, deltah
       real*8 fak, dne, yneu, ypro, xalf,  xnucleu
@@ -35,7 +35,7 @@ c..   instantaneous rate of energy generation
       real*8 enc,yoldsum,ynewsum,yesum, t9old(kdm)
 
       integer*4 inegs
-      integer*4 idebug, ncycle, k, j, negflag, leq, n
+      integer*4 idebug, ncycle, k, j, negflag, leq, jnb
       integer*4 it, kk, kreac
 
       integer*4 indx(ndim), i
@@ -78,6 +78,8 @@ c-------------------------------------------------------------
 c..   full network solution with abundance update (implicit), or
 c..   energy generation rate from right hand side evaluation (explicit)
 
+      jnb = 0
+      k = 1
       ncycle = 0
 c..   T,rho passed through call
       t9     = temp*1.0d-9
@@ -90,7 +92,7 @@ c..   yin passed through call
 c         if(irank.eq.0) write(*,*)y(n)
       enddo
 
-      temp = tempin
+c      temp = tempin
 
 c     if1: t9 sufficient for reactions
       if( t9 .gt. 1.0d-2 .and. t9 .lt. tnse)then
@@ -100,7 +102,7 @@ c..   full network
             bt(j)   = 0.0d0
             bv(j)   = 0.0d0
             yold(j) = y(j)
-            ydcon(j) = axdcon(j,1)
+            ydcon(j) = axdcon(j)
          enddo
          
 c..   evaluate rates and put in sig array
