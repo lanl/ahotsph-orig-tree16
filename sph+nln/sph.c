@@ -596,11 +596,13 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         m_ave = 0.;//10./(N_AVOG*m);
 
         for ( j = 0; j < NISO; j++) {
-            m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+        //    m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+            m_ave += p->abund[j]*(p->np[j]+p->nn[j])/(N_AVOG*m);
             abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
 
-        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
+        //m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
+        //singlPrintf("m_ave = %E   ",m_ave);
 
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
@@ -642,7 +644,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
             }
             p->Y_el = molfrac[NNETW];
-            printf("Ye = %E\n",molfrac[NNETW]);
+            //printf("Ye = %E\n",molfrac[NNETW]);
         }  
         //printf("done burning\n");
 

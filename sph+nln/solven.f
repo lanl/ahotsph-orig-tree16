@@ -1,4 +1,4 @@
-      subroutine solven(dtstar,temp, rho, yin, deltah,irank)
+      subroutine solven(dtstar,temp, rho, yin, deltah, irank)
 
 c..   evaluates rates, sets up matrix equations,
 c..   and solves reaction network over time interval dth,
@@ -72,8 +72,8 @@ c-------------------------------------------------------------
       inegs  = 0
 
 c---------------------------------------------------------------
-      if(irank.eq.0 .and. iDbug) write(*,*)
-     1   'solven, received T:'
+c      if(irank.eq.0 .and. iDbug) write(*,'(a,$)')
+c     1   'solven, received T:'
 c-------------------------------------------------------------
 c..   full network solution with abundance update (implicit), or
 c..   energy generation rate from right hand side evaluation (explicit)
@@ -83,7 +83,7 @@ c..   energy generation rate from right hand side evaluation (explicit)
       ncycle = 0
 c..   T,rho passed through call
       t9     = temp*1.0d-9
-      if(irank.eq.0 .and. iDbug) write(*,*)'T=',temp
+c      if(irank.eq.0 .and. iDbug) write(*,*)'T=',temp
 
 c..   yin passed through call
 
@@ -181,7 +181,7 @@ c..   see sparse_ma28.f
 
 c..   evaluate next time step
          call dtnuc(dth0,t9*1.d9,dth,1)
-         if(t9.ge.1.d0) write(*,*)'new dth=',dth
+         if(t9.ge.1.d-1) write(*,*)'new dth=',dth
 
 c..   check result for excessive changes
          sumd = 0
@@ -594,7 +594,7 @@ c     end if3
 
 
       icall = 1
-      if(irank.eq.0) write(*,*)'deltah=',deltah
+c      if(irank.eq.0) write(*,*)'deltah=',deltah
       return
 
  101  continue
