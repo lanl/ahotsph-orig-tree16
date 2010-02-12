@@ -551,7 +551,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                          {1,0,2,6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,0}}; /*A-Z*/
     double dt1_tot,udot_tot,dt1,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    double abund_renorm,temp,rho, dtd;
+    double abund_renorm,temp,rho, dt_cgs;
     int cycles=0,cycle_count=0;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
@@ -605,7 +605,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
-	/* Figure out good upper and lower limits for temp */
+	/* Figure out good upper and lower limits for temp (note: unit-independent!) */
 	p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
 
 
@@ -622,11 +622,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             molfrac[NNETW] = 0.5;//p->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
+            /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
-            rho = (double)p->rho;
-            dtd = (double)dt;
+            rho = (double)p->rho / m * (l*l*l);
+            dt_cgs = (double)(dt / t);
             //printf("calling solven from proc %d ...... ",rank);
-            solven_(&dtd,&temp,&rho,&molfrac,&deltah,&rank);
+            solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
             //printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
             //printf("udot: %E   ",p->udot);
