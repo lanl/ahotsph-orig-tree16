@@ -658,11 +658,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             n = 0.;
             abund_renorm = 0;
             for ( j = 0; j < NISO; j++) {
-                m_ave += btab->abund[j]/((double)(btab->np[j] + btab->nn[j]));/*mean molecular weight*/
-                n += (double)(btab->rho * 
-                     (N_AVOG*m) / (double)(btab->np[j] + btab->nn[j]) * btab->abund[j] * 
-                     (double)(btab->np[j] + 1.0)); /*b/c we also have electrons!*/
-                abund_renorm += btab->abund[j]; /* so that sum(abund) = 1 */
+                m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+                n += (double)(p->rho * 
+                     (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
+                     (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
+                abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
             }
 
             m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
@@ -678,33 +678,34 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)
               lcool contains energy lost as positive value */
-	    lcool = calc_lcool1(btab->abund,btab->np,btab->nn,p->rho,p->temp,Gridpts,Nel,0);
+	    lcool = calc_lcool1(p->abund, p->np, p->nn, p->rho, p->temp, Gridpts, Nel, 0);
             /*lcool = analytic_cool(p->temp);*/
 
 	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
             /* and lcool is positive for energy loss */
 	    udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+
+            /* trying to catch any NaN's */
             if ( udot != udot ) udot = 0.0;
 
             /*determine if we need subcycling*/
 	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
-	        dt1 = dt / 4.;
+	        dt1 = dt / 2.;
                 dt1_tot = 0.;
-                cycles = 4; /*total number of cycles*/
+                cycles = 2; /*total number of cycles*/
                 cycle_count = 0; /*keep track of cycles gone through*/
 		printf("subcycling %d times, u= %E  udot*dt1= %E\n",cycles,u*frac, udot*dt1);
              } else {
                 cycles = 0;
                 cycle_count = 0;
-		//printf("no subcycling u= %E  udot= %E\n",u, lcool);
              }
 
              /* if so, then subcycle */ 
 	        while(cycle_count < cycles) { 
 
-		printf("frac= %E  u*frac= %E  udot= %E  udot*dt1= %E\n",frac,u*frac,udot,udot*dt1);
 		    if ( abs( dt1 * udot ) < ( frac * u) ) { 
-                        printf("subcycling %d times, u= %E  udot*dt1= %E\n",cycles,u*frac, udot*dt1);
+                        printf("subcycling %d times, u= %E  udot*dt1= %E\n",
+                               cycles,u*frac, udot*dt1);
                         /*this sub-timestep*/
 		        dt1_tot += dt1;	
 		        u += udot * dt1;	
@@ -713,15 +714,18 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(
-                                btab->abund,btab->np,btab->nn,p->rho,p->temp,Gridpts,Nel,0);
+                                p->abund,p->np,p->nn,p->rho,p->temp,Gridpts,Nel,0);
 	                udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
                         if ( udot != udot ) udot = 0.0; /* trying to catch stupid NaN's */
                         cycle_count++;
 		    } else if (cycles <= 1024) { 
-		        dt1 = dt1/4.0; 
-                        cycles = cycle_count + (cycles-cycle_count)*4; /*double remaining number of cycles*/
-                        printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", p->temp,dt1, cycles,u*frac,udot*dt1);
+                        /*halve time step and double remaining number of cycles*/
+		        dt1 = dt1/2.0; 
+                        cycles = cycle_count + (cycles-cycle_count)*2; 
+                        printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", 
+                               p->temp,dt1, cycles,u*frac,udot*dt1);
                     } else {
+                        printf("update_final: too many subcycles!\n");
                         break;
                     }
 		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? - very! */
@@ -738,7 +742,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
            /*     printf("subcycles: %d  %d\n",cycle_count, cycles);*/
             
 
-            btab->temp = p->temp;
+            //btab->temp = p->temp;
             p->udot += (u - p->u) / dt;
 
 	}
