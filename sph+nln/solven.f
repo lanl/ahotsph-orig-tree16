@@ -181,7 +181,7 @@ c..   see sparse_ma28.f
 
 c..   evaluate next time step
          call dtnuc(dth0,t9*1.d9,dth,1)
-         if(t9.ge.1.d-1) write(*,*)'new dth=',dth
+c         if(t9.ge.1.d-1) write(*,*)'new dth=',dth
 
 c..   check result for excessive changes
          sumd = 0

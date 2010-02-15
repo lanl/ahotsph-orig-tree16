@@ -18,7 +18,7 @@ c..   else        after leqs, b(n) = dY(n)
 
       integer*4 n, nflag
 
-      data delchi/1.0d-5/, chimin/1.0d-3/, fdtn/1.2d0/
+      data delchi/1.0d-2/, chimin/1.0d-5/, fdtn/1.2d0/
       data fdysum/2.0d-3/
 c-------------------------------------------------------------
 c..DELCHI is maximum fractional change allowed in number density
@@ -164,7 +164,7 @@ c      elseif(tin .gt. 5.0d9)then
 c         if(dth .lt. 1.0d-8)dth=1.0d-10
       endif
 
-      write(*,*)'dtnuc: found new dth =',dth1
+      if(tin.gt.3.0d8)write(*,*)'dtnuc: found new dth =',dth1
       return
       end
 
