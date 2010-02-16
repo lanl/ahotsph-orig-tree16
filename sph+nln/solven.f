@@ -65,7 +65,8 @@ c     aeps,y               (via commons caeps, comcsolve)
 c     aepst,aepsv
 
 c-------------------------------------------------------------
-      iDbug = 1
+      iDbug = 0
+      if(temp.gt.1.d9) iDbug = 1
 c-------------------------------------------------------------
 
       dth0   = 0.0d0
@@ -89,7 +90,7 @@ c..   yin passed through call
 
       do n =1, ndim
          y(n) = yin(n)
-c         if(irank.eq.0) write(*,*)y(n)
+         if(irank.eq.0 .and. iDbug) write(*,*)y(n)
       enddo
 
 c     if1: t9 sufficient for reactions
@@ -273,6 +274,16 @@ c..   output if excessive subcycles
      2                 ,suma,sumd
                endif
             endif
+
+c..   reset Ye (copied from NSE-loop. ~CIE)
+         yesum = 0.0d0
+         sumz   = -1.0d0
+         do j = 1, ndim-1
+            yesum = yesum + y(j) * dble( nz(j) )
+            sumz = sumz + x(j)
+         enddo
+         x(ndim) = yesum
+         y(ndim) = yesum
 
 c..   calculate energy generation rate using mass excesses
 c..   DNE is 3/2 kT for new particles

@@ -615,9 +615,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
-	//	printf("p: %d  %d    n: %d  %d\n",btab->np[j], inNW[0][i],btab->nn[j],inNW[1][i]);
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i] = p->abund[j]/((double)(p->np[j]+p->nn[j]));
+                        molfrac[i] = p->abund[j];/*((double)(p->np[j]+p->nn[j]));*/
                     }   
                 }   
             }
@@ -626,7 +625,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             /* deltah= erg/g for this timestep */
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
-            rho = (double)p->rho / m * (l*l*l);
+            rho = (double)p->rho * (m / (l*l*l));
+            if(p->temp > 1.e9) printf("T= %.2EK   p->rho= %E     rho= %E\n",p->temp, p->rho,rho);
             dt_cgs = (double)(dt / t);
             //printf("calling solven from proc %d ...... ",rank);
             solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
@@ -639,7 +639,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i]*((double)(p->np[j]+p->nn[j]));
+                        p->abund[j] = molfrac[i];/*((double)(p->np[j]+p->nn[j]));*/
                     }   
                 }
             }
