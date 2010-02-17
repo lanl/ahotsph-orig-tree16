@@ -128,7 +128,7 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 	/* this also puts X_el in order of ascending Z, if an element
 	 * does not exist in abund[i], it is just zero in X_el */
         if(nparr[n] > 0) {
-           X_el[ nparr[n]-1 ] += abundarr[n] * rho
+           X_el[ nparr[n]-1 ] += abundarr[n] * rho *
                N_AVOG / ((float)(nnarr[n] + nparr[n]));
 	   ndens += X_el[ nparr[n]-1]; /*this double-counts isotopes*/
 /*

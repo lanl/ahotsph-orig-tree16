@@ -552,7 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt1_tot,udot_tot,dt1,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs;
-    int cycles=0,cycle_count=0;
+    unsigned long cycles=0,cycle_count=0;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
@@ -719,16 +719,16 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	                udot = -1.0*lcool * ( t*t*t* l/ m );
                         if ( udot != udot ) udot = 0.0; /* trying to catch stupid NaN's */
                         cycle_count++;
-		    } else if (cycles <= 1024) { 
+		    } else {//if (cycles <= 1024) { 
                         /*halve time step and double remaining number of cycles*/
 		        dt1 = dt1/2.0; 
                         cycles = cycle_count + (cycles-cycle_count)*2; 
                         printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", 
                                p->temp,dt1, cycles,u*frac,udot*dt1);
-                    } else {
+                    } /*else {
                         printf("update_final: too many subcycles!\n");
                         break;
-                    }
+                    }*/
 		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? - very! */
  		/* add condition that increases dt1 again if udot*dt1 < minfrac*u */
                     /* only if too small && less that dt && even subcycle */
