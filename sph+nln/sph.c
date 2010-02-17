@@ -669,6 +669,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 //            m_ave = 10./(N_AVOG*m);
 
 	    u = p->u; 
+            rho = (double)p->rho * (m / (l*l*l));
             eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	    eos_u = ((double)(p->u)) * ((double)(p->rho));
 
@@ -678,12 +679,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)
               lcool contains energy lost as positive value */
-	    lcool = calc_lcool1(p->abund, p->np, p->nn, p->rho, p->temp, Gridpts, Nel, 0);
+	    lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
             /*lcool = analytic_cool(p->temp);*/
 
 	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
             /* and lcool is positive for energy loss */
-	    udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+	    udot = -1.0*lcool * ( t*t*t* l/ m );
 
             /* trying to catch any NaN's */
             if ( udot != udot ) udot = 0.0;
@@ -714,8 +715,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(
-                                p->abund,p->np,p->nn,p->rho,p->temp,Gridpts,Nel,0);
-	                udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+                                p->abund,p->np,p->nn,p->temp,rho,Gridpts,Nel,0);
+	                udot = -1.0*lcool * ( t*t*t* l/ m );
                         if ( udot != udot ) udot = 0.0; /* trying to catch stupid NaN's */
                         cycle_count++;
 		    } else if (cycles <= 1024) { 

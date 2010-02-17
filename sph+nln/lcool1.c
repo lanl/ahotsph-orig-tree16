@@ -56,6 +56,7 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
     double ioncool=0.0;		/*hold intermediate cooling term*/
     double fracn;	/*holds ion fraction returned by interp. */
     double *fracnp;	/*pointer to frac*/
+    double fracneu;	/*fraction of neutral atoms per element*/
     double rowarr[2],interp[2],fracns[2];	/*temporary arrays for interp.*/
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
     float temps[Gridpts];
@@ -127,14 +128,14 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 	/* this also puts X_el in order of ascending Z, if an element
 	 * does not exist in abund[i], it is just zero in X_el */
         if(nparr[n] > 0) {
-           X_el[ nparr[n]-1 ] += abundarr[n] * 
-               rho * massCF / (lengthCF * lengthCF * lengthCF) *
+           X_el[ nparr[n]-1 ] += abundarr[n] * rho
                N_AVOG / ((float)(nnarr[n] + nparr[n]));
-	   ndens += (double)(rho * massCF /(lengthCF*lengthCF*lengthCF) * 
-	       N_AVOG / (double)(nparr[j] + nnarr[j]) * abundarr[j]); 
+	   ndens += X_el[ nparr[n]-1]; /*this double-counts isotopes*/
+/*
 	   n_e += (double)(rho * massCF /(lengthCF*lengthCF*lengthCF) * 
 	       N_AVOG / (double)(nparr[j] + nnarr[j]) * abundarr[j]) * 
                (nparr[j]); 
+*/
         }
     }
 
@@ -167,6 +168,8 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 	    /*interpolate*/
 	    polint(rowarr,fracns,2,logtemp,fracnp,dfp);
 
+            if(m == 0) fracneu = fracn;
+
 	    /*reset value if extrapolated to unphysical value*/
 	    if (fracn<0.0)
 	    {
@@ -174,11 +177,14 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 		else fracn=1.0;
 	    }
 
+            n_e += X_el[n] * (double)(m) * fracn;
+
             /*lcool is in erg*cm^3/s, X_el/ndens is n_i/n_tot */
             /*multiplying by n_e * n_totalion hopefully converts to erg/cm^3/s */
-	    ioncool += lcool * fracn * X_el[n]/ndens * (n_e * ndens); 
+	    ioncool += lcool * X_el[n] * abs(1.0 - fracneu); 
 	}
     }
+    ioncool = ioncool * n_e;
     return ioncool;
 } /*end calc_lcool*/
 
