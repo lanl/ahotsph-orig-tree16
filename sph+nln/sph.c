@@ -616,7 +616,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i] = p->abund[j];/*((double)(p->np[j]+p->nn[j]));*/
+                        molfrac[i] = p->abund[j]/((double)(p->np[j]+p->nn[j]));
                     }   
                 }   
             }
@@ -639,7 +639,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i];/*((double)(p->np[j]+p->nn[j]));*/
+                        p->abund[j] = molfrac[i]*((double)(p->np[j]+p->nn[j]));
                     }   
                 }
             }

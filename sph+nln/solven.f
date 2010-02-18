@@ -247,6 +247,7 @@ c..   elapsed time
             time     = time + dth0
             dtleft   = dtstar - time
             checksum = sumx - 1.0d0
+      if(irank.eq.0) write(*,*)'checksum= ',checksum
 
 c..   output if excessive subcycles
             if( ncycle .ge. ncytest )then
