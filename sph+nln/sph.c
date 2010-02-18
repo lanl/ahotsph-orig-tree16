@@ -626,7 +626,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
             rho = (double)p->rho * (m / (l*l*l));
-            if(p->temp > 1.e9) printf("T= %.2EK   p->rho= %E     rho= %E\n",p->temp, p->rho,rho);
+            if(p->temp > 1.e0) printf("T= %.2EK   p->rho= %.3E   rho= %.3E, H: %.3E\n",p->temp, p->rho,rho,molfrac[1]);
             dt_cgs = (double)(dt / t);
             //printf("calling solven from proc %d ...... ",rank);
             solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
