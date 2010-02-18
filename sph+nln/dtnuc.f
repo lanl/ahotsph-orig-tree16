@@ -164,7 +164,7 @@ c      elseif(tin .gt. 5.0d9)then
 c         if(dth .lt. 1.0d-8)dth=1.0d-10
       endif
 
-      if(tin.gt.1.0d9)write(*,*)'dtnuc: found new dth =',dth1
+c      if(tin.gt.1.0d9)write(*,*)'dtnuc: found new dth =',dth1
       return
       end
 

@@ -596,13 +596,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         m_ave = 0.;//10./(N_AVOG*m);
 
         for ( j = 0; j < NISO; j++) {
-        //    m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
             m_ave += p->abund[j]*(p->np[j]+p->nn[j])/(N_AVOG*m);
             abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
-
-        //m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
-        //singlPrintf("m_ave = %E   ",m_ave);
 
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
@@ -621,8 +617,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i] = p->abund[j];/* rho * N_AVOG /((double)(p->np[j]+p->nn[j]))
-                                     / ndens;*/
+                        molfrac[i] = p->abund[j];
                     }   
                 }   
             }
@@ -630,19 +625,16 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
             //printf("calling solven from proc %d ...... ",rank);
-            if(p->temp > 1.e0) printf("T= %.2EK   p->rho= %.3E   rho= %.3E, H: %.3E\n",p->temp, p->rho,rho,molfrac[1]);
             solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
             //printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
             //printf("udot: %E   ",p->udot);
-            
 
             /*update composition of particle from updated abundance array*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i];/*((double)(p->np[j]+p->nn[j])) * ndens
-                                      / (rho * N_AVOG);*/
+                        p->abund[j] = molfrac[i];
                     }   
                 }
             }

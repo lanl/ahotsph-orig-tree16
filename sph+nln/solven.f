@@ -66,7 +66,7 @@ c     aepst,aepsv
 
 c-------------------------------------------------------------
       iDbug = 0
-      if(temp.gt.1.d0) iDbug = 1
+c      if(temp.gt.1.d0) iDbug = 1
 c-------------------------------------------------------------
 
       dth0   = 0.0d0
@@ -90,7 +90,7 @@ c..   xin passed through call
 
       do n =1, nnuc
          y(n) = xin(n) / dble( nz(n) + nn(n))
-         if(irank.eq.0 .and. iDbug) write(*,*)y(n),nz(n),nn(n)
+c         if(irank.eq.0 .and. iDbug) write(*,*)y(n),nz(n),nn(n)
       enddo
 
 c     if1: t9 sufficient for reactions
@@ -247,7 +247,7 @@ c..   elapsed time
             time     = time + dth0
             dtleft   = dtstar - time
             checksum = sumx - 1.0d0
-      if(irank.eq.0) write(*,*)'checksum= ',checksum
+      if(irank.eq.0 .and. iDbug) write(*,*)'checksum= ',checksum
 
 c..   output if excessive subcycles
             if( ncycle .ge. ncytest )then
@@ -467,7 +467,7 @@ c..   positive or zero
             eta  = eta  + y(j)* dble(nn(j) - nz(j))
          enddo
          checksum = sumx - 1.0d0
-         write(*,*)'checksum in nse ',checksum
+c         write(*,*)'checksum in nse ',checksum
 c..   Brand new thesis paranoia
 c..   renormalize abundances
          sumx = -1.0d0
@@ -584,7 +584,7 @@ c..   positive or zero
             eta  = eta  + y(j)* dble(nn(j) - nz(j))
          enddo
          checksum = sumx - 1.0d0
-      if(irank.eq.0) write(*,*)'checksum= ',checksum
+      if(irank.eq.0 .and. iDbug) write(*,*)'checksum= ',checksum
 
 c..   calculate energy generation rate using mass excesses
 c..   DNE is 3/2 kT for new particles
