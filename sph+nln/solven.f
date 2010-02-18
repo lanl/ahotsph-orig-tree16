@@ -1,10 +1,10 @@
-      subroutine solven(dtstar,temp, rho, yin, deltah, irank)
+      subroutine solven(dtstar,temp, rho, xin, deltah, irank)
 
 c..   evaluates rates, sets up matrix equations,
 c..   and solves reaction network over time interval dth,
 c..   updating mole fractions y and nucleon fractions x
 c..   Takes timestep, temperature, density, and mole fractions
-c..   yin in a 1d array as input. Outputs new y and energy generated
+c..   xin in a 1d array as input. Outputs new y and energy generated
 c..   (deltah)
 
       implicit none
@@ -22,7 +22,7 @@ c..   (deltah)
       integer*4 irank
       integer*4 iDbug
 
-      real*8  yold(ndim), yin(ndim)
+      real*8  yold(ndim), xin(ndim)
 c..   instantaneous rate of energy generation
       real*8  ssi(kdm)
 
@@ -66,7 +66,7 @@ c     aepst,aepsv
 
 c-------------------------------------------------------------
       iDbug = 0
-      if(temp.gt.1.d9) iDbug = 1
+      if(temp.gt.1.d0) iDbug = 1
 c-------------------------------------------------------------
 
       dth0   = 0.0d0
@@ -86,10 +86,10 @@ c..   T,rho passed through call
       t9     = temp*1.0d-9
 c      if(irank.eq.0 .and. iDbug) write(*,*)'T=',temp
 
-c..   yin passed through call
+c..   xin passed through call
 
-      do n =1, ndim
-         y(n) = yin(n)
+      do n =1, nnuc
+         y(n) = xin(n) / dble( nz(n) + nn(n))
          if(irank.eq.0 .and. iDbug) write(*,*)y(n)
       enddo
 
@@ -607,6 +607,13 @@ c     end if3
 
       icall = 1
 c      if(irank.eq.0) write(*,*)'deltah=',deltah
+
+c     update xin to be passed back to calling routine. ~CIE
+c     I'm guessing in original that was unnecessary since global array
+      do n =1, ndim
+         x(n) = xin(n) 
+      enddo
+
       return
 
  101  continue
