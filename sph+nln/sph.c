@@ -547,8 +547,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double molfrac[NNETW+1]; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
-    int inNW[2][NNETW+1]={{0,1,2,6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0},/*Z*/
-                         {1,0,2,6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,0}}; /*A-Z*/
+    int inNW[2][NNETW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
+                         {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
     double dt1_tot,udot_tot,dt1,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
@@ -621,8 +621,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        molfrac[i] = p->abund[j] * rho * N_AVOG /((double)(p->np[j]+p->nn[j]))
-                                     / ndens;
+                        molfrac[i] = p->abund[j];/* rho * N_AVOG /((double)(p->np[j]+p->nn[j]))
+                                     / ndens;*/
                     }   
                 }   
             }
@@ -641,8 +641,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i]*((double)(p->np[j]+p->nn[j])) * ndens
-                                      / (rho * N_AVOG);
+                        p->abund[j] = molfrac[i];/*((double)(p->np[j]+p->nn[j])) * ndens
+                                      / (rho * N_AVOG);*/
                     }   
                 }
             }

@@ -90,7 +90,7 @@ c..   xin passed through call
 
       do n =1, nnuc
          y(n) = xin(n) / dble( nz(n) + nn(n))
-         if(irank.eq.0 .and. iDbug) write(*,*)y(n)
+         if(irank.eq.0 .and. iDbug) write(*,*)y(n),nz(n),nn(n)
       enddo
 
 c     if1: t9 sufficient for reactions
@@ -584,6 +584,7 @@ c..   positive or zero
             eta  = eta  + y(j)* dble(nn(j) - nz(j))
          enddo
          checksum = sumx - 1.0d0
+      if(irank.eq.0) write(*,*)'checksum= ',checksum
 
 c..   calculate energy generation rate using mass excesses
 c..   DNE is 3/2 kT for new particles
