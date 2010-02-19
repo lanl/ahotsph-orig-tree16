@@ -100,7 +100,7 @@ c..si28
       end
 
 
-      subroutine inverses
+      subroutine inverses(irank)
 
 c..   written 11/17/04 wda
 c..   find reaction identity of inverse rates
