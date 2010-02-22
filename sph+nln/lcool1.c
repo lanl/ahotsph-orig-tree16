@@ -142,15 +142,17 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
     for ( n = 0; n < Nel; n++)	
     {
 	N = n+1;
+//        printf("bares:  %.2E  %.2E \n", ionfracp[ N*(N+1)/2+N ][j],tablep[ N*(N+1)/2-1+N][j]);
 	/*loop over ions for each element,dont skip any*/
         for ( m = 0; m < (N+1); m++)	
 	{
+            index = (int)(N * (float)( (N+1)/2 ) ); /* to preempt int division probs */
 	    /*re-assign table values so interpolation can be done in 
 	      double precision (table is floats). */
 	    rowarr[0] = ionfracp[0][ j ];
 	    rowarr[1] = ionfracp[0][ j + 1 ];
-	    interp[0] = tablep[ N*(N+1)/2-1+m ][ j ];
-	    interp[1] = tablep[ N*(N+1)/2-1+m ][ j + 1 ];
+	    interp[0] = tablep[ index-1+m ][ j ];
+	    interp[1] = tablep[ index-1+m ][ j + 1 ];
 
 	    /*interpolate*/
 	    polint(rowarr,interp,2,logtemp,lcoolp,dyp);
@@ -162,8 +164,8 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 		/*else fracn=1.0;*//*this case shouldn't happen*/
 	    }
 		
-	    fracns[0] = ionfracp[ N*(N+1)/2+m ][ j ];
-	    fracns[1] = ionfracp[ N*(N+1)/2+m ][ j + 1 ];
+	    fracns[0] = ionfracp[ index+m ][ j ];
+	    fracns[1] = ionfracp[ index+m ][ j + 1 ];
 
 	    /*interpolate*/
 	    polint(rowarr,fracns,2,logtemp,fracnp,dfp);

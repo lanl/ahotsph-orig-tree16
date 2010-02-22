@@ -54,7 +54,6 @@ void init_CoolTable(int *Gridpts, int *Nel)
            "CHIANTI-COOLING.dat", "r");
            /*"/home/cellinge/SNSPH.dir/tree16/sph+nln/CHIANTI-COOLING.dat", "r");*/
     if (File1p == NULL) 
-	//Error("error opening cooling curves: %s\n",strerror(errno));
 	singlPrintf("error opening cooling curves: \n");
 
     /*open table with ion fractions*/
@@ -62,7 +61,6 @@ void init_CoolTable(int *Gridpts, int *Nel)
            "mazzotta_etal_9.ioneq","r");
            /*"/home/cellinge/SNSPH.dir/tree16/sph+nln/mazzotta_etal_9.ioneq","r");*/
     if (file2p == NULL) 
-	//Error("error opening ion fractions: %s\n",strerror(errno));
 	singlPrintf("error opening ion fractions: \n");
 
     fscanf(file2p, "%i %i", Gridpts,Nel);
@@ -75,15 +73,21 @@ void init_CoolTable(int *Gridpts, int *Nel)
     /* for ionfracp, need (Nel*(Nel+1)/2 + Nel+1) by Gridpts array */
     ionfracp = (float**)malloc( (tot_ion + 1) * sizeof(float *) );
 
-    for ( i = 0; i < (tot_ion + 1); i++) 
+    for ( i = 0; i < (tot_ion + 1); i++) {
 	ionfracp[i] = (float *)malloc( (*Gridpts) * sizeof(float) );
+        for ( j = 0; j < (*Gridpts); j++)
+            ionfracp[i][j] = 0.0;
+    }
 
 
     /* for tablep, need (Nel*(Nel+1)/2) by Gridpts array */ 
     tablep = (float **)malloc( (tot_ion) * sizeof(float *) );
 
-    for ( i = 0; i < (tot_ion); i++)
+    for ( i = 0; i < (tot_ion); i++) {
 	tablep[i] = (float *)malloc( (*Gridpts) * sizeof(float *) );
+        for ( j = 0; j < (*Gridpts); j++)
+            tablep[i][j] = 0.0;
+    }
 
     fgets(myline,50,File1p);//read in first line of text in cooling curves
     fgets(myline,50,File1p);//read in second line of text in cooling curves
@@ -137,6 +141,7 @@ void init_CoolTable(int *Gridpts, int *Nel)
 	 */
 	    }
 
+            printf("counter: %4d, j=%2d, k=%2d, tab= %.6E  ion=%.6E\n",counter1,j,k,tablep[counter1][12],ionfracp[counter1][12]);
 	    counter1++;
 	    counter2++;
 	}
