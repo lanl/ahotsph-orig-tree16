@@ -661,69 +661,66 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             }
 
             m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
-//            m_ave = 10./(N_AVOG*m);
 
 	    u = p->u; 
             rho = (double)p->rho * (m / (l*l*l));
             eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
-	    eos_u = ((double)(p->u)) * ((double)(p->rho));
+            dtsub = dt;
+            dt_tot = 0.;
 
-	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+            cycles = 0;
+            cycle_count = 0;
+            countc = 0;
 
-	    /*this does the table look-up:
-	      0=use analytic outside table, 1=extrapolate (NR's linear polint)
-              lcool contains energy lost as positive value */
-	    lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
-            /*lcool = analytic_cool(p->temp);*/
+            do {
+                eos_u = ((double)(u)) * ((double)(p->rho));
 
-	    /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-            /* and lcool is positive for energy loss */
-	    udot = -1.0*lcool * ( t*t*t* l/ m );
+  	        /* Figure out good upper and lower limits for temp. returns -99. at failure */
 
-            /* trying to catch any NaN's */
-            if ( udot != udot ) udot = 0.0;
+	        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+                if(p->temp < 0.) cycles = 0;    /*catching errors in newtraph (T=-99.) */
+                printf("@ T; %.3E, ",p->temp);
 
-            /*determine if we need subcycling*/
-	    if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
-	        dt1 = dt / 2.;
-                dt1_tot = 0.;
-                cycles = 2; /*total number of cycles*/
-                cycle_count = 0; /*keep track of cycles gone through*/
-		printf("subcycling %d times, u= %E  udot*dt1= %E\n",cycles,u*frac, udot*dt1);
-             } else {
-                cycles = 0;
-                cycle_count = 0;
-             }
+                if((p->temp > 0.0) && (p->temp < 1.e9)) {
+	           /*this does the table look-up:
+	             0=use analytic outside table, 1=extrapolate (NR's linear polint)
+                     lcool contains energy lost as positive value */
+	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
+                   /*lcool = analytic_cool(p->temp);*/
 
-             /* if so, then subcycle */ 
-	        while(cycle_count < cycles) { 
+                   /* trying to catch any NaN's */
+                   if ( lcool != lcool ) lcool = 0.0;
 
-		    if ( abs( dt1 * udot ) < ( frac * u) ) { 
-                        printf("subcycling %d times, u= %E  udot*dt1= %E\n",
-                               cycles,u*frac, udot*dt1);
-                        /*this sub-timestep*/
-		        dt1_tot += dt1;	
-		        u += udot * dt1;	
-	                eos_u = ((double)(u)) * ((double)(p->rho));
-		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	           /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
+                   /* and lcool is positive for energy loss */
+	           udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
 
-                        /*next sub-timestep*/
-		        lcool = calc_lcool1(
-                                p->abund,p->np,p->nn,p->temp,rho,Gridpts,Nel,0);
-	                udot = -1.0*lcool * ( t*t*t* l/ m );
-                        if ( udot != udot ) udot = 0.0; /* trying to catch stupid NaN's */
-                        cycle_count++;
-		    } else {//if (cycles <= 1024) { 
-                        /*halve time step and double remaining number of cycles*/
-		        dt1 = dt1/2.0; 
-                        cycles = cycle_count + (cycles-cycle_count)*2; 
-                        printf("@ T= %E, decreasing dt: %E, %d .... %E  %E\n", 
-                               p->temp,dt1, cycles,u*frac,udot*dt1);
-                    } /*else {
-                        printf("update_final: too many subcycles!\n");
-                        break;
-                    }*/
+                   /*determine if we need subcycling*/
+	           if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
+                       countc++;
+	               dt_sub = dt_sub / (double)decr;
+                       if(cycles < decr) {
+                          cycles = decr; /* total number of cycles */
+                       } else {
+                          cycles = cycle_count + (cycles - cycle_count)*decr;
+                       }
+		       printf("subcycling %d times, udot= %.2E  new dt= %.2E\n",
+                              cycles,udot, dt_sub);
+                   } else { /* no further subcycling required, update values */
+                       dt_tot += dt_sub;
+                       u += udot * dt_sub;
+                       cycle_count++;
+                       printf("new u= %.2E, udot= %.2E after cycle %d; frac of t= %.2E\n",
+                              u, udot, cycle_count, (dt_tot/dt));
+                   }
+
+                   if(dt_tot > dt)
+                      printf("warning: dt_tot > dt!\n");
+                   if(cycles < 0) printf("warning: int overflow in cycles\n");
+                   if(countc > 300) printf("warning: over 300 subcycles\n");
+                }
+            } while (cycle_count < cycles);
+
 		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? - very! */
  		/* add condition that increases dt1 again if udot*dt1 < minfrac*u */
                     /* only if too small && less that dt && even subcycle */
@@ -737,8 +734,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
            /*     printf("subcycles: %d  %d\n",cycle_count, cycles);*/
             
-
-            //btab->temp = p->temp;
             p->udot += (u - p->u) / dt;
 
 	}
