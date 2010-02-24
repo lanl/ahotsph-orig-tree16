@@ -291,6 +291,7 @@ main(int argc, char *argv[])
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts, Nel; 	/* for cooling tables */
     int status, done,rank,idbug;
+    char netrcfn[20];
 
     argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
     //openangle_wind=60.0; //added by CE
@@ -688,10 +689,15 @@ main(int argc, char *argv[])
     }
 
         rank = MPMY_Procnum();
+        sprintf(netrcfn, "%20c",' ');
+        sprintf(netrcfn, "net.rc.%-d",rank); 
+        strncpy( &netrcfn[ strlen(netrcfn) ], " ",1 );
+        printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));
+
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
         singlPrintf("building network library .... ");
-        build_(&rank,&idbug);
+        build_(&rank,&idbug,&netrcfn);
         singlPrintf("successfully built network library\n");
     }
 

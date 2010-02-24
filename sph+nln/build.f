@@ -1,4 +1,4 @@
-      subroutine build(irank,idbug)
+      subroutine build(irank,idbug,filenm)
 
 c..reads Thielemann file format
 c..identifies symbol in Z,N
@@ -21,6 +21,7 @@ c..and echo to standard i/o
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
 c..from reaction rates available
+      write(*,*) filenm,len(trim(filenm))
       idebug = 0
       call getfkt(idebug,irank)
 
@@ -31,8 +32,8 @@ ccccccccccccccccccccccc
       
 c..actual size of network (number of nuclei)
       netsize = itot
-      filenm = 'net.rc.1'
-      call abinit(irank,filenm)
+c      filenm = 'net.rc.1'
+      call abinit(irank,trim(filenm))
       
 c..setup binding energies and 2J+1 factors
       call masses(qq,w,itot,irank)
