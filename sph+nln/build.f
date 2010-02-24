@@ -16,6 +16,7 @@ c..and echo to standard i/o
 
       integer*4 irank,idbug
       integer*4 idebug,n,i,j
+      character*20 filenm
 
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
@@ -30,7 +31,8 @@ ccccccccccccccccccccccc
       
 c..actual size of network (number of nuclei)
       netsize = itot
-      call abinit(irank)
+      filenm = 'net.rc.1'
+      call abinit(irank,filenm)
       
 c..setup binding energies and 2J+1 factors
       call masses(qq,w,itot,irank)

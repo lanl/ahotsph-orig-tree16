@@ -1,4 +1,4 @@
-      subroutine abinit(irank)
+      subroutine abinit(irank,netrcfile)
 
       implicit none
 
@@ -6,6 +6,7 @@
       include 'comod'
 
       integer*4 irank
+      character*20 netrcfile
 
       real*8 y(ndim),xx(ndim)
 
@@ -49,13 +50,15 @@ c..special nuclei to be used in diagnostics and i/o
 
 c-------------------------------------------------------------------
 
+      write(*,*) netrcfile
+
       if(irank.eq.0) write(*,*)'ENTERING ABINIT, netsize ',netsize
 ccccccccccccccccccccccccccccc
 
 c..   resource file for analysis programs
-      inquire(file='net.rc',exist=tobe)
+      inquire(file=trim(netrcfile),exist=tobe)
       if( .not. tobe )then
-         if(irank.eq.0) write(*,*)'abinit: no net.rc'
+         if(irank.eq.0) write(*,*)'abinit: no ',trim(netrcfile)
          newnet = 1
       endif
 
@@ -172,7 +175,7 @@ c         enddo
 
 c..   redefine net.rc values
          lun = 30+irank
-         open(lun,file='net.rc')
+         open(lun,file=trim(netrcfile))
          do j = 1, netsize
             write(lun,'(3i5,a5,0pf10.4,1pe12.4)')
      1           j,nz(j),nn(j),xid(j),qex(j),solarx(j)
@@ -194,7 +197,7 @@ c..   by many routines
 
          if(irank.eq.0) write(*,*)'abinit: checking netrc'
 
-         open(lun,file='net.rc',status='old')
+         open(lun,file=trim(netrcfile),status='old')
          ibu = 1
 c..initializing qex and solarx
  100     read(lun,'(3i5,a5,0pf10.4,1pe12.4)',end=101)
@@ -202,15 +205,16 @@ c..initializing qex and solarx
          if( izbu(ibu) .ne. nz(ibu) .or.
      1        inbu(ibu) .ne. nn(ibu) )then
 c..   different net.rc
-            if(irank.eq.0) write(*,*)'net.rc'
+            if(irank.eq.0) write(*,*)trim(netrcfile)
             if(irank.eq.0) write(*,'(3i5,a5)')
      1         ibu,izbu(ibu),inbu(ibu),cbu
             if(irank.eq.0) write(*,*)'abinit'
             if(irank.eq.0) write(*,'(3i5,a5)')
      1         ibu,nz(ibu),nn(ibu),xid(ibu)
-            if(irank.eq.0) write(*,*)'abinit: different net.rc'
             if(irank.eq.0) write(*,*)
-     1         'rm net.rc or change its name, and rerun'
+     1         'abinit: different ',trim(netrcfile)
+            if(irank.eq.0) write(*,*)
+     1         'rm ',trim(netrcfile),' or change its name, and rerun'
             stop'abinit: reading net.rc'
          endif
          if( izbu(ibu) .eq. 2 .and. inbu(ibu) .eq. 2 )goto 101
@@ -237,7 +241,7 @@ c..define solar metallicity from solar tables for consistency
          enddo
 
          if(irank.eq.0) write(*,*)
-     1      'abinit: net.rc exists and is left unchanged'
+     1      'abinit: ',trim(netrcfile),' exists and is left unchanged'
          close(lun)
       endif
 
@@ -360,7 +364,7 @@ c..   reordering finished
 
       if( jz .ne. 0 .or. ja .ne. 0 )then
 c..   redefine net.rc values
-         open(lun,file='net.rc')
+         open(lun,file=trim(netrcfile))
          do j = 1, netsize
             read(lun,'(3i5,a5,0pf10.4,1pe12.4)')
      1           i,nz(j),nn(j),xid(j),qex(j),solarx(j)
@@ -371,8 +375,8 @@ c..   by many routines
             write(lun,'(10i5)')(nucp(i),i=j,j+9)
          enddo
          close(lun)
-         if(irank.eq.0) write(*,*)
-     1      'net.rc adjusted for new nucp index array'
+         if(irank.eq.0) write(*,*) trim(netrcfile),
+     1      ' adjusted for new nucp index array'
       endif
 
       if(irank.eq.0) write(*,*)'LEAVING ABINIT'
