@@ -688,14 +688,15 @@ main(int argc, char *argv[])
         singlPrintf("successfully read in cooling functions\n");
     }
 
-        rank = MPMY_Procnum();
-        sprintf(netrcfn, "%20c",' ');
-        sprintf(netrcfn, "net.rc.%-d",rank); 
-        strncpy( &netrcfn[ strlen(netrcfn) ], " ",1 );
-        printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));
+    rank = MPMY_Procnum();
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
+        sprintf(netrcfn, "%20c",' ');
+        sprintf(netrcfn, "net.rc.%-d",rank); 
+        strncpy( &netrcfn[ strlen(netrcfn) ], " ",1 );
+        /*printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));*/
+
         singlPrintf("building network library .... ");
         build_(&rank,&idbug,&netrcfn);
         singlPrintf("successfully built network library\n");

@@ -50,7 +50,7 @@ c..special nuclei to be used in diagnostics and i/o
 
 c-------------------------------------------------------------------
 
-      write(*,*) netrcfile
+c      write(*,*) netrcfile
 
       if(irank.eq.0) write(*,*)'ENTERING ABINIT, netsize ',netsize
 ccccccccccccccccccccccccccccc

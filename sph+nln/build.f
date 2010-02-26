@@ -21,7 +21,7 @@ c..and echo to standard i/o
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
 c..from reaction rates available
-      write(*,*) filenm,len(trim(filenm))
+c      write(*,*) filenm,len(trim(filenm))
       idebug = 0
       call getfkt(idebug,irank)
 
