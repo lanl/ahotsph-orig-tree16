@@ -551,7 +551,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                          {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
+    double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
     double tlo, tup;
     int decr;
     long cycles=0, countc;
@@ -630,7 +630,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             temp = (double)p->temp;
             dt_cgs = (double)(dt * t);
             ndens = eos_n / (l*l*l);
-        /*prepare abundance array passed into network - more ugliness!*/
+            /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){

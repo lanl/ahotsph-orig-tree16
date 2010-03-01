@@ -33,8 +33,10 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 	    xl = xguess;
     }
 
-    if (i == MAX_ITER) 
+    if (i == MAX_ITER) {
 	singlPrintf("Bisect: max iterations exceeded\n");
+        xguess = -99.0;
+    }
 
     return (float)xguess;
 }
