@@ -8,6 +8,7 @@ typedef struct{
 } SPHbody;
 */
 
+double find_ne(float abundarr[],int nparr[],int nnarr[],double rho,double temp,int Gridpts,int Nel);
 double calc_lcool1(float abundarr[],int nparr[],int nnarr[],double rho,double temp,int Gridpts,int Nel,int extrapolate);
 double calc_lcool2(double temp,double uint,double dens,int numu,int numD);
 
