@@ -605,9 +605,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 	/* Figure out good upper and lower limits for temp (note: unit-independent!) */
 	p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+        if(p->temp < 0.0) printf("newtraph failed: particle %d\n",p->ident);
 
 
-        if(do_burning){
+        if(do_burning && (p->temp > 0.0)) {
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
             rho = (double)p->rho * (m / (l*l*l));

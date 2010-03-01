@@ -15,6 +15,8 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
    
     if ((*f)(xl)*(*f)(xr) > 0.0) {
 	singlPrintf("Bisect: %1.1e and %1.1e do not bracket a root\n", xl, xr);
+        xguess = -99.0;
+        return xguess;
     }
 
     for(i = 0; i <= MAX_ITER; i++) {
@@ -31,8 +33,10 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 	    xl = xguess;
     }
 
-    if (i == MAX_ITER) 
+    if (i == MAX_ITER) {
 	singlPrintf("Bisect: max iterations exceeded\n");
+        xguess = -99.0;
+    }
 
     return (float)xguess;
 }
