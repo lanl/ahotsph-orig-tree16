@@ -141,7 +141,7 @@ void init_CoolTable(int *Gridpts, int *Nel)
 	 */
 	    }
 
-            printf("counter: %4d, j=%2d, k=%2d, tab= %.6E  ion=%.6E\n",counter1,j,k,tablep[counter1][12],ionfracp[counter1][12]);
+            //printf("counter: %4d, j=%2d, k=%2d, tab= %.6E  ion=%.6E\n",counter1,j,k,tablep[counter1][12],ionfracp[counter1][12]);
 	    counter1++;
 	    counter2++;
 	}

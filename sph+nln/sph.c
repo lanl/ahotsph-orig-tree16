@@ -549,11 +549,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
  * should be included in the burning. This is UGLY!! */
     int inNW[2][NNETW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
                          {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
-    double dt_tot,udot_tot,dt_sub,udot,frac=0.1, minfrac=0.001;
+    double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
-    int decr = 2;
-    long cycles=0,cycle_count=0, countc;
+    int decr;
+    long cycles=0, countc;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
@@ -667,10 +667,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             rho = (double)p->rho * (m / (l*l*l));
             eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
             dt_sub = dt;
+            dt_save = dt;
             dt_tot = 0.;
 
+            decr = 10;
             cycles = 0;
-            cycle_count = 0;
             countc = 0;
 
             do {
@@ -679,15 +680,13 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
   	        /* Figure out good upper and lower limits for temp. returns -99. at failure */
 
 	        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
-                if(p->temp < 0.) cycles = 0;    /*catching errors in newtraph (T=-99.) */
-                printf("@ T; %.3E, ",p->temp);
+                if(p->temp < 0.) dt = 0.;    /*catching errors in newtraph (T=-99.) */
 
                 if((p->temp > 0.0) && (p->temp < 1.e9)) {
 	           /*this does the table look-up:
 	             0=use analytic outside table, 1=extrapolate (NR's linear polint)
                      lcool contains energy lost as positive value */
 	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
-                   /*lcool = analytic_cool(p->temp);*/
 
                    /* trying to catch any NaN's */
                    if ( lcool != lcool ) lcool = 0.0;
@@ -700,27 +699,30 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	           if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
                        countc++;
 	               dt_sub = dt_sub / (double)decr;
-                       if(cycles < decr) {
-                          cycles = decr; /* total number of cycles */
-                       } else {
-                          cycles = cycle_count + (cycles - cycle_count)*decr;
-                       }
+			printf("%d T: %.2E rho: %.2E n: %.2E\n",
+                               p->ident,p->temp,p->rho,eos_n);
 		       printf("subcycling %d times, udot= %.2E  new dt= %.2E\n",
-                              cycles,udot, dt_sub);
+                              countc,udot, dt_sub);
+                   } else if( (float)(dt - dt_tot) < (float)dt_sub ) {
+                   /* do the last sub-time step */
+                       u += udot * (dt - dt_tot);
+                       dt_tot = dt;
+                       cycles++;
+                       printf("last u= %.2E, udot= %.2E after cycle %d; %.2E\n",
+                              u, udot, cycles, (dt_tot/dt));
                    } else { /* no further subcycling required, update values */
                        dt_tot += dt_sub;
                        u += udot * dt_sub;
-                       cycle_count++;
-                       printf("new u= %.2E, udot= %.2E after cycle %d; frac of t= %.2E\n",
-                              u, udot, cycle_count, (dt_tot/dt));
+                       cycles++;
+                       printf("new u= %.2E, udot= %.2E after cycle %d; %.2E\n",
+                              u, udot, cycles, (dt_tot/dt));
                    }
 
-                   if(dt_tot > dt)
-                      printf("warning: dt_tot > dt!\n");
-                   if(cycles < 0) printf("warning: int overflow in cycles\n");
-                   if(countc > 300) printf("warning: over 300 subcycles\n");
+                   if((float)dt_tot > (float)dt)
+                      printf("warning: dt_tot > dt: %E and %E\n",dt_tot, dt);
+                   if(cycles > 300) printf("warning: over 300 subcycles\n");
                 }
-            } while (cycle_count < cycles);
+            } while ((float)dt_tot < (float)dt);
 
 		/* need to limit the number of subcycles!!!! BELOW: DANGEROUS?? - very! */
  		/* add condition that increases dt1 again if udot*dt1 < minfrac*u */
@@ -733,6 +735,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                     }
 */
             
+            dt = dt_save;
             p->udot += (u - p->u) / dt;
 
 	}

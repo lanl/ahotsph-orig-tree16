@@ -183,7 +183,7 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 
             /*lcool is in erg*cm^3/s, X_el/ndens is n_i/n_tot */
             /*multiplying by n_e * n_totalion hopefully converts to erg/cm^3/s */
-	    ioncool += lcool * X_el[n] * abs(1.0 - fracneu); 
+	    ioncool += lcool * fracn * X_el[n] * abs(1.0 - fracneu); 
 	}
     }
     ioncool = ioncool * n_e;
