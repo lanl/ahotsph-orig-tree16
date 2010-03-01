@@ -612,7 +612,7 @@ c      if(irank.eq.0) write(*,*)'deltah=',deltah
 c     update xin to be passed back to calling routine. ~CIE
 c     I'm guessing in original that was unnecessary since global array
       do n =1, ndim
-         x(n) = xin(n) 
+         xin(n) = x(n) 
       enddo
 
       return
