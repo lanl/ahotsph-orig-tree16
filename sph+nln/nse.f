@@ -52,7 +52,7 @@ c..   xxeq = nucleon fraction in nse
       real*8 ualow,uhat0
       real*8 up,un,yheold,ww(nnuc),yeqold(ndim)
       real*8 chemfak, chemcon
-      integer*4 ib, in,ip,ia,ni56,nc12,nfe54,nucn,nucpr
+      integer*4 ib, in,ip,ia,ni56,nc12,nfe54,nfe56,nucn,nucpr
       integer*4 nuc0, i, n, iitot
 
       data blank/'     '/
@@ -137,7 +137,6 @@ c..   executed once on each call
       theta = 0.1013d0 * rho9 /t932
       tk    = t9/11.605d0
       tin   = t9*1.0d9
-c added (1) CIE
       yense    = ye(1)
       eta = 1.0d0 - 2.0d0*ye(1)
 c----------------------------------
@@ -147,14 +146,25 @@ c----------------------------------
             write(*,*)'error in qse, no Ni56 in network'
             stop
          endif
-         nfe54  = 0
+c         nfe54  = 0
+c         do i = 1, itot
+c            yeqold(i) = yeq(i)
+c            if( nz(i) .eq. 26 .and.  nn(i) .eq. 28 )then
+c               nfe54 = i
+c            endif
+c         enddo
+c         if( nfe54 .eq. 0 )then
+c            write(*,*)'error in qse, no Fe54 in network'
+c            stop
+c         endif
+         nfe56  = 0
          do i = 1, itot
             yeqold(i) = yeq(i)
-            if( nz(i) .eq. 26 .and.  nn(i) .eq. 28 )then
-               nfe54 = i
+            if( nz(i) .eq. 26 .and.  nn(i) .eq. 30 )then
+               nfe56 = i
             endif
          enddo
-         if( nfe54 .eq. 0 )then
+         if( nfe56 .eq. 0 )then
             write(*,*)'error in qse, no Fe54 in network'
             stop
          endif
@@ -184,8 +194,11 @@ c..   high T value = free n have all neutron excess
          uhhi  = ( qq(in) - qq(ip) )
      1        + tk*dlog( (omxa + eta)/(omxa - eta) )
 c..   low T value = Fe54 has all neutron excess
-         uhlow = qq(nfe54) + tk*dlog( eta*theta*0.5d0/54.0d0**1.5 )
-     1        - 54.0d0/4.0d0*ualow
+c         uhlow = qq(nfe54) + tk*dlog( eta*theta*0.5d0/54.0d0**1.5 )
+c     1        - 54.0d0/4.0d0*ualow
+c..   Small SNSPH network has no Fe54. Use Fe56 instead 
+         uhlow = qq(nfe56) + tk*dlog( eta*theta*0.5d0/56.0d0**1.5 )
+     1        - 56.0d0/4.0d0*ualow
 c..   compromise value
          uhat  = uhlow*(1.0d0 - xal) + uhhi*xal
 c..   use chemical potential values from state.f
