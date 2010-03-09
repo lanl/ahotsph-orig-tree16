@@ -874,7 +874,7 @@ main(int argc, char *argv[])
 	    
 	    if (MACtype == AREL_MAC) this_tol = tol*mtot/(sysradius*sysradius);
 	    SetupCofm(MACtype, this_tol, frac_tol);
-	    singlPrintf("BuildTree, tol=%g, frac_tol=%g\n", this_tol, frac_tol);
+	    singlPrintf("BuildTree, tol=%g, frac_tol=%g, sysrad.=%.3g\n", this_tol, frac_tol,sysradius);
 	    
 	    StartTimer(&BuildTot);
 	    pqsortsetup(&sortedbtab, btab, nobj, sizeof(body), sort_tol, Realloc_f);
