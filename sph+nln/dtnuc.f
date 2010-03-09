@@ -81,7 +81,7 @@ c..   guess at best time step
                fak = b(n)
                if( fak .ne. 0.0d0 )then
 c..delchi
-                  taug  =  dabs( ( 1.0d-5 + y(n) )/fak )*delchi*dth0
+                  taug  =  dabs( ( 1.0d-3 + y(n) )/fak )*delchi*dth0
 
                else
                   taug = tau(1)
@@ -94,7 +94,7 @@ c..delchi
                fak = b(n)
                if( fak .ne. 0.0d0 )then
 c..delchi => 1
-                  taug  =  dabs( ( 1.0d-5 + y(n) )/fak )*dth0
+                  taug  =  dabs( ( 1.0d-3 + y(n) )/fak )*dth0
                else
                   taug = tau(1)
                endif
@@ -109,7 +109,7 @@ c..   guess at best time step
             if( y(n) .gt. chimin )then
                fak = b(n)
                if( fak .ne. 0.0d0 )then
-                  taug  =  dabs( ( 1.0d-5 + y(n) )/fak )*delchi*dth0
+                  taug  =  dabs( ( 1.0d-3 + y(n) )/fak )*delchi*dth0
                else
                   taug = tau(1)
                endif
@@ -117,7 +117,8 @@ c..   guess at best time step
                   tau(2) = taug
                   nucleu = n
                endif
-            elseif( y(n) .gt. 1.0d-15 )then
+c            elseif( y(n) .gt. 1.0d-15 )then
+            elseif( y(n) .gt. 1.0d-6 )then
                fak = b(n)
                if( fak .ne. 0.0d0 )then
 c..delchi = 1 for very low abundances (try to avoid negative y)
@@ -157,12 +158,12 @@ c..decide on new value
          ndth = 2
       endif
 
-      if(tin .gt. 9.0d9)then 
+c      if(tin .gt. 9.0d9)then 
 c         if(dth .lt. 1.0d-10)dth=1.0d-10
 c         if(dth .gt. 1.0d-5)dth=1.0d-5
 c      elseif(tin .gt. 5.0d9)then
 c         if(dth .lt. 1.0d-8)dth=1.0d-10
-      endif
+c      endif
 
 c      if(tin.gt.1.0d9)write(*,*)'dtnuc: found new dth =',dth1
       return
