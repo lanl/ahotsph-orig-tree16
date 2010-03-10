@@ -192,6 +192,7 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 
 double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double rho, int Gridpts,int Nel)
 {
+/* could also calculate n_ion and set a flag that determines which one is returned */
     extern float **ionfracp;	/*global array with ion fractions*/
     double dy,df;	/*measure of accuracy returned from interp.*/
     double *dyp;	/*pointer to dy*/
