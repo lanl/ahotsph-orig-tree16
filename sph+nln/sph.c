@@ -628,6 +628,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
+            rho = (double)p->rho * (m / (l*l*l));
             dt_cgs = (double)(dt * t);
             ndens = eos_n / (l*l*l);
             /*prepare abundance array passed into network - more ugliness!*/
