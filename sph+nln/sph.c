@@ -552,7 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
-    float tlo = 1.e3, tup = 2.5e11;
+    double tlo = 1.e3, tup = 2.5e11;
     int decr;
     long cycles=0, countc;
 
@@ -700,7 +700,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	           if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
                        countc++;
 	               dt_sub = dt_sub / (double)decr;
-		       printf("%d T: %.2E rho: %.2E n: %.2E\n",
+		       printf("\n%d T: %.2E rho: %.2E n: %.2E\n",
                                p->ident,p->temp,p->rho,eos_n);
 		       printf("subcycling %d times,u=%.2E udot= %.2E, new dt= %.2E\n",
                               countc, u, udot, dt_sub);
@@ -709,14 +709,17 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        u += udot * (dt - dt_tot);
                        dt_tot = dt;
                        cycles++;
-                       printf("last u= %.2E, udot= %.2E after cycle %d; %.2E\n",
+                       printf("\nlast u= %.2E, udot= %.2E after cycle %d; %.2E\n",
                               u, udot, cycles, (dt_tot/dt));
                    } else { /* no further subcycling required, update values */
                        dt_tot += dt_sub;
                        u += udot * dt_sub;
                        cycles++;
+                       printf("%8d ",p->ident);
+/*
                        printf("new u= %.2E, udot= %.2E after cycle %d; %.2E\n",
                               u, udot, cycles, (dt_tot/dt));
+*/
                    }
 
                    if((float)dt_tot > (float)dt)
@@ -749,7 +752,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float acoef;
-    float tlo = 1.e3, tup = 2.5e11;
+    double tlo = 1.e3, tup = 2.5e11;
     int j;
     SPHbody *p;
    
@@ -775,7 +778,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(tlo, lup, eos_u*1.0e-6, uvst, duvst);
+	    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 

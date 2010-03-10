@@ -293,7 +293,7 @@ main(int argc, char *argv[])
     int status, done,rank,idbug;
     char netrcfn[20];
 
-    argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
+    /*argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";*/
     //openangle_wind=60.0; //added by CE
 
     MPMY_Init(&argc, &argv);
