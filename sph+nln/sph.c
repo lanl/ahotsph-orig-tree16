@@ -552,6 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
+    float tlo = 1.e3, tup = 2.5e11;
     int decr;
     long cycles=0, countc;
 
@@ -605,7 +606,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	/* Figure out good upper and lower limits for temp (note: unit-independent!) */
-	p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
 
         if(do_burning){
@@ -679,7 +680,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
   	        /* Figure out good upper and lower limits for temp. returns -99. at failure */
 
-	        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
                 if(p->temp < 0.) dt = 0.;    /*catching errors in newtraph (T=-99.) */
 
                 if((p->temp > 0.0) && (p->temp < 1.e9)) {
@@ -748,6 +749,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float acoef;
+    float tlo = 1.e3, tup = 2.5e11;
     int j;
     SPHbody *p;
    
@@ -773,7 +775,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	    p->temp = newtraph(tlo, lup, eos_u*1.0e-6, uvst, duvst);
 	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 
