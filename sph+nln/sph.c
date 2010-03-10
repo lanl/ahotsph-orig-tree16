@@ -675,7 +675,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             countc = 0;
 
             do {
-                eos_u = ((double)(u)) * ((double)(p->rho));
+                eos_u = ((double)u) * ((double)(p->rho));
 
   	        /* Figure out good upper and lower limits for temp. returns -99. at failure */
 
@@ -699,10 +699,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	           if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
                        countc++;
 	               dt_sub = dt_sub / (double)decr;
-			printf("%d T: %.2E rho: %.2E n: %.2E\n",
+		       printf("%d T: %.2E rho: %.2E n: %.2E\n",
                                p->ident,p->temp,p->rho,eos_n);
-		       printf("subcycling %d times, udot= %.2E  new dt= %.2E\n",
-                              countc,udot, dt_sub);
+		       printf("subcycling %d times,u=%.2E udot= %.2E, new dt= %.2E\n",
+                              countc, u, udot, dt_sub);
                    } else if( (float)(dt - dt_tot) < (float)dt_sub ) {
                    /* do the last sub-time step */
                        u += udot * (dt - dt_tot);

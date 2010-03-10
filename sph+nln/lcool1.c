@@ -61,8 +61,9 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
     float temps[Gridpts];
     float X_el[Nel];		/*element fraction, i.e. number density*/
-    float ndens = 0.;	/* total ion number density */
+    float ndens = 0.;	/* total number density */
     float n_e = 0.;	/* total electron number density */
+    float n_ion = 0.;	/* total ion number density */
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
@@ -139,13 +140,11 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
         }
     }
 
-    for ( n = 0; n < Nel; n++)	
-    {
+    for ( n = 0; n < Nel; n++) {
 	N = n+1;
 //        printf("bares:  %.2E  %.2E \n", ionfracp[ N*(N+1)/2+N ][j],tablep[ N*(N+1)/2-1+N][j]);
 	/*loop over ions for each element,dont skip any*/
-        for ( m = 0; m < (N+1); m++)	
-	{
+        for ( m = 0; m < (N+1); m++) {
             index = (int)(N * (float)( (N+1)/2 ) ); /* to preempt int division probs */
 	    /*re-assign table values so interpolation can be done in 
 	      double precision (table is floats). */
@@ -181,14 +180,19 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, doub
 
             n_e += X_el[n] * (double)(m) * fracn;
 
-            /*lcool is in erg*cm^3/s, X_el/ndens is n_i/n_tot */
-            /*multiplying by n_e * n_totalion hopefully converts to erg/cm^3/s */
-	    ioncool += lcool * fracn * X_el[n] * abs(1.0 - fracneu); 
+            /* fracn weighs it by fraction in this ionization state */
+            /* X_el[n]/ndens weighs it by fractional abundance of this element */
+	    ioncool += lcool * fracn * X_el[n] / ndens; 
 	}
+        /* sum total ion number density, excluding neutral ions */
+        n_ion += X_el[n] * ((double)1.0 - (double)fracneu);
     }
-    ioncool = ioncool * n_e;
+    /*lcool is in erg*cm^3/s, X_el/ndens is n_i/n_tot */
+    /*multiplying by n_e * n_totalion hopefully converts to erg/cm^3/s */
+    ioncool = ioncool * n_e * n_ion;
+
     return ioncool;
-} /*end calc_lcool*/
+} 
 
 
 
