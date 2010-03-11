@@ -675,13 +675,18 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             cycles = 0;
             countc = 0;
 
+	       printf("\n%d T: %.2E rho: %.2E n: %.2E u: %.3E\n",
+		       p->ident,p->temp,p->rho,eos_n,p->u);
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
 
   	        /* Figure out good upper and lower limits for temp. returns -99. at failure */
 
 	        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-                if(p->temp < 0.) dt = 0.;    /*catching errors in newtraph (T=-99.) */
+                if(p->temp < 0.) {
+                   dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
+                   printf("newtraph failed: %6G for particle %8d\n",p->temp,p->ident);
+                }
 
                 if((p->temp > 0.0) && (p->temp < 1.e9)) {
 	           /*this does the table look-up:
@@ -693,17 +698,17 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    if ( lcool != lcool ) lcool = 0.0;
 
 	           /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-                   /* and lcool is positive for energy loss */
 	           udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
 
                    /*determine if we need subcycling*/
-	           if ( (abs(udot*dt) > frac*u) && !(p->ident & (1<<30)) ) {
+	           if ( (abs(udot*dt)/u > frac) && !(p->ident & (1<<30)) ) {
                        countc++;
 	               dt_sub = dt_sub / (double)decr;
-		       printf("\n%d T: %.2E rho: %.2E n: %.2E\n",
-                               p->ident,p->temp,p->rho,eos_n);
-		       printf("subcycling %d times,u=%.2E udot= %.2E, new dt= %.2E\n",
-                              countc, u, udot, dt_sub);
+                       if(countc > 300) {
+		          printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
+                              p->ident, u, udot, dt_sub, dt_tot);
+                           break;
+                       }
                    } else if( (float)(dt - dt_tot) < (float)dt_sub ) {
                    /* do the last sub-time step */
                        u += udot * (dt - dt_tot);
