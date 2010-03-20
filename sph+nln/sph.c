@@ -613,7 +613,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
             rho = (double)p->rho * (m / (l*l*l));
-            dt_cgs = (double)(dt / t);
+            dt_cgs = (double)(dt * t);
             ndens = eos_n / (l*l*l);
         /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
@@ -686,9 +686,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 if(p->temp < 0.) {
                    dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
                    printf("newtraph failed: %6G for particle %8d\n",p->temp,p->ident);
+                } else if (p->temp < 2.0e3) {
+                   dt_tot = dt;
                 }
 
-                if((p->temp > 0.0) && (p->temp < 1.e9)) {
+                if((p->temp > 2.0e3) && (p->temp < 1.e9)) {
 	           /*this does the table look-up:
 	             0=use analytic outside table, 1=extrapolate (NR's linear polint)
                      lcool contains energy lost as positive value */
