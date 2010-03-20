@@ -52,7 +52,7 @@ c..   sparse solver variables
       parameter(nelem = nreac)
       real*8 berr
       
-      parameter(ncytest = 300, ncymax = 300)
+      parameter(ncytest = 295, ncymax = 300)
 
       save
 c---------------------------------------------------------------
@@ -82,6 +82,7 @@ c..   energy generation rate from right hand side evaluation (explicit)
       jnb = 0
       k = 1
       ncycle = 0
+      ncytot = 0
 c..   T,rho passed through call
       t9     = temp*1.0d-9
 c      if(irank.eq.0 .and. iDbug) write(*,*)'T=',temp
@@ -382,6 +383,22 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      3              negflag
             endif
          endif
+
+
+ 101  continue
+         if(ncycle .gt. ncymax)then
+           write(*,*)'more than ',ncymax,' subcycles'
+           write(*,*)ncycle,' subcycles in zone ',k
+           write(*,'(a5,8a12)')'k','t9','rho','dtstar','dtleft','dth',
+     1       'checksum','eta','sumd'
+           write(*,'(i5,1p8e12.3)') k,t9,rho,dtstar,dtleft,dth,
+     1       checksum,eta,sumd
+           if( nucleu .gt. 0 .and. nucleu .le. itot )then
+              write(*,*)'fastest nucleus is ',xid(nucleu)
+           endif
+
+           stop'solven too many subcycles'
+         endif
 c     end if1?     
 
 c..   total matrix solutions
@@ -389,7 +406,7 @@ c..   total matrix solutions
 
 
 c     if2: t9 sufficient for NSE
-      elseif( t9 .eq. tnse )then
+      elseif( t9 .ge. tnse )then
 c..   itbrn(i) = 3 ...............................................
 c..   nse solver plus weak interactions......................
          
@@ -513,7 +530,7 @@ c     end if2?
 
 
 c     if3: t9 not sufficient for any burning, just decays
-      elseif( t9 .lt. 1.0d-2 )then
+      elseif( t9 .le. 1.0d-2 )then
 c..   itbrn(i) = 0 ...............................................
 c..   network solution for decays only......................
          ncycle = 0
@@ -616,19 +633,6 @@ c     I'm guessing in original that was unnecessary since global array
       enddo
 
       return
-
- 101  continue
-      write(*,*)'more than ',ncymax,' subcycles'
-      write(*,*)ncycle,' subcycles in zone ',k
-      write(*,'(a5,8a12)')'k','t9','rho','dtstar','dtleft','dth',
-     1     'checksum','eta','sumd'
-      write(*,'(i5,1p8e12.3)') k,t9,rho,dtstar,dtleft,dth,
-     1     checksum,eta,sumd
-      if( nucleu .gt. 0 .and. nucleu .le. itot )then
-         write(*,*)'fastest nucleus is ',xid(nucleu)
-      endif
-
-      stop'solven too many subcycles'
 
       end
 
