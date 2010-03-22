@@ -552,7 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
-    double tlo = 1.e3, tup = 2.5e11;
+    double tlo, tup;
     int decr;
     long cycles=0, countc;
 
@@ -593,26 +593,36 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ++*limit_low;
 	}
 
+        /* all this is done in user-units */
+        m_ave = 0;
         n = 0.;
-        abund_renorm = 0.0;
-        m_ave = 0.;//10./(N_AVOG*m);
-
+        abund_renorm = 0;
         for ( j = 0; j < NISO; j++) {
-            m_ave += p->abund[j]*(p->np[j]+p->nn[j])/(N_AVOG*m);
+            m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+            n += (double)(p->rho * 
+                 (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
+                 (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
             abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
+
+        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
+        rho = (double)p->rho * (m / (l*l*l));
 
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
-	/* Figure out good upper and lower limits for temp (note: unit-independent!) */
-	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-
 
         if(do_burning){
+            tlo=1.e4;
+            tup=2.5e11;
+	    /* Figure out good upper and lower limits for temp (note: unit-independent!) */
+	    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+	    if(p->temp < 0.) 
+	       printf("newtraph failed: %6G for particle %8d\n",p->temp,p->ident);
+	     
+
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
-            rho = (double)p->rho * (m / (l*l*l));
             dt_cgs = (double)(dt * t);
             ndens = eos_n / (l*l*l);
         /*prepare abundance array passed into network - more ugliness!*/
@@ -626,11 +636,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             molfrac[NNETW] = p->Y_el;
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
-            //printf("calling solven from proc %d ...... ",rank);
             solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
-            //printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
-            //printf("udot: %E   ",p->udot);
 
             /*update composition of particle from updated abundance array*/
             for( i = 0; i < NNETW; i++ ) {
@@ -641,29 +648,13 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
             }
             p->Y_el = molfrac[NNETW];
-            //printf("Ye = %E\n",molfrac[NNETW]);
         }  
-        //printf("done burning\n");
 
 
 	if (do_cooling) {
-            /* all this is done in user-units */
-            m_ave = 0;
-            n = 0.;
-            abund_renorm = 0;
-            for ( j = 0; j < NISO; j++) {
-                m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
-                n += (double)(p->rho * 
-                     (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
-                     (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
-                abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
-            }
-
-            m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
-
+            tlo = 1.e2;
+            tup = 1.e9;
 	    u = p->u; 
-            rho = (double)p->rho * (m / (l*l*l));
-            eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
             dt_sub = dt;
             dt_save = dt;
             dt_tot = 0.;
