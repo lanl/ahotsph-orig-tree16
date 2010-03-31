@@ -18,7 +18,7 @@ c..   else        after leqs, b(n) = dY(n)
 
       integer*4 n, nflag
 
-      data delchi/1.0d-2/, chimin/1.0d-5/, fdtn/1.2d0/
+      data delchi/1.0d-1/, chimin/1.0d-4/, fdtn/1.2d0/
       data fdysum/2.0d-3/
 c-------------------------------------------------------------
 c..DELCHI is maximum fractional change allowed in number density
@@ -90,7 +90,7 @@ c..delchi
                   tau(2) = taug
                   nucleu = n
                endif
-            elseif( y(n) .gt. chimin**2 )then
+            elseif( y(n) .gt. chimin )then
                fak = b(n)
                if( fak .ne. 0.0d0 )then
 c..delchi => 1

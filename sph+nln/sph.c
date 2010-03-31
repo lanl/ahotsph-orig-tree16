@@ -562,6 +562,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
     for (p = btab; p < btab+nobj; p++) {
+        if (p->ident = 0) printf("dt= %E\n", dt);
 	if (!SPH_need_update(p)) continue;
 	VV(p->acc, += p->grav_acc);
 	/* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */

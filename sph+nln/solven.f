@@ -52,7 +52,7 @@ c..   sparse solver variables
       parameter(nelem = nreac)
       real*8 berr
       
-      parameter(ncytest = 295, ncymax = 300)
+      parameter(ncytest = 3000, ncymax = 30000)
 
       save
 c---------------------------------------------------------------
@@ -224,7 +224,7 @@ c..   avoid zero abundance
             endif
          endif
 
-         if(  abs(sumd) .lt. 1.0d-7
+         if(  abs(sumd) .lt. 1.0d-5
      1        .and. negflag .eq. 0 
      2        .and. dth .ge. dth0*0.5d0 )then
 
@@ -310,6 +310,7 @@ c..   DNE is 3/2 kT for new particles
             aeps = eb - dne + en
             deltah = deltah + aeps*(dtstar-dtleft)
 
+c            else
 c..   tests were unsuccessful
             dth = dmin1( dth, 0.5d0*dth0 )
             if( ncycle .ge. ncytest )then
@@ -391,8 +392,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
            write(*,*)ncycle,' subcycles in zone ',k
            write(*,'(a5,8a12)')'k','t9','rho','dtstar','dtleft','dth',
      1       'checksum','eta','sumd'
-           write(*,'(i5,1p8e12.3)') k,t9,rho,dtstar,dtleft,dth,
-     1       checksum,eta,sumd
+           write(*,'(i5,1pe23.16,1p7e12.3)') k,t9,rho,dtstar,dtleft,
+     1       dth,checksum,eta,sumd
            if( nucleu .gt. 0 .and. nucleu .le. itot )then
               write(*,*)'fastest nucleus is ',xid(nucleu)
            endif
@@ -530,7 +531,7 @@ c     end if2?
 
 
 c     if3: t9 not sufficient for any burning, just decays
-      elseif( t9 .le. 1.0d-2 )then
+      elseif( t9 .le. 0.95d-2 )then
 c..   itbrn(i) = 0 ...............................................
 c..   network solution for decays only......................
          ncycle = 0
