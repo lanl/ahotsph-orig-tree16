@@ -604,7 +604,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	/* Figure out good upper and lower limits for temp (note: unit-independent!) */
-	p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	p->temp = newtraph(1.0e-1, 2.5e11, eos_u*1.0e-6, uvst, duvst);
         if(p->temp < 0.0) printf("newtraph failed: particle %d\n",p->ident);
 
 
@@ -670,7 +670,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	    p->temp = newtraph(1.0e-1, 2.5e11, eos_u*1.0e-6, uvst, duvst);
 
 	    /*this does the table look-up:
 	      0=use analytic outside table, 1=extrapolate (NR's linear polint)
@@ -707,7 +707,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		        dt1_tot += dt1;	
 		        u += udot * dt1;	
 	                eos_u = ((double)(u)) * ((double)(p->rho));
-		        p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+		        p->temp = newtraph(1.0e-1, 2.5e11, eos_u*1.0e-6, uvst, duvst);
 
                         /*next sub-timestep*/
 		        lcool = calc_lcool1(
@@ -777,7 +777,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(1.0e3, 2.5e11, eos_u*1.0e-6, uvst, duvst);
+	    p->temp = newtraph(1.0e-1, 2.5e11, eos_u*1.0e-6, uvst, duvst);
 	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 

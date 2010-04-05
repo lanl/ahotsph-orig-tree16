@@ -4,7 +4,7 @@
 #include "singlio.h"
 #include "units.h"
 
-#define MAX_ITER 100
+#define MAX_ITER 200
 
 /* Need to change printf's to Msgfs or whatever */
 
