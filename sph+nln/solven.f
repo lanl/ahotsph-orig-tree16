@@ -95,7 +95,8 @@ c         if(irank.eq.0 .and. iDbug) write(*,*)y(n),nz(n),nn(n)
       enddo
 
 c     if1: t9 sufficient for reactions
-      if( t9 .gt. 1.0d-2 .and. t9 .lt. tnse)then
+      if( (t9 .gt. 1.0d-2) .and. (t9 .lt. tnse) .and. 
+     1    (rho .gt. 1.0d1))then
 c..   full network
          do j = 1, itot
             b(j)    = 0.0d0
@@ -411,10 +412,10 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
          if(ncycle .gt. ncymax)then
            write(*,*)'more than ',ncymax,' subcycles'
            write(*,*)ncycle,' subcycles in zone ',k
-           write(*,'(a5,8a12)')'k','t9','rho','dtstar','dtleft','dth',
-     1       'checksum','eta','sumd'
-           write(*,'(i5,1p8e12.3)') k,t9,rho,dtstar,dtleft,dth,
-     1       checksum,eta,sumd
+           write(*,'(a5,2a20,6a12)')'k','t9','rho','dtstar','dtleft',
+     1       'dth','checksum','eta','sumd'
+           write(*,'(i5,1p2e20.13,1p6e12.3)') k,t9,rho,dtstar,dtleft,
+     1       dth,checksum,eta,sumd
            if( nucleu .gt. 0 .and. nucleu .le. itot )then
               write(*,*)'fastest nucleus is ',xid(nucleu)
            endif
@@ -428,7 +429,7 @@ c..   total matrix solutions
 
 
 c     if2: t9 sufficient for NSE
-      elseif( t9 .ge. tnse )then
+      elseif( (t9 .ge. tnse) .and. (rho .gt. 1.0d1))then
 c..   itbrn(i) = 3 ...............................................
 c..   nse solver plus weak interactions......................
          
@@ -553,7 +554,7 @@ c     end if2?
 
 
 c     if3: t9 not sufficient for any burning, just decays
-      elseif( t9 .le. 1.0d-2 )then
+      elseif( (t9 .le. 1.00-2) .or. (rho .le. 1.0d1))then
 c..   itbrn(i) = 0 ...............................................
 c..   network solution for decays only......................
          ncycle = 0
