@@ -52,7 +52,7 @@ c..   sparse solver variables
       parameter(nelem = nreac)
       real*8 berr
       
-      parameter(ncytest = 295, ncymax = 300)
+      parameter(ncytest = 3000, ncymax = 30000)
 
       save
 c---------------------------------------------------------------
@@ -224,7 +224,7 @@ c..   avoid zero abundance
             endif
          endif
 
-         if(  abs(sumd) .lt. 1.0d-7
+         if(  abs(sumd) .lt. 1.0d-5
      1        .and. negflag .eq. 0 
      2        .and. dth .ge. dth0*0.5d0 )then
 
