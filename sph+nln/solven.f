@@ -243,6 +243,28 @@ c..   positive or zero
                eta  = eta  + y(j)* dble(nn(j) - nz(j))
 
             enddo
+c..   Brand new thesis paranoia
+c..   renormalize abundances
+         sumx = -1.0d0
+         do j = 1, nnuc
+            x(j) = y(j) * dble( nz(j) + nn(j) )
+            sumx = sumx + x(j)
+         enddo
+
+         do j = 1, ndim-1
+            x(j) = x(j)/( 1.0d0 + sumx )
+            y(j) = x(j)/dble( nz(j) + nn(j) )
+         enddo
+c..   reset Ye
+         yesum = 0.0d0
+         sumz   = -1.0d0
+         do j = 1, ndim-1
+            yesum = yesum + y(j) * dble( nz(j) )
+            sumz = sumz + x(j)
+         enddo
+         x(ndim) = yesum
+         y(ndim) = yesum
+
 
 c..   elapsed time
             time     = time + dth0
@@ -495,6 +517,7 @@ c..   renormalize abundances
 
          do j = 1, ndim-1
             x(j) = x(j)/( 1.0d0 + sumx )
+            y(j) = x(j)/dble( nz(j) + nn(j) )
          enddo
 c..   reset Ye
          yesum = 0.0d0
