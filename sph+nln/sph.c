@@ -535,7 +535,7 @@ double eos_n, eos_u;
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int iter)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -656,7 +656,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }  
 
 
-	if (do_cooling) {
+	if (do_cooling && (iter > 2000)) {
             tlo = 1.0e-1;
             tup = 1.0e9;
 	    u = p->u; 
