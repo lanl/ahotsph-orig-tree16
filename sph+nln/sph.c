@@ -556,6 +556,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     int decr;
     long cycles=0, countc;
 
+    tlo = 1.0e1;
+    tup = 2.5e11;
+
     kB = K_BOLTZ * t * t / m / ( l*l );
 
     for (p = btab; p < btab+nobj; p++) {
@@ -564,6 +567,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	/* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */
 	p->rho += wij[0] * p->mass / (p->h * p->h * p->h); 
 	p->hdot = (float)(-1.0/3.0) * p->h * p->drho_dt / p->rho;
+        /* reset udot value */
+        p->udot = 0.0;
 	if (p->hdot * dt > p->h) {
 	    SeriousWarning("Hdot limit (high)\n%s\n", PrintSPHBodyContents(p));
 	    p->hdot = p->h/dt;
@@ -608,18 +613,18 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
         rho = (double)p->rho * (m / (l*l*l));
 
-        eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
+        ne = 0.0; /*find_ne();*/
+        eos_n = (double)(p->rho/m_ave + ne); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
+	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         if(do_burning){
-            tlo=1.e4;
-            tup=2.5e11;
 	    /* Figure out good upper and lower limits for temp (note: unit-independent!) */
 	    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-	    if(p->temp < 0.) 
+	    if(p->temp < 0.) {
 	       printf("newtraph failed: %6G for particle %8d\n",p->temp,p->ident);
-	     
+            }
 
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
@@ -652,8 +657,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 
 	if (do_cooling) {
-            tlo = 1.e2;
-            tup = 1.e9;
+            tlo = 1.0e-1;
+            tup = 1.0e9;
 	    u = p->u; 
             dt_sub = dt;
             dt_save = dt;
@@ -663,10 +668,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             cycles = 0;
             countc = 0;
 
-/*
-	       printf("\n%d T: %.2E rho: %.2E n: %.2E u: %.3E\n",
-		       p->ident,p->temp,p->rho,eos_n,p->u);
-*/
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
 
@@ -675,12 +676,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
                 if(p->temp < 0.) {
                    dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
-                   printf("newtraph failed: %6G for particle %8d\n",p->temp,p->ident);
+                   udot = 0.0;
                 } else if (p->temp < 2.0e3) {
                    dt_tot = dt;
                 }
 
-                if((p->temp > 2.0e3) && (p->temp < 1.e9)) {
+                if((p->temp > 2.0e3) && (p->temp < 5.e7) && (p->rho < 1.0e-8)) {
 	           /* lcool contains energy lost as positive value */
 	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
 
@@ -704,19 +705,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        u += udot * (dt - dt_tot);
                        dt_tot = dt;
                        cycles++;
-/*
-                       printf("\nlast u= %.2E, udot= %.2E after cycle %d; %.2E\n",
-                              u, udot, cycles, (dt_tot/dt));
-*/
                    } else { /* no further subcycling required, update values */
                        dt_tot += dt_sub;
                        u += udot * dt_sub;
                        cycles++;
-/*
-                       printf("%8d ",p->ident);
-                       printf("new u= %.2E, udot= %.2E after cycle %d; %.2E\n",
-                              u, udot, cycles, (dt_tot/dt));
-*/
                    }
 
                    if((float)dt_tot > (float)dt)
