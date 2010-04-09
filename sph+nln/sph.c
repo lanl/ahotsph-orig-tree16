@@ -562,14 +562,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
     for (p = btab; p < btab+nobj; p++) {
-        if (p->ident = 0) printf("dt= %E\n", dt);
 	if (!SPH_need_update(p)) continue;
 	VV(p->acc, += p->grav_acc);
 	/* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */
 	p->rho += wij[0] * p->mass / (p->h * p->h * p->h); 
 	p->hdot = (float)(-1.0/3.0) * p->h * p->drho_dt / p->rho;
-        /* reset udot value */
-        p->udot = 0.0;
 	if (p->hdot * dt > p->h) {
 	    SeriousWarning("Hdot limit (high)\n%s\n", PrintSPHBodyContents(p));
 	    p->hdot = p->h/dt;
@@ -659,6 +656,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 
 	if (do_cooling && (iter > 2000)) {
+            if(p->ident == 1) printf("cooling!\n");
             tlo = 1.0e-1;
             tup = 1.0e9;
 	    u = p->u; 
