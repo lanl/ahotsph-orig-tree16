@@ -535,7 +535,7 @@ double eos_n, eos_u;
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int partid)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -626,7 +626,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             /* in here somewhere calc energy generation by nuclear burning? */
             /* deltah= erg/g for this timestep */
             //printf("calling solven from proc %d ...... ",rank);
-            solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
+            solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank,&partid);
             //printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
             //printf("udot: %E   ",p->udot);
