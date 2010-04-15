@@ -552,7 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
-    double tlo, tup;
+    double tlo, tup, mfp;
     int decr,notprinted;
     long cycles=0, countc;
 
@@ -562,8 +562,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
     notprinted = 1;
-    if (do_cooling && (tstar > 0.5 * M_PI*1.e7 / t))
-        singlPrintf("cooling!\n");
  
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -615,8 +613,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
         rho = (double)p->rho * (m / (l*l*l));
 
-        ne = 0.0; /*find_ne();*/
-        eos_n = (double)(p->rho/m_ave + ne); /*needed in newtraph; in user-units */
+        ne = find_ne(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel);
+        eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
@@ -659,9 +657,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }  
 
 
-	if (do_cooling && (tstar > 0.5 * M_PI*1.e7 / t)) {
+        mfp = 1.0/ ((eos_n+ne*l*l*l) * 4.0e-4*A_NOUGHT*A_NOUGHT/(l*l));
+        //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
+
+	if (do_cooling && (mfp >= p->h) ); /*(tstar > 0.5 * M_PI*1.e7 / t)) */{
             tlo = 1.0e-1;
-            tup = 1.0e9;
+            tup = 1.0e10;
 	    u = p->u; 
             dt_sub = dt;
             dt_save = dt;
@@ -684,10 +685,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    dt_tot = dt;
                 }
 
-                if((p->temp > 2.0e1) && (p->temp < 5.e7) && 
-                   (p->rho < (5.0e-13*l*l*l/m)) ) {
-		   if(notprinted) singlPrintf("cooling!\n");
-                   notprinted = 0;
+                if((p->temp > 2.0e1) && (p->temp < 1.e8) && 
+                   (p->rho < (1.0e-12*l*l*l/m)) ) {
+		   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
+                   notprinted = 1;
 	           /* lcool contains energy lost as positive value */
 	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
 
