@@ -535,7 +535,7 @@ double eos_n, eos_u;
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int iter)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, float tstar)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -553,7 +553,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
     double tlo, tup;
-    int decr;
+    int decr,notprinted;
     long cycles=0, countc;
 
     tlo = 1.0e1;
@@ -561,6 +561,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
+    notprinted = 1;
+    if (do_cooling && (tstar > 0.5 * M_PI*1.e7 / t))
+        singlPrintf("cooling!\n");
+ 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
 	VV(p->acc, += p->grav_acc);
@@ -655,8 +659,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }  
 
 
-	if (do_cooling && (iter > 2000)) {
-            if(p->ident == 1) printf("cooling!\n");
+	if (do_cooling && (tstar > 0.5 * M_PI*1.e7 / t)) {
             tlo = 1.0e-1;
             tup = 1.0e9;
 	    u = p->u; 
@@ -681,7 +684,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    dt_tot = dt;
                 }
 
-                if((p->temp > 2.0e3) && (p->temp < 5.e7) && (p->rho < 1.0e-8)) {
+                if((p->temp > 2.0e1) && (p->temp < 5.e7) && 
+                   (p->rho < (5.0e-13*l*l*l/m)) ) {
+		   if(notprinted) singlPrintf("cooling!\n");
+                   notprinted = 0;
 	           /* lcool contains energy lost as positive value */
 	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
 
