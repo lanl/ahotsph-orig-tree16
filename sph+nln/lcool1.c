@@ -44,7 +44,7 @@
 
 /*arrays in C: array[row-index][col-index]*/
 
-double calc_lcool1(float abundarr[], int nparr[], int nnarr[] ,double temp, double rho, int Gridpts,int Nel,int extrapolate)
+double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, double rho, int Gridpts,int Nel,int extrapolate)
 {
     extern float **tablep;	/*global array with cooling values*/
     extern float **ionfracp;	/*global array with ion fractions*/

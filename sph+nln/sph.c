@@ -657,7 +657,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }  
 
 
-        mfp = 1.0/ ((eos_n+ne*l*l*l) * 4.0e-4*A_NOUGHT*A_NOUGHT/(l*l));
+        mfp = 1.0/( ((eos_n+ne*l*l*l) * 4.0e-4*A_NOUGHT*A_NOUGHT/(l*l)) + /*contribution of ?*/ 
+              (0.64e23*p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
         //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
 
 	if (do_cooling && (mfp >= p->h) ); /*(tstar > 0.5 * M_PI*1.e7 / t)) */{
