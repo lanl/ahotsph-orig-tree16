@@ -549,12 +549,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
  * should be included in the burning. This is UGLY!! */
     int inNW[2][NNETW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
                          {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
-    double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.1, minfrac=0.001;
+    double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.01, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
     double tlo, tup, mfp;
     int decr,notprinted;
-    long cycles=0, countc;
+    long cycles=0, countc, cycled;
 
     tlo = 1.0e1;
     tup = 2.5e11;
@@ -562,6 +562,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
     notprinted = 1;
+            cycled = 0;
  
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -600,13 +601,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
         /* all this is done in user-units */
         m_ave = 0;
-        n = 0.;
         abund_renorm = 0;
         for ( j = 0; j < NISO; j++) {
             m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
-            n += (double)(p->rho * 
-                 (N_AVOG*m) / (double)(p->np[j] + p->nn[j]) * p->abund[j] * 
-                 (double)(p->np[j] + 1.0)); /*b/c we also have electrons!*/
             abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
 
@@ -618,6 +615,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+
+        mfp =(1.0/ (0.64e23*m*m/(l*l*l*l*l)*p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
+        p->Y_el = mfp;
+        //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
 
         if(do_burning){
 	    /* Figure out good upper and lower limits for temp (note: unit-independent!) */
@@ -657,11 +658,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }  
 
 
-        mfp = 1.0/( ((eos_n+ne*l*l*l) * 4.0e-4*A_NOUGHT*A_NOUGHT/(l*l)) + /*contribution of ?*/ 
-              (0.64e23*p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
-        //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
-
-	if (do_cooling && (mfp >= p->h) ); /*(tstar > 0.5 * M_PI*1.e7 / t)) */{
+	if (do_cooling && (mfp >= p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             tlo = 1.0e-1;
             tup = 1.0e10;
 	    u = p->u; 
@@ -671,12 +668,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
             decr = 10;
             cycles = 0;
-            countc = 0;
+            countc = 1;
 
+/*            while ( cycles < countc ) {*/
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
-
-  	        /* Figure out good upper and lower limits for temp. returns -99. at failure */
 
 	        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
                 if(p->temp < 0.) {
@@ -686,12 +682,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    dt_tot = dt;
                 }
 
-                if((p->temp > 2.0e1) && (p->temp < 1.e8) && 
-                   (p->rho < (1.0e-12*l*l*l/m)) ) {
+                if((p->temp > 0.0e0) && (p->temp < 1.e8) ) {
 		   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
-                   notprinted = 1;
+                   notprinted = 0;
+
 	           /* lcool contains energy lost as positive value */
-	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 0);
+	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 1);
 
                    /* trying to catch any NaN's */
                    if ( lcool != lcool ) lcool = 0.0;
@@ -701,29 +697,36 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
                    /*determine if we need subcycling*/
 	           if ( (abs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
-                       countc++;
+                       if(cycled == 0) cycled=p->ident;
+                       countc = cycles + (countc - cycles) * decr;
 	               dt_sub = dt_sub / (double)decr;
+                       if(p->ident == cycled) 
+                              printf("ID: %8d: new dt= %E udot= %.5E u= %.5E step %d\n",
+                              p->ident, dt_sub, udot, u, countc);
                        if(countc > 300) {
-		          printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
+                           dt_tot = dt;
+		           printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
                               p->ident, u, udot, dt_sub, dt_tot);
-                           break;
+                           cycles = countc + 1;
                        }
-                   } else if( (float)(dt - dt_tot) < (float)dt_sub ) {
-                   /* do the last sub-time step */
-                       u += udot * (dt - dt_tot);
-                       dt_tot = dt;
-                       cycles++;
                    } else { /* no further subcycling required, update values */
                        dt_tot += dt_sub;
                        u += udot * dt_sub;
                        cycles++;
+                       if(p->ident == cycled) {
+                       printf("ID: %8d: cycles: %d, done %E\n",p->ident, cycles,dt_tot/dt);
+                       }
                    }
 
+/*
                    if((float)dt_tot > (float)dt)
                       printf("warning: dt_tot > dt: %E and %E\n",dt_tot, dt);
+*/
                    if(cycles > 300) printf("warning: over 300 subcycles\n");
+                } else {
+                   cycles = countc+1; /*to get out of while loop if no cooling takes place */
                 }
-            } while ((float)dt_tot < (float)dt);
+            } while (cycles < countc); 
 
             dt = dt_save;
             p->udot += (u - p->u) / dt;

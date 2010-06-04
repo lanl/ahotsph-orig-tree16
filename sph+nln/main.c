@@ -293,7 +293,7 @@ main(int argc, char *argv[])
     int status, done,rank,idbug;
     char netrcfn[20];
 
-    //argv[1]="/scratch/cellinge/runsnsph/run3g_50.ctl";
+    /*argv[1]="/scratch/cellinge/runsnsph/cooling/run3g_50c.ctl";*/
     //openangle_wind=60.0; //added by CE
 
     MPMY_Init(&argc, &argv);
@@ -682,7 +682,7 @@ main(int argc, char *argv[])
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
     /* read in necessary files on all processors */
-    if(do_cooling) {
+    if(1) {
         singlPrintf("reading in cooling tables .... ");
         init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/
         singlPrintf("successfully read in cooling functions\n");
