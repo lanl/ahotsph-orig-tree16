@@ -53,7 +53,7 @@ c..   sparse solver variables
       parameter(nelem = nreac)
       real*8 berr
       
-      parameter(ncytest = 3000, ncymax = 30000)
+      parameter(ncytest = 3000, ncymax = 10000)
 
       save
 c---------------------------------------------------------------
@@ -96,8 +96,8 @@ c         if(irank.eq.0 .and. iDbug) write(*,*)y(n),nz(n),nn(n)
       enddo
 
 c     if1: t9 sufficient for reactions
-      if( (t9 .gt. 1.0d-2) .and. (t9 .lt. tnse) .and. 
-     1    (rho .gt. 1.0d1))then
+      if( (t9 .ge. 1.0d-2) .and. (t9 .lt. tnse) ) then
+c     1    .and. (rho .gt. 1.0d3))then
 c..   full network
          do j = 1, itot
             b(j)    = 0.0d0
@@ -442,7 +442,8 @@ c..   total matrix solutions
 
 
 c     if2: t9 sufficient for NSE
-      elseif( (t9 .ge. tnse) .and. (rho .gt. 1.0d1))then
+      elseif( (t9 .ge. tnse) ) then
+c     1       .and. (rho .gt. 1.0d2))then
 c..   itbrn(i) = 3 ...............................................
 c..   nse solver plus weak interactions......................
          
@@ -567,7 +568,8 @@ c     end if2?
 
 
 c     if3: t9 not sufficient for any burning, just decays
-      elseif( (t9 .le. 1.00-2) .or. (rho .le. 1.0d1))then
+      elseif( (t9 .lt. 1.0d-2) ) then
+c             .or. (rho .le. 1.0d1))then
 c..   itbrn(i) = 0 ...............................................
 c..   network solution for decays only......................
          ncycle = 0
@@ -653,10 +655,14 @@ c..   DNE is 3/2 kT for new particles
          aeps = eb - dne
          deltah = aeps*dtstar
          
-
+c     end if3
+ 
+c     just in case
+      else
+         deltah = 0.0
 
       endif
-c     end if3
+
 
 
       icall = 1

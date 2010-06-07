@@ -18,7 +18,7 @@ c..   else        after leqs, b(n) = dY(n)
 
       integer*4 n, nflag
 
-      data delchi/1.0d-1/, chimin/1.0d-4/, fdtn/1.2d0/
+      data delchi/1.0d-2/, chimin/1.0d-5/, fdtn/1.2d0/
       data fdysum/2.0d-3/
 c-------------------------------------------------------------
 c..DELCHI is maximum fractional change allowed in number density
@@ -118,7 +118,7 @@ c..   guess at best time step
                   nucleu = n
                endif
 c            elseif( y(n) .gt. 1.0d-15 )then
-            elseif( y(n) .gt. 1.0d-6 )then
+            elseif( y(n) .gt. 1.0d-9 )then
                fak = b(n)
                if( fak .ne. 0.0d0 )then
 c..delchi = 1 for very low abundances (try to avoid negative y)
