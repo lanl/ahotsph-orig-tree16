@@ -670,7 +670,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             cycles = 0;
             countc = 1;
 
-/*            while ( cycles < countc ) {*/
+/*            while ( cycles < countc ) */
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
 
