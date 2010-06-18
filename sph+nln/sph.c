@@ -696,7 +696,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	           udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
 
                    /*determine if we need subcycling*/
-	           if ( (abs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
+	           if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
                        if(cycled == 0) cycled=p->ident;
                        countc = cycles + (countc - cycles) * decr;
 	               dt_sub = dt_sub / (double)decr;
