@@ -553,6 +553,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0.;
     unsigned long cycles=0,cycle_count=0;
+    int temp_ok;
 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
@@ -605,16 +606,23 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 	/* Figure out good upper and lower limits for temp (note: unit-independent!) */
 	p->temp = newtraph(1.0e-1, 2.5e11, eos_u*1.0e-6, uvst, duvst);
-        if(p->temp < 0.0) printf("newtraph failed: particle %d\n",p->ident);
 
+        if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
+           temp_ok = 1;
+        } else {
+           temp_ok = 0;
+           printf("newtraph failed: particle %d\n",p->ident);
+        }
 
-        if(do_burning && (p->temp > 0.0)) {
+        if(do_burning && temp_ok) {
+
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
             rho = (double)p->rho * (m / (l*l*l));
             dt_cgs = (double)(dt * t);
             ndens = eos_n / (l*l*l);
-        /*prepare abundance array passed into network - more ugliness!*/
+
+            /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
@@ -623,13 +631,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }   
             }
             molfrac[NNETW] = p->Y_el;
-            /* in here somewhere calc energy generation by nuclear burning? */
+
+            //printf("before: %.3E %.3E %.3E, T=%.4E\n",molfrac[19], molfrac[20], molfrac[17], temp);
+
             /* deltah= erg/g for this timestep */
-            //printf("calling solven from proc %d ...... ",rank);
             solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank,&partid);
-            //printf("called solven\n");
             p->udot += deltah * (t*t) / (l*l) / dt;
-            //printf("udot: %E   ",p->udot);
+
+            //printf("after: %.3E %.3E %.3E, T=%.4E\n",molfrac[19], molfrac[20], molfrac[17], temp);
 
             /*update composition of particle from updated abundance array*/
             for( i = 0; i < NNETW; i++ ) {
@@ -640,9 +649,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
             }
             p->Y_el = molfrac[NNETW];
-            //printf("Ye = %E\n",molfrac[NNETW]);
+
         }  
-        //printf("done burning\n");
 
 
 /*also can calculate rho,n of particle?*/

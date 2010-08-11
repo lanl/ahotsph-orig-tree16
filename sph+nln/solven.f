@@ -461,7 +461,7 @@ c..   evaluate rates and put in sig array
 
 cccccccccccccccccccccc
 
-
+         write(*,*)'calling nse with T', t9
          call nse(t9,rho,y,enc)
 
 c..   most optimistic choice for time step
