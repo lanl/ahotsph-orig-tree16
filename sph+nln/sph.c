@@ -627,18 +627,17 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
                         molfrac[i] = p->abund[j];
+                        j = NISO; /* get out, so we don't overwrite molfrac
+                                   * with junk from trailing abund columns */
                     }   
                 }   
             }
             molfrac[NNETW] = p->Y_el;
 
-            //printf("before: %.3E %.3E %.3E, T=%.4E\n",molfrac[19], molfrac[20], molfrac[17], temp);
-
             /* deltah= erg/g for this timestep */
             solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank,&partid);
             p->udot += deltah * (t*t) / (l*l) / dt;
 
-            //printf("after: %.3E %.3E %.3E, T=%.4E\n",molfrac[19], molfrac[20], molfrac[17], temp);
 
             /*update composition of particle from updated abundance array*/
             for( i = 0; i < NNETW; i++ ) {

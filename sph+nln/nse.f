@@ -139,8 +139,6 @@ c..   executed once on each call
       tin   = t9*1.0d9
       yense    = ye(1)
       eta = 1.0d0 - 2.0d0*ye(1)
-      write(*,*)'NSE, got t9', t9, 'rho', rho, 
-     1          'yeq', yeq, 'ye', ye, 'yense', yense
 c----------------------------------
       if( iachain .ne. 0 )then
 c----------------------------------

@@ -462,7 +462,7 @@ c..   evaluate rates and put in sig array
 cccccccccccccccccccccc
 
 c..   make sure Ye is set
-      if( ye(ndim) .ne. ye(ndim) ) then
+      if( y(ndim) .ne. y(ndim) ) then
          yesum = 0.0d0
          do j = 1, ndim-1
             yesum = yesum + y(j) * dble( nz(j) )
@@ -471,7 +471,6 @@ c..   make sure Ye is set
          y(ndim) = yesum
       endif
 
-         write(*,*)'calling nse with T', t9
          call nse(t9,rho,y,enc)
 
 c..   most optimistic choice for time step
