@@ -584,7 +584,7 @@ c..   network solution for decays only......................
          ncycle = 0
 c         rho = den
          do j = 1, itot
-            y(j)    = aex(j)
+c            y(j)    = aex(j)
             b(j)    = 0.0d0
             yold(j) = y(j)
          enddo
@@ -663,7 +663,7 @@ c..   DNE is 3/2 kT for new particles
          dne      = dn * 1.2476d+17 *t9/dtstar
          aeps = eb - dne
          deltah = aeps*dtstar
-         
+
 c     end if3
  
 c     just in case

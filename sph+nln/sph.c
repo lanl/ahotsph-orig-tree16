@@ -611,7 +611,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
            temp_ok = 1;
         } else {
            temp_ok = 0;
-           printf("newtraph failed: particle %d\n",p->ident);
+           printf("newtraph failed: particle %d for u=%.4E udot=%.4E\n",
+                  p->ident, p->u, p->udot);
+            for(j=0;j<NISO;j++) printf("%.4E ",p->abund[j]);
+            printf("\n");
         }
 
         if(do_burning && temp_ok) {
