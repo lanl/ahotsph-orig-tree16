@@ -535,7 +535,7 @@ double eos_n, eos_u;
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, float tstar)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int partid)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -556,6 +556,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
+    int temp_ok;
 
     tlo = 1.0e1;
     tup = 2.5e11;
@@ -620,30 +621,38 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         p->Y_el = mfp;
         //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
 
-        if(do_burning){
-	    /* Figure out good upper and lower limits for temp (note: unit-independent!) */
-	    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-	    if(p->temp < 0.) {
-	       printf("newtraph failed: %6G for particle %8d\n",p->temp,p->ident);
-            }
+        if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
+           temp_ok = 1;
+        } else {
+           temp_ok = 0;
+           printf("newtraph failed: particle %d for u=%.4E udot=%.4E\n",
+                  p->ident, p->u, p->udot);
+            for(j=0;j<NISO;j++) printf("%.4E ",p->abund[j]);
+            printf("\n");
+        }
+
+        if(do_burning && temp_ok) {
 
             /* solven operates in cgs. must convert from user-units to cgs! */
             temp = (double)p->temp;
             rho = (double)p->rho * (m / (l*l*l));
             dt_cgs = (double)(dt * t);
             ndens = eos_n / (l*l*l);
+
             /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNETW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
                     if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
                         molfrac[i] = p->abund[j];
+                        j = NISO; /* get out, so we don't overwrite molfrac
+                                   * with junk from trailing abund columns */
                     }   
                 }   
             }
             molfrac[NNETW] = p->Y_el;
-            /* in here somewhere calc energy generation by nuclear burning? */
+
             /* deltah= erg/g for this timestep */
-            solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank);
+            solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank,&partid);
             p->udot += deltah * (t*t) / (l*l) / dt;
 
             /*update composition of particle from updated abundance array*/
@@ -655,6 +664,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
             }
             p->Y_el = molfrac[NNETW];
+
         }  
 
 

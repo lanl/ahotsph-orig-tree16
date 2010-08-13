@@ -70,7 +70,7 @@ c..   ni56, nc12 are indices for special nuclei
       save in,ip,ia,ni56,nc12
 c----------------------------------------------------
 
-c      write(*,*)'NSE'
+c      write(*,*)'NSE, got t9', t9
 
       ierr = 0
       ye = yeq(ndim)

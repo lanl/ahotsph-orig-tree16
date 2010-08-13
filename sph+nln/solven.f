@@ -1,4 +1,4 @@
-      subroutine solven(dtstar,temp, rho, xin, deltah, irank)
+      subroutine solven(dtstar,temp, rho, xin, deltah, irank, partid)
 
 c..   evaluates rates, sets up matrix equations,
 c..   and solves reaction network over time interval dth,
@@ -21,6 +21,7 @@ c..   (deltah)
 
       integer*4 irank
       integer*4 iDbug
+      integer*4 partid
 
       real*8  yold(ndim), xin(ndim)
 c..   instantaneous rate of energy generation
@@ -52,7 +53,7 @@ c..   sparse solver variables
       parameter(nelem = nreac)
       real*8 berr
       
-      parameter(ncytest = 3000, ncymax = 30000)
+      parameter(ncytest = 3000, ncymax = 10000)
 
       save
 c---------------------------------------------------------------
@@ -65,7 +66,7 @@ c     aeps,y               (via commons caeps, comcsolve)
 c     aepst,aepsv
 
 c-------------------------------------------------------------
-      iDbug = 0
+      iDbug = 1
 c      if(temp.gt.1.d0) iDbug = 1
 c-------------------------------------------------------------
 
@@ -95,7 +96,8 @@ c         if(irank.eq.0 .and. iDbug) write(*,*)y(n),nz(n),nn(n)
       enddo
 
 c     if1: t9 sufficient for reactions
-      if( t9 .gt. 1.0d-2 .and. t9 .lt. tnse .and. rho .gt. 1.0d+1)then
+      if( (t9 .ge. 1.0d-2) .and. (t9 .lt. tnse) ) then
+c     1    .and. (rho .gt. 1.0d3))then
 c..   full network
          do j = 1, itot
             b(j)    = 0.0d0
@@ -139,9 +141,13 @@ c..   insure time interval does not overshoot
          endif
 
          if( dth .le. 0.0d0 )then
-            write(*,'(6a12)')
-     1           'dtstar','dth','dth0','dtleft','T9','ncycle','k'
-            write(*,'(1p5e12.5,2i12)')dtstar,dth,dth0,dtleft,t9,ncycle,k
+            write(*,'(7a12)')
+     1           'dtstar','dth','dth0','dtleft','T9','rho','ncycle','k'
+            write(*,'(1p6e12.5,2i12)')dtstar,dth,dth0,dtleft,t9,rho,ncycle,k
+            write(*,*)'particle',partid
+            do n =1, nnuc
+               if(iDbug) write(*,*)y(n),nz(n),nn(n)
+            enddo
             stop'solven dth'
          endif
 
@@ -270,7 +276,6 @@ c..   elapsed time
             time     = time + dth0
             dtleft   = dtstar - time
             checksum = sumx - 1.0d0
-      if(irank.eq.0 .and. iDbug) write(*,*)'checksum= ',checksum
 
 c..   output if excessive subcycles
             if( ncycle .ge. ncytest )then
@@ -332,7 +337,7 @@ c..   DNE is 3/2 kT for new particles
             aeps = eb - dne + en
             deltah = deltah + aeps*(dtstar-dtleft)
 
-c            else
+         else
 c..   tests were unsuccessful
             dth = dmin1( dth, 0.5d0*dth0 )
             if( ncycle .ge. ncytest )then
@@ -377,6 +382,10 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      1                 'reject',dth0,' try',dth, k,ncycle,
      1                 xid(nucleu),xnucleu,dxnucl,dtleft,
      2                 ypro,xalf,suma,sumd,negflag
+                  write(*,*)'particle',partid
+                  do n =1, nnuc
+                     if(iDbug) write(*,*)y(n),nz(n),nn(n)
+                  enddo
                   stop'solven: no success'
                endif
             endif
@@ -412,14 +421,18 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
          if(ncycle .gt. ncymax)then
            write(*,*)'more than ',ncymax,' subcycles'
            write(*,*)ncycle,' subcycles in zone ',k
-           write(*,'(a5,8a12)')'k','t9','rho','dtstar','dtleft','dth',
-     1       'checksum','eta','sumd'
-           write(*,'(i5,1p2e20.10,1p6e12.3)') k,t9,rho,dtstar,dtleft,
+           write(*,'(a5,2a20,6a12)')'k','t9','rho','dtstar','dtleft',
+     1       'dth','checksum','eta','sumd'
+           write(*,'(i5,1p2e20.13,1p6e12.3)') k,t9,rho,dtstar,dtleft,
      1       dth,checksum,eta,sumd
            if( nucleu .gt. 0 .and. nucleu .le. itot )then
               write(*,*)'fastest nucleus is ',xid(nucleu)
            endif
 
+           write(*,*)'particle',partid
+           do n =1, nnuc
+              if(iDbug) write(*,*)y(n),nz(n),nn(n)
+           enddo
            stop'solven too many subcycles'
          endif
 c     end if1?     
@@ -429,7 +442,8 @@ c..   total matrix solutions
 
 
 c     if2: t9 sufficient for NSE
-      elseif( t9 .ge. tnse .and. rho .gt. 1.0d+1)then
+      elseif( (t9 .ge. tnse) ) then
+c     1       .and. (rho .gt. 1.0d2))then
 c..   itbrn(i) = 3 ...............................................
 c..   nse solver plus weak interactions......................
          
@@ -447,6 +461,15 @@ c..   evaluate rates and put in sig array
 
 cccccccccccccccccccccc
 
+c..   make sure Ye is set
+      if( y(ndim) .ne. y(ndim) ) then
+         yesum = 0.0d0
+         do j = 1, ndim-1
+            yesum = yesum + y(j) * dble( nz(j) )
+         enddo
+         x(ndim) = yesum
+         y(ndim) = yesum
+      endif
 
          call nse(t9,rho,y,enc)
 
@@ -554,13 +577,14 @@ c     end if2?
 
 
 c     if3: t9 not sufficient for any burning, just decays
-      elseif( t9 .le. 0.95d-2 .or. rho .lt. 1.0d+1 )then
+      elseif( (t9 .lt. 1.0d-2) ) then
+c             .or. (rho .le. 1.0d1))then
 c..   itbrn(i) = 0 ...............................................
 c..   network solution for decays only......................
          ncycle = 0
 c         rho = den
          do j = 1, itot
-            y(j)    = aex(j)
+c            y(j)    = aex(j)
             b(j)    = 0.0d0
             yold(j) = y(j)
          enddo
@@ -625,7 +649,6 @@ c..   positive or zero
             eta  = eta  + y(j)* dble(nn(j) - nz(j))
          enddo
          checksum = sumx - 1.0d0
-      if(irank.eq.0 .and. iDbug) write(*,*)'checksum= ',checksum
 
 c..   calculate energy generation rate using mass excesses
 c..   DNE is 3/2 kT for new particles
@@ -640,11 +663,15 @@ c..   DNE is 3/2 kT for new particles
          dne      = dn * 1.2476d+17 *t9/dtstar
          aeps = eb - dne
          deltah = aeps*dtstar
-         
 
+c     end if3
+ 
+c     just in case
+      else
+         deltah = 0.0
 
       endif
-c     end if3
+
 
 
       icall = 1

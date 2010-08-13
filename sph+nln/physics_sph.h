@@ -372,7 +372,7 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 	     double (*df)(double x));
 
 /* in solven.f */
-void solven_(double *dtstar, double *temp, double *rho, double *y, double *deltah, int *rank);
+void solven_(double *dtstar, double *temp, double *rho, double *y, double *deltah, int *rank, int *partid);
 void build_(int *rank, int *idbug, char *netrcfn);
 
 /*
