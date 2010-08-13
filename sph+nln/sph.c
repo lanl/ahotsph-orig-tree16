@@ -554,7 +554,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
     double tlo, tup, mfp;
     int decr,notprinted;
-    long cycles=0, countc, cycled;
+    long cycles=0, countc; 
+    static long cycled = 0;
 
     tlo = 1.0e1;
     tup = 2.5e11;
@@ -562,7 +563,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     kB = K_BOLTZ * t * t / m / ( l*l );
 
     notprinted = 1;
-            cycled = 0;
  
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -700,10 +700,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        if(cycled == 0) cycled=p->ident;
                        countc = cycles + (countc - cycles) * decr;
 	               dt_sub = dt_sub / (double)decr;
+/*
                        if(p->ident == cycled) 
                               printf("ID: %8d: new dt= %E udot= %.5E u= %.5E step %d\n",
                               p->ident, dt_sub, udot, u, countc);
-                       if(countc > 300) {
+*/
+                       if(countc > 1e6) {
                            dt_tot = dt;
 		           printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
                               p->ident, u, udot, dt_sub, dt_tot);
@@ -714,7 +716,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        u += udot * dt_sub;
                        cycles++;
                        if(p->ident == cycled) {
+/*
                        printf("ID: %8d: cycles: %d, done %E\n",p->ident, cycles,dt_tot/dt);
+*/
                        }
                    }
 
@@ -722,7 +726,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    if((float)dt_tot > (float)dt)
                       printf("warning: dt_tot > dt: %E and %E\n",dt_tot, dt);
 */
-                   if(cycles > 300) printf("warning: over 300 subcycles\n");
+                   if(cycles > 1e6) printf("warning: over 1e6 subcycles\n");
                 } else {
                    cycles = countc+1; /*to get out of while loop if no cooling takes place */
                 }

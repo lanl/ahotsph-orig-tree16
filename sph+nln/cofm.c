@@ -200,7 +200,7 @@ static void rcrit_poly(double r, double *value, double *deriv)
 /* It's even more dangerous than the version that NR says is too */
 /* dangerous to use...No checking of bounds.  We might just run off */
 /* to infinity... */
-#define JMAX 20
+#define JMAX 40
 
 static double
 rtnewt(void (*funcd)(double, double *, double *), double x1, double xacc)
