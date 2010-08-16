@@ -7,10 +7,10 @@ defaultFC:=ifort -nofor_main
 
 CC_SPECIFIC:=-g -DLONG_LONG_KEYS 
 #-march=core2 -mcpu=core2
-FC_SPECIFIC:=-g -fpp -warn alignments -align all -align rec8byte 
+FC_SPECIFIC:=-g -fpp -warn alignments 
 #-names as_is -assume nounderscore -assume no2underscore
 #-cm -w95 -80
-ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC
+ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC
 # ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC
 
 # ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
