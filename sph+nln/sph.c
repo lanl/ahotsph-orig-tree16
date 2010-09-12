@@ -603,7 +603,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         /* all this is done in user-units */
         m_ave = 0;
         abund_renorm = 0;
-        for ( j = 0; j < NISO; j++) {
+        for ( j = 0; j < NNETW; j++) {
             m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
             abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
@@ -615,18 +615,20 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
+        //if(!(eos_n != eos_n) && eos_n > 0.0)
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         mfp =(1.0/ (0.64e23*m*m/(l*l*l*l*l)*p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
-        p->Y_el = mfp;
+        //p->Y_el = mfp;
         //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
 
         if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
-           temp_ok = 1;
+            temp_ok = 1;
         } else {
-           temp_ok = 0;
-           printf("newtraph failed: particle %d for u=%.4E udot=%.4E\n",
-                  p->ident, p->u, p->udot);
+            temp_ok = 0;
+            printf("newtraph failed: particle %d for eos_u=%.4E eos_n=%.4E gives T=%.4E\n",
+                  p->ident, eos_u, eos_n, p->temp);
+            printf("m=%.4E l=%.4E\n",m,l);
             for(j=0;j<NISO;j++) printf("%.4E ",p->abund[j]);
             printf("\n");
         }
@@ -775,7 +777,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	    /* Calculate temperature from u, then "create" photons (a*T^4) */
             /* keep these in user-units */
             eos_n = 0;
-            for( j = 0; j < NISO; j++)
+            for( j = 0; j < NNETW; j++)
                 eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(p->np[j] + p->nn[j]) *
                           p->abund[j] * (double)(p->np[j] + 1.0);/* accounts for electrons!*/
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
