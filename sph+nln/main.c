@@ -395,10 +395,12 @@ main(int argc, char *argv[])
  
 /* get bndry quantities from sdf file or ctl file?
  * if from sdf file: corresponds to how it is done in snevolbrna, but then 
- * I need to modifiy the sdf files again
+ * I need to modifiy the sdf files again - or not, get initial quantities 
+ * from ctl file, and later quantities from sdf file on restart
  * if from ctl file: much easier to add to current set up, but then on 
  * restarts would use the wrong quantities? (how is time step/ iter done?)
  */
+                /* remember: this is doing restarts, get from sdf file */
                 if (do_absorbing_bndry) {
                     SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
 #if NDIM>=2        
@@ -475,6 +477,26 @@ main(int argc, char *argv[])
 		sdfp = InitRead(name, csdfp, (void **)&btab, &gnobj, &nobj, 
 				&SPHbtab, &SPHgnobj, &SPHnobj, 
 				set_id, setpvel, new_h, new_u);
+
+                /* first iteration, get central particle from ctl file */
+                if (do_absorbing_bndry) {
+                    SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
+#endif
+#endif
+                    SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
+#endif
+#endif
+                    SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
+                    SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
+                }
 	    }
 	    FixNterms(btab, nobj);
 	    SPHFixNterms(SPHbtab, SPHnobj);
@@ -888,7 +910,7 @@ main(int argc, char *argv[])
  
         if (do_absorbing_bndry) {
             SPHoldnobj = SPHnobj;
-            AdjustBtab4((SPHBODY **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
+            AdjustBtab4((SPHbody **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
                         cosmo.GNewt, tpos);
 
             totnewmass = 0.0;
@@ -2288,6 +2310,9 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	     "ke", SDF_DOUBLE, ke,
 	     "pe", SDF_DOUBLE, pe,
 	     "te", SDF_DOUBLE, te,
+             "massCF", SDF_FLOAT, massCF,
+             "lengthCF", SDF_FLOAT, lengthCF,
+             "timeCF", SDF_FLOAT, timeCF,
 	     NULL);
     Free(output_btab);
     singlPrintf("\nOutput done.\n");
