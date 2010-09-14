@@ -400,24 +400,24 @@ main(int argc, char *argv[])
  * if from ctl file: much easier to add to current set up, but then on 
  * restarts would use the wrong quantities? (how is time step/ iter done?)
  */
-                /* remember: this is doing restarts, get from sdf file */
+                /* first iteration, get central particle from ctl file */
                 if (do_absorbing_bndry) {
-                    SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
+                    SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
 #if NDIM>=2        
-                    SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
+                    SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
 #if NDIM>=3
-                    SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
+                    SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
 #endif
 #endif
-                    SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
 #if NDIM>=2        
-                    SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
 #if NDIM>=3
-                    SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
 #endif
 #endif
-                    SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
-                    SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
+                    SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
+                    SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
                 }
 
 		if (do_winds) {
@@ -477,26 +477,6 @@ main(int argc, char *argv[])
 		sdfp = InitRead(name, csdfp, (void **)&btab, &gnobj, &nobj, 
 				&SPHbtab, &SPHgnobj, &SPHnobj, 
 				set_id, setpvel, new_h, new_u);
-
-                /* first iteration, get central particle from ctl file */
-                if (do_absorbing_bndry) {
-                    SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
-#if NDIM>=2        
-                    SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
-#if NDIM>=3
-                    SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
-#endif
-#endif
-                    SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
-#if NDIM>=2        
-                    SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
-#if NDIM>=3
-                    SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
-#endif
-#endif
-                    SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
-                    SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
-                }
 	    }
 	    FixNterms(btab, nobj);
 	    SPHFixNterms(SPHbtab, SPHnobj);
@@ -504,6 +484,26 @@ main(int argc, char *argv[])
 	    SDFgetfloatOrDefault(sdfp, "tpos",  &tpos, (float)0.0);
 	    tvel = tpos;
 	    SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
+
+                /* not first iteration, get central particle from sdf file */
+                if (do_absorbing_bndry && (iter > 0)) {
+                    SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
+#endif
+#endif
+                    SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
+#endif
+#endif
+                    SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
+                    SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
+                }
 	    if (cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
 	    if(sdfp) SDFclose(sdfp);
 	} else {
