@@ -256,16 +256,19 @@ AdjustBtab3(SPHbody **SPHbtabp, int *nobj, int gnobj, float r_limit,
 /* adjust btab from snevolbrna to let the central particle acrete mass ~CIE */
 void
 AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
-            float *newr, float newt, float tpos)
+            float *newr, float *newp, float *newl, float newt, float tpos)
 {
     SPHbody *btab = *SPHbtabp;
     SPHbody *p, *q;
     Stk s;
     float r2, v2, b2, minb2 = 1e30;
+    float j[NDIM], jhat[NDIM];
+    float jm, jmax;
 
     StkInitEz(&s);
 
-    for (*newmass = 0.0, p = btab; p < btab+*nobj; p++) {
+    for (*newmass = 0.0, newp[0]=0.0, newp[1]=0.0; newp[2]=0.0, 
+         newl[0]=0.0, newl[1]=0.0, newl[2]=0.0, p = btab; p < btab+*nobj; p++) {
 
 	v2 = (p->vel[0] - b.vel[0])*(p->vel[0] - b.vel[0]) + 
 	    (p->vel[1] - b.vel[1])*(p->vel[1] - b.vel[1]) + 
@@ -291,6 +294,31 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 	    if (b2 < minb2) minb2 = b2;
 	} else {
 	    *newmass += p->mass;
+
+            newp[0] += p->mass * p->vel[0];
+            newp[1] += p->mass * p->vel[1];
+            newp[2] += p->mass * p->vel[2];
+
+            j[0] = p->mass * (p->pos[1]*p->vel[2] - p->pos[2]*p->vel[1]);
+            j[1] = p->mass * (p->pos[2]*p->vel[0] - p->pos[0]*p->vel[2]);
+            j[2] = p->mass * (p->pos[0]*p->vel[1] - p->pos[1]*p->vel[0]);
+
+            jm = sqrt( j[0]*j[0] + j[1](j[1] + j[2]*j[2] );
+            jhat[0] = j[0]/jm;
+            jhat[1] = j[1]/jm;
+            jhat[2] = j[2]/jm;
+
+            jmax = sqrt( G * b.mass * b.r ) / p->mass;
+
+            jm = ( jm < jmax ? jm : jmax );
+
+            j[0] = jm * jhat[0];
+            j[1] = jm * jhat[1];
+            j[2] = jm * jhat[2];
+
+            newl[0] += j[0];
+            newl[1] += j[1];
+            newl[2] += j[2];
 
 	    Msgf(("t: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", tpos, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
 	}
