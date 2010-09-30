@@ -495,6 +495,7 @@ main(int argc, char *argv[])
                     SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
 #endif
 #endif
+
                     SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
 #if NDIM>=2        
                     SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
@@ -502,6 +503,23 @@ main(int argc, char *argv[])
                     SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
 #endif
 #endif
+
+                    SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
+#endif
+#endif
+
+                    SDFgetfloatOrDie(sdfp, "bndry_lx", &(bndry.l[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(sdfp, "bndry_ly", &(bndry.l[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(sdfp, "bndry_lz", &(bndry.l[2]));
+#endif
+#endif
+
                     SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
                     SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
                 }
@@ -705,24 +723,34 @@ main(int argc, char *argv[])
         /*singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);*/
 #if NDIM>=2
         /*singlPrintf("float bndry_y = %g;\n", bndry.pos[1]);*/
-        singlPrintf("float bndry_pos[2] = [ %g, %g ];\n", 
-                    bndry.pos[0], bndry.pos[1]);
 #if NDIM>=3
-        singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
-                    bndry.pos[0], bndry.pos[1], bndry.pos[2]);
         /*singlPrintf("float bndry_z = %g;\n", bndry.pos[2]);*/
 #endif
 #endif
         /*singlPrintf("float bndry_vx = %g;\n", bndry.vel[0]);*/
 #if NDIM>=2
         /*singlPrintf("float bndry_vy = %g;\n", bndry.vel[1]);*/
-        singlPrintf("float bndry_vel[2] = [ %g, %g ];\n", 
-                    bndry.vel[0], bndry.vel[1]);
 #if NDIM>=3
         /*singlPrintf("float bndry_vz = %g;\n", bndry.vel[2]);*/
+#endif
+#if NDIM=2
+        singlPrintf("float bndry_pos[2] = [ %g, %g ];\n", 
+                    bndry.pos[0], bndry.pos[1]);
+        singlPrintf("float bndry_vel[2] = [ %g, %g ];\n", 
+                    bndry.vel[0], bndry.vel[1]);
+        singlPrintf("float bndry_p[2] = [ %g, %g ];\n", 
+                    bndry.p[0], bndry.p[1]);
+        singlPrintf("float bndry_l[2] = [ %g, %g ];\n",
+                    bndry.l[0], bndry.l[1]);
+#elif NDIM=3
+        singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
+                    bndry.pos[0], bndry.pos[1], bndry.pos[2]);
         singlPrintf("float bndry_vel[3] = [ %g, %g, %g ];\n", 
                     bndry.vel[0], bndry.vel[1], bndry.vel[2]);
-#endif
+        singlPrintf("float bndry_p[3] = [ %g, %g, %g ];\n", 
+                    bndry.p[0], bndry.p[1], bndry.p[2]);
+        singlPrintf("float bndry_l[3] = [ %g, %g, %g ];\n", 
+                    bndry.l[0], bndry.l[1], bndry.l[2]);
 #endif
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
@@ -938,11 +966,13 @@ main(int argc, char *argv[])
              * also, no VV ever devides, but always multiplies, and scalar is 
              * always first ~CIE */
             invmass = 1.0/bndry.mass;
-            VV(bndry.vel, = invmass * bndry.p);
+            VVS(bndry.vel, = bndry.p, * invmass ); /* seems safer ~CIE */
             /* now, the call later to UpdateX will move central particle accordingly? */
             /* how do I prevent artificial added momentum due to rounding errors? */
-            Msgf(("Iter %d: removed %d bodies from SPHbtab\nBndry mass = %g\n",
-                  iter, SPHoldnobj-SPHnobj, bndry.mass));
+            Msgf(("Iter %d: removed %d bodies from SPHbtab\nBndry mass = %g\n
+                  p-vec = ( %g, %g, %g )\nl-vec = ( %g, %g, %g )\n",
+                  iter, SPHoldnobj-SPHnobj, bndry.mass,
+                  bndry.p[0],bndry.p[1],bndry.p[2],bndry.l[0],bndry.l[1],bndry.l[2]));
         }
 
 	/* comoving smoothing */

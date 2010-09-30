@@ -795,6 +795,7 @@ update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt,
 	oneor2 = oneor * oneor;
 	phii = newt * oneor * bndry.mass;
 	r->phi -= phii;
+    /* updates acc. due G from central particle after eating particles ~CIE */
 	VVx(r->acc, -= oneor2 * phii * r);
     }
 }

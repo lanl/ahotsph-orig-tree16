@@ -262,7 +262,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     SPHbody *p, *q;
     Stk s;
     float r2, v2, b2, minb2 = 1e30;
-    float j[NDIM], jhat[NDIM];
+    float j[NDIM], jhat[NDIM], r_vec[NDIM];
     float jm, jmax;
 
     StkInitEz(&s);
@@ -288,22 +288,31 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 	    (p->pos[1] - b.pos[1])*(p->pos[1] - b.pos[1]) + 
 	    (p->pos[2] - b.pos[2])*(p->pos[2] - b.pos[2]);
 
-	if ( b2 >= r2 ) {  /* If distance to bndry > capture radius */
+	if ( b2 >= r2 ) {  /* If distance to bndry > capture radius = not eaten */
 	    q = StkPush(&s, sizeof(SPHbody));
 	    *q = *p;
 	    if (b2 < minb2) minb2 = b2;
-	} else {
+	} else { /*eat particle*/
 	    *newmass += p->mass;
 
             newp[0] += p->mass * p->vel[0];
             newp[1] += p->mass * p->vel[1];
             newp[2] += p->mass * p->vel[2];
 
+            /* this assumes that the central particle is at the origin? ~CIE */
             j[0] = p->mass * (p->pos[1]*p->vel[2] - p->pos[2]*p->vel[1]);
             j[1] = p->mass * (p->pos[2]*p->vel[0] - p->pos[0]*p->vel[2]);
             j[2] = p->mass * (p->pos[0]*p->vel[1] - p->pos[1]*p->vel[0]);
 
-            jm = sqrt( j[0]*j[0] + j[1](j[1] + j[2]*j[2] );
+            r_vec[0] = p->pos[0] - b.pos[0];
+            r_vec[1] = p->pos[1] - b.pos[1];
+            r_vec[2] = p->pos[2] - b.pos[2];
+            /*then use r_vec instead of p->pos above ... ~CIE*/
+
+/* or: (but #include"vop.h"
+            VVV(r_vec, = p->pos, - b.pos);
+*/
+            jm = sqrt( j[0]*j[0] + j[1]*j[1] + j[2]*j[2] );
             jhat[0] = j[0]/jm;
             jhat[1] = j[1]/jm;
             jhat[2] = j[2]/jm;
@@ -321,7 +330,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
             newl[2] += j[2];
 
 	    Msgf(("t: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", tpos, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
-	}
+	   }
     }
 
     Free(btab);
