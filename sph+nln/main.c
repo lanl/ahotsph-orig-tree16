@@ -616,7 +616,7 @@ main(int argc, char *argv[])
       SDFgetintOrDie(csdfp, "kernel_ncoef1", &kernel_ncoef1);
       if (kernel_ncoef1 >= MAXCOEF) Error("Increase MAXCOEF\n");
       SDFgetintOrDie(csdfp, "kernel_ncoef2", &kernel_ncoef2);
-      IF (KERNEL_NCOEF2 >= maxcoef) eRROR("iNCREASE maxcoef\N");
+      if (kernel_ncoef2 >= MAXCOEF) Error("Increase MAXCOEF\n");
       if (SDFseekrdvecs(csdfp, "kernel_coef1", 0, kernel_ncoef1, 
 			kernel_coef1, 0, NULL))
 	  Error("SDFread kernel_coef1 failed\n");
@@ -720,19 +720,22 @@ main(int argc, char *argv[])
     }
     if (do_absorbing_bndry) {
         /* this just prints to stdout, can print as arrays! ~CIE*/
-        /*singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);*/
+/*
+        singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);
 #if NDIM>=2
-        /*singlPrintf("float bndry_y = %g;\n", bndry.pos[1]);*/
+        singlPrintf("float bndry_y = %g;\n", bndry.pos[1]);
 #if NDIM>=3
-        /*singlPrintf("float bndry_z = %g;\n", bndry.pos[2]);*/
+        singlPrintf("float bndry_z = %g;\n", bndry.pos[2]);
 #endif
 #endif
-        /*singlPrintf("float bndry_vx = %g;\n", bndry.vel[0]);*/
+        singlPrintf("float bndry_vx = %g;\n", bndry.vel[0]);
 #if NDIM>=2
-        /*singlPrintf("float bndry_vy = %g;\n", bndry.vel[1]);*/
+        singlPrintf("float bndry_vy = %g;\n", bndry.vel[1]);
 #if NDIM>=3
-        /*singlPrintf("float bndry_vz = %g;\n", bndry.vel[2]);*/
+        singlPrintf("float bndry_vz = %g;\n", bndry.vel[2]);
 #endif
+#endif
+*/
 #if NDIM=2
         singlPrintf("float bndry_pos[2] = [ %g, %g ];\n", 
                     bndry.pos[0], bndry.pos[1]);
@@ -742,7 +745,8 @@ main(int argc, char *argv[])
                     bndry.p[0], bndry.p[1]);
         singlPrintf("float bndry_l[2] = [ %g, %g ];\n",
                     bndry.l[0], bndry.l[1]);
-#elif NDIM=3
+/*#elif NDIM=3*//*let's assume we're never going to run this in 1D ~CIE*/
+#else
         singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
                     bndry.pos[0], bndry.pos[1], bndry.pos[2]);
         singlPrintf("float bndry_vel[3] = [ %g, %g, %g ];\n", 
