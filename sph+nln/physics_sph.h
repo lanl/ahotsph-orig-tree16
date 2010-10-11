@@ -6,9 +6,14 @@
 #include "key.h"
 #include "timers.h"
 
+#ifndef NNETW
+#define NNETW	/* number of isotopes in network */
+int NNW;
+#else
+extern int NNW;
+#endif
 #define NDIM 3
-#define NISO 22 	/* number of isotopes tracked */
-#define NNETW 20	/* number of isotopes in network */
+#define NISO 20 	/* number of isotopes tracked */
 #define SPH_SAVE_ACC
 #define POS_IS_DOUBLE
 #define SPH_GRAV
@@ -178,8 +183,6 @@ typedef struct {
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
-    int p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22; \n\
-    int m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -210,8 +213,6 @@ typedef struct {
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
-    int p1,p2,p3,p4,p5,p6,p7,p8,p9,p10,p11,p12,p13,p14,p15,p16,p17,p18,p19,p20,p21,p22; \n\
-    int m1,m2,m3,m4,m5,m6,m7,m8,m9,m10,m11,m12,m13,m14,m15,m16,m17,m18,m19,m20,m21,m22; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\

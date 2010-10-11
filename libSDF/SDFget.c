@@ -59,6 +59,7 @@ SDFgetdouble(SDF *sdfp, char *name, double *value)
     int int_value;
 
     if( sdfp == NULL || !SDFhasname(name, sdfp) ){
+        printf("%s not found in header!\n",name);
 	return -1;
     }
     switch(SDFtype(name, sdfp)){

@@ -272,6 +272,7 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
                     "f18", offsetof(SPHbody, abund[17]), &f1conf,
                     "f19", offsetof(SPHbody, abund[18]), &f1conf,
                     "f20", offsetof(SPHbody, abund[19]), &f1conf,
+/*
                     "f21", offsetof(SPHbody, abund[20]), &f1conf,
                     "f22", offsetof(SPHbody, abund[21]), &f1conf,
                     "p1", offsetof(SPHbody, np[0]), &p1conf,
@@ -318,6 +319,7 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
                     "m20", offsetof(SPHbody, nn[19]), &m1conf,
                     "m21", offsetof(SPHbody, nn[20]), &m1conf,
                     "m22", offsetof(SPHbody, nn[21]), &m1conf,
+*/
 		    NULL);
     nobj = *nobjp;
     gnobj = *gnobjp;

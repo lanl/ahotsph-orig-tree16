@@ -85,6 +85,7 @@ static void ReadCosmo(SDF *sdfp, struct cosmo_s *cosmo, float tpos, float *R0p);
 static void CosmoPush(struct cosmo_s *p, float time);
 static int dark_need_update(float dark_tacc, float dark_dt);
 /*  static float IdtSPHGetCost(const SPHbody *ptr); */
+int make_spec_names(char ***chararr, char spec, int num);
 
 /* In shrink.c */
 /*  void ShrinkBtab(SPHbody **SPHbtabp, body *btabp, int *nobj, float r_limit); */
@@ -163,6 +164,9 @@ int do_burning;    /* used in sph.c, turns network on */
 float **tablep; //array to hold cooling curve table values
 float **ionfracp; //array to hold ionfraction table values
 
+int **inNW;
+int nparr[NISO], nnarr[NISO];
+
 #ifdef __PARAGON__
 void
 chk_slow(int die)
@@ -193,8 +197,9 @@ chk_slow(int die)
 int
 main(int argc, char *argv[])
 {
-    extern float **tablep; //added by CE
-    extern float **ionfracp; //added by CE
+    FILE *fp = NULL;
+    extern float **tablep; //added by CIE
+    extern float **ionfracp; //added by CIE
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
@@ -292,8 +297,11 @@ main(int argc, char *argv[])
     int Gridpts, Nel; 	/* for cooling tables */
     int status, done,rank,idbug;
     char netrcfn[20];
+    char **pnames, **nnames;
 
-    /*argv[1]="/scratch/cellinge/runsnsph/cooling/run3g_50c.ctl";*/
+/*
+    argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
+*/
     //openangle_wind=60.0; //added by CE
 
     MPMY_Init(&argc, &argv);
@@ -331,6 +339,21 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "do_boundary", &do_boundary, 0);
     SDFgetintOrDefault(csdfp, "do_drag", &do_drag, 0);
     SDFgetintOrDefault(csdfp, "has_grav_data", &has_grav_data, do_grav);
+
+/* read in Z and N for abundances. at some later point, populate nparr/nnarr ~CIE*/
+    if( (fp = fopen("networklist","r"))==NULL ) printf("error opening networklist\n");
+    fscanf(fp, "%d", &NNW);
+    inNW = (int **)malloc( 2 * sizeof(int *) );
+    inNW[0] = (int *)malloc( (NNW+1) * sizeof(int) );
+    inNW[1] = (int *)malloc( (NNW+1) * sizeof(int) );
+    for (i = 0; i < NNW; i++) fscanf(fp, "%d\t%d", &inNW[0][i], &inNW[1][i]);
+    inNW[0][NNW] = 0; /*for electron fraction */
+    inNW[1][NNW] = 0;
+    fclose(fp);
+    fp = NULL;
+ 
+    make_spec_names(&pnames, 'p', NISO);
+    make_spec_names(&nnames, 'n', NISO);
     if (do_sph || do_grav) {
 	if (!((strncmp(name, "test", 4) == 0))) {
 	    if (SDFhasname("SPHdatafile", csdfp) || do_restart) {
@@ -342,9 +365,14 @@ main(int argc, char *argv[])
 		    if (do_restart) sprintf(iname, "%s_sph.restart", name);
 		    else SDFgetstring(csdfp, "SPHdatafile", iname, 
 				      sizeof(iname));
-/* this is where the SDF file is read in (?) -CE */
+/* this is where the SDF file is read in (?) -CIE */
 		    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 				   set_id, setpvel, new_h, new_u);
+            for ( i=0; i<NISO; i++ ) {
+            /* need to create the 'p1/n1' specifiers */
+                SDFgetintOrDie(sdfp, pnames[i], &nparr[i]);
+                SDFgetintOrDie(sdfp, nnames[i], &nnarr[i]);
+            }
 		} else SPHgnobj = SPHnobj = 0;
 
 		if (has_grav_data) {
@@ -649,7 +677,7 @@ main(int argc, char *argv[])
 	singlPrintf("float drag_coeff = %g;\n", drag_coeff);
     }
     if (do_cooling)
-	singlPrintf("int do_cooling = %d;\n", do_cooling);
+	    singlPrintf("int do_cooling = %d;\n", do_cooling);
     singlPrintf("int do_diffusion = %d;\n", do_diffusion);
     singlPrintf("int do_burning = %d;\n", do_burning);
     if( do_output ){
@@ -2122,6 +2150,10 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
     int output_gnobj;
     float output_z, output_h, output_R0;
     char outname[256];
+    char **pnames, **nnames;
+
+    make_spec_names(&pnames, 'p', NISO);
+    make_spec_names(&nnames, 'n', NISO);
 
     sprintf(outname, "%s_sph.%04d", outnamebase, iter);
     pe = ke = te = 0.0;
@@ -2150,10 +2182,12 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
         output_btab[i].Y_el = btab[i].Y_el;
-        for(j=0;j<NISO;j++){ /*will this work? -CE: so far, it compiled and runs*/
+        for(j=0;j<NISO;j++){ /*will this work? -CIE: so far, it compiled and runs*/
             output_btab[i].abund[j] = btab[i].abund[j];
+/*
             output_btab[i].np[j] = btab[i].np[j];
             output_btab[i].nn[j] = btab[i].nn[j];
+*/
         }
     }
 /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
@@ -2180,7 +2214,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	output_h = 0.0;
 	output_R0 = sysradius;
     }
-/* I'm guessing this writes whatever is in output_btab, matched to SPHOUTBODYDESC -CE */
+/* I'm guessing this writes whatever is in output_btab, matched to SPHOUTBODYDESC -CIE */
     SDFwrite(outname, output_gnobj, 
 	     output_nobj, output_btab, sizeof(SPHoutbody),
 	     SPHOUTBODYDESC,
@@ -2206,6 +2240,52 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	     "ke", SDF_DOUBLE, ke,
 	     "pe", SDF_DOUBLE, pe,
 	     "te", SDF_DOUBLE, te,
+         pnames[0], SDF_INT, nparr[0],
+         nnames[0], SDF_INT, nnarr[0],
+         pnames[1], SDF_INT, nparr[1],
+         nnames[1], SDF_INT, nnarr[1],
+         pnames[2], SDF_INT, nparr[2],
+         nnames[2], SDF_INT, nnarr[2],
+         pnames[3], SDF_INT, nparr[3],
+         nnames[3], SDF_INT, nnarr[3],
+         pnames[4], SDF_INT, nparr[4],
+         nnames[4], SDF_INT, nnarr[4],
+         pnames[5], SDF_INT, nparr[5],
+         nnames[5], SDF_INT, nnarr[5],
+         pnames[6], SDF_INT, nparr[6],
+         nnames[6], SDF_INT, nnarr[6],
+         pnames[7], SDF_INT, nparr[7],
+         nnames[7], SDF_INT, nnarr[7],
+         pnames[8], SDF_INT, nparr[8],
+         nnames[8], SDF_INT, nnarr[8],
+         pnames[9], SDF_INT, nparr[9],
+         nnames[9], SDF_INT, nnarr[9],
+         pnames[10], SDF_INT, nparr[10],
+         nnames[10], SDF_INT, nnarr[10],
+         pnames[11], SDF_INT, nparr[11],
+         nnames[11], SDF_INT, nnarr[11],
+         pnames[12], SDF_INT, nparr[12],
+         nnames[12], SDF_INT, nnarr[12],
+         pnames[13], SDF_INT, nparr[13],
+         nnames[13], SDF_INT, nnarr[13],
+         pnames[14], SDF_INT, nparr[14],
+         nnames[14], SDF_INT, nnarr[14],
+         pnames[15], SDF_INT, nparr[15],
+         nnames[15], SDF_INT, nnarr[15],
+         pnames[16], SDF_INT, nparr[16],
+         nnames[16], SDF_INT, nnarr[16],
+         pnames[17], SDF_INT, nparr[17],
+         nnames[17], SDF_INT, nnarr[17],
+         pnames[18], SDF_INT, nparr[18],
+         nnames[18], SDF_INT, nnarr[18],
+         pnames[19], SDF_INT, nparr[19],
+         nnames[19], SDF_INT, nnarr[19],
+/*
+         pnames[20], SDF_INT, nparr[20];
+         nnames[20], SDF_INT, nnarr[20];
+         pnames[21], SDF_INT, nparr[21];
+         nnames[21], SDF_INT, nnarr[21];
+*/
 	     NULL);
     Free(output_btab);
     singlPrintf("\nOutput done.\n");
@@ -2680,3 +2760,20 @@ SPH_need_update(const SPHbody *p)
     return (p->tacc + p->dt <= tpos + dt * 1.00001);
 }
 
+int make_spec_names(char ***specarr, char spec, int num)
+{
+    int i;
+    char tmpchr[20];
+
+    *specarr = (char **)malloc(num * sizeof(char *) );
+
+    for( i = 0; i < num; i++ ){
+
+        sprintf( tmpchr, "%c%-d\0", spec, (i+1));
+        *(*specarr + i) = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
+        sprintf((*specarr)[i], "%s",tmpchr); 
+        //printf("isotope specifier: %s  %d\n", specarr[i],(int)strlen(specarr[i]));
+
+    }
+    return i;
+}

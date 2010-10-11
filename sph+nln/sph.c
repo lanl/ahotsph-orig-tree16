@@ -530,7 +530,8 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 
 #include "Msgs.h"
 double eos_n, eos_u;
-
+extern int nparr[NISO], nnarr[NISO];
+extern int **inNW;
 
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
@@ -544,11 +545,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
     double kB; 
-    double molfrac[NNETW+1]; /*float or double?? */
+    double *molfrac; /*float or double?? */
 /* for the purpose of making progress, hard-code for now which isotope 
  * should be included in the burning. This is UGLY!! */
-    int inNW[2][NNETW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
-                         {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
+/* to do: read in from file in main and pass in, (perhaps stuff inNW as global var into cool.h?) */
+    //int inNW[2][NNW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
+    //                     {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.01, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
@@ -557,6 +559,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     long cycles=0, countc; 
     static long cycled = 0;
     int temp_ok;
+
+    molfrac = (double *)malloc( (NNW+1) * sizeof(double) );
 
     tlo = 1.0e1;
     tup = 2.5e11;
@@ -603,15 +607,15 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         /* all this is done in user-units */
         m_ave = 0;
         abund_renorm = 0;
-        for ( j = 0; j < NNETW; j++) {
-            m_ave += p->abund[j]/((double)(p->np[j] + p->nn[j]));/*mean molecular weight*/
+        for ( j = 0; j < NNW; j++) {
+            m_ave += p->abund[j]/((double)(nparr[j] + nnarr[j]));/*mean molecular weight*/
             abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
         }
 
         m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
         rho = (double)p->rho * (m / (l*l*l));
 
-        ne = find_ne(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel);
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 	eos_u = ((double)(p->u)) * ((double)(p->rho));
 
@@ -642,30 +646,30 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             ndens = eos_n / (l*l*l);
 
             /*prepare abundance array passed into network - more ugliness!*/
-            for( i = 0; i < NNETW; i++ ) {
+            for( i = 0; i < NNW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
-                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                    if((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])){
                         molfrac[i] = p->abund[j];
                         j = NISO; /* get out, so we don't overwrite molfrac
                                    * with junk from trailing abund columns */
                     }   
                 }   
             }
-            molfrac[NNETW] = p->Y_el;
+            molfrac[NNW] = p->Y_el;
 
             /* deltah= erg/g for this timestep */
-            solven_(&dt_cgs,&temp,&rho,&molfrac,&deltah,&rank,&partid);
+            solven_(&dt_cgs,&temp,&rho,molfrac,&deltah,&rank,&partid);
             p->udot += deltah * (t*t) / (l*l) / dt;
 
             /*update composition of particle from updated abundance array*/
-            for( i = 0; i < NNETW; i++ ) {
+            for( i = 0; i < NNW; i++ ) {
                 for( j = 0; j < NISO; j++ ) {
-                    if((p->np[j] == inNW[0][i]) && (p->nn[j] == inNW[1][i])){
+                    if((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])){
                         p->abund[j] = molfrac[i];
                     }   
                 }
             }
-            p->Y_el = molfrac[NNETW];
+            p->Y_el = molfrac[NNW];
 
         }  
 
@@ -699,7 +703,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    notprinted = 0;
 
 	           /* lcool contains energy lost as positive value */
-	           lcool = calc_lcool1(p->abund, p->np, p->nn, p->temp, rho, Gridpts, Nel, 1);
+	           lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
 
                    /* trying to catch any NaN's */
                    if ( lcool != lcool ) lcool = 0.0;
@@ -777,9 +781,9 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	    /* Calculate temperature from u, then "create" photons (a*T^4) */
             /* keep these in user-units */
             eos_n = 0;
-            for( j = 0; j < NNETW; j++)
-                eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(p->np[j] + p->nn[j]) *
-                          p->abund[j] * (double)(p->np[j] + 1.0);/* accounts for electrons!*/
+            for( j = 0; j < NNW; j++)
+                eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
+                          p->abund[j] * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
 	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
