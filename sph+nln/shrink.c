@@ -256,7 +256,7 @@ AdjustBtab3(SPHbody **SPHbtabp, int *nobj, int gnobj, float r_limit,
 /* adjust btab from snevolbrna to let the central particle acrete mass ~CIE */
 void
 AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
-            float *newr, float *newp, float *newl, float newt, float tpos)
+            float *newr, float *newp, float *newl, float G, float tpos)
 {
     SPHbody *btab = *SPHbtabp;
     SPHbody *p, *q;
@@ -267,8 +267,10 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 
     StkInitEz(&s);
 
-    for (*newmass = 0.0, newp[0]=0.0, newp[1]=0.0; newp[2]=0.0, 
-         newl[0]=0.0, newl[1]=0.0, newl[2]=0.0, p = btab; p < btab+*nobj; p++) {
+    VS(newp, = 0.0);
+    VS(newl, = 0.0);
+
+    for (*newmass = 0.0, p = btab; p < btab+*nobj; p++) {
 
 	v2 = (p->vel[0] - b.vel[0])*(p->vel[0] - b.vel[0]) + 
 	    (p->vel[1] - b.vel[1])*(p->vel[1] - b.vel[1]) + 

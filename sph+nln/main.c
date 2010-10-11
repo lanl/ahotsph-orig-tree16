@@ -401,20 +401,22 @@ main(int argc, char *argv[])
  * if from ctl file: much easier to add to current set up, but then on 
  * restarts would use the wrong quantities? (how is time step/ iter done?)
  */
-                /* first iteration, get central particle from ctl file */
+                /* first iteration, get central particle data from ctl file */
                 if (do_absorbing_bndry) {
                     SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
+                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[0]), 0.0);
 #if NDIM>=2        
                     SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
+                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[1]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[1]), 0.0);
 #if NDIM>=3
                     SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
-#endif
-#endif
-                    SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
-#if NDIM>=2        
-                    SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
-#if NDIM>=3
                     SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
+                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[2]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[2]), 0.0);
 #endif
 #endif
                     SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
@@ -486,36 +488,21 @@ main(int argc, char *argv[])
 	    tvel = tpos;
 	    SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
 
-                /* not first iteration, get central particle from sdf file */
+                /* not first iteration, get central data particle from sdf file */
                 if (do_absorbing_bndry && (iter > 0)) {
                     SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
-#if NDIM>=2        
-                    SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
-#if NDIM>=3
-                    SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
-#endif
-#endif
-
                     SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
-#if NDIM>=2        
-                    SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
-#if NDIM>=3
-                    SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
-#endif
-#endif
-
                     SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
-#if NDIM>=2        
-                    SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
-#if NDIM>=3
-                    SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
-#endif
-#endif
-
                     SDFgetfloatOrDie(sdfp, "bndry_lx", &(bndry.l[0]));
 #if NDIM>=2        
+                    SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
+                    SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
+                    SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
                     SDFgetfloatOrDie(sdfp, "bndry_ly", &(bndry.l[1]));
 #if NDIM>=3
+                    SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
+                    SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
+                    SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
                     SDFgetfloatOrDie(sdfp, "bndry_lz", &(bndry.l[2]));
 #endif
 #endif
@@ -736,6 +723,7 @@ main(int argc, char *argv[])
 #endif
 #endif
 */
+/* or 2D for now, to get it compiled
 #if NDIM=2
         singlPrintf("float bndry_pos[2] = [ %g, %g ];\n", 
                     bndry.pos[0], bndry.pos[1]);
@@ -745,8 +733,9 @@ main(int argc, char *argv[])
                     bndry.p[0], bndry.p[1]);
         singlPrintf("float bndry_l[2] = [ %g, %g ];\n",
                     bndry.l[0], bndry.l[1]);
+*/
 /*#elif NDIM=3*//*let's assume we're never going to run this in 1D ~CIE*/
-#else
+/*#else*/
         singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
                     bndry.pos[0], bndry.pos[1], bndry.pos[2]);
         singlPrintf("float bndry_vel[3] = [ %g, %g, %g ];\n", 
@@ -755,7 +744,7 @@ main(int argc, char *argv[])
                     bndry.p[0], bndry.p[1], bndry.p[2]);
         singlPrintf("float bndry_l[3] = [ %g, %g, %g ];\n", 
                     bndry.l[0], bndry.l[1], bndry.l[2]);
-#endif
+/*#endif*/
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
     }
@@ -973,10 +962,8 @@ main(int argc, char *argv[])
             VVS(bndry.vel, = bndry.p, * invmass ); /* seems safer ~CIE */
             /* now, the call later to UpdateX will move central particle accordingly? */
             /* how do I prevent artificial added momentum due to rounding errors? */
-            Msgf(("Iter %d: removed %d bodies from SPHbtab\nBndry mass = %g\n
-                  p-vec = ( %g, %g, %g )\nl-vec = ( %g, %g, %g )\n",
-                  iter, SPHoldnobj-SPHnobj, bndry.mass,
-                  bndry.p[0],bndry.p[1],bndry.p[2],bndry.l[0],bndry.l[1],bndry.l[2]));
+            Msgf(("Iter %d: removed %d bodies from SPHbtab\nBndry mass = %g\n", iter, SPHoldnobj-SPHnobj, bndry.mass));
+            Msgf(("p-vec = ( %g, %g, %g )\nl-vec = ( %g, %g, %g )\n", bndry.p[0],bndry.p[1],bndry.p[2],bndry.l[0],bndry.l[1],bndry.l[2]));
         }
 
 	/* comoving smoothing */
@@ -2365,6 +2352,12 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
              "bndry_vx", SDF_FLOAT, bndry.vel[0],
              "bndry_vy", SDF_FLOAT, bndry.vel[1],
              "bndry_vz", SDF_FLOAT, bndry.vel[2],
+             "bndry_px", SDF_FLOAT, bndry.p[0],
+             "bndry_py", SDF_FLOAT, bndry.p[1],
+             "bndry_pz", SDF_FLOAT, bndry.p[2],
+             "bndry_lx", SDF_FLOAT, bndry.l[0],
+             "bndry_ly", SDF_FLOAT, bndry.l[1],
+             "bndry_lz", SDF_FLOAT, bndry.l[2],
              "bndry_mass", SDF_FLOAT, bndry.mass,
              "bndry_r", SDF_FLOAT, bndry.r,
 	     "ke", SDF_DOUBLE, ke,
