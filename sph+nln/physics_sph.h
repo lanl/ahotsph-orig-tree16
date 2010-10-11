@@ -5,15 +5,9 @@
 #include "tree.h"
 #include "key.h"
 #include "timers.h"
+#include "cool.h"
 
-#ifndef NNETW
-#define NNETW	/* number of isotopes in network */
-int NNW;
-#else
-extern int NNW;
-#endif
 #define NDIM 3
-#define NISO 20 	/* number of isotopes tracked */
 #define SPH_SAVE_ACC
 #define POS_IS_DOUBLE
 #define SPH_GRAV
@@ -182,7 +176,7 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
-    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
+    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -212,7 +206,7 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
-    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20,f21,f22; \n\
+    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\

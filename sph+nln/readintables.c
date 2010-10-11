@@ -30,9 +30,10 @@
  * start at 0), where ionstate is the ionization state (0 for neutral, Z+1    *
  * for bare ion), and Nel is the number of the element (=Z).                  *
  ******************************************************************************/
+/*
 extern float **tablep;
 extern float **ionfracp;
-
+*/
 
 /* return Gridpts and Nel to calling function*/
 void init_CoolTable(int *Gridpts, int *Nel)
@@ -40,8 +41,6 @@ void init_CoolTable(int *Gridpts, int *Nel)
     FILE *File1p;	/*pointer to file with cooling curves*/
     FILE *file2p;	/*pointer to file with ion fractions*/
     long lSize;		/*holds file size (number of characters in file)*/
-    extern float **tablep;	/*global array for cooling curves*/
-    extern float **ionfracp;	/*global array for ion fractions*/
     int i,j,k;		/*indices for looping through arrays*/
     int counter1 = 0, counter2 = 0;
     int index;		/*index to access correct array element*/

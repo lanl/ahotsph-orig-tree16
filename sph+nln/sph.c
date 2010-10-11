@@ -45,8 +45,10 @@ extern int do_diffusion;
 extern int do_cooling;
 extern int do_burning;
 
+/*
 extern float **tablep; //added by CE
 extern float **ionfracp; //added by CE
+*/
 
 void
 SetSPHOffset(float *off, float *voff)
@@ -530,8 +532,10 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 
 #include "Msgs.h"
 double eos_n, eos_u;
+/*
 extern int nparr[NISO], nnarr[NISO];
 extern int **inNW;
+*/
 
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/

@@ -19,6 +19,7 @@
 #include "SDFwrite.h"
 #include "SDFread.h"
 #include "physics.h"
+#include "cool.h"
 #include "physics_sph.h"
 #include "vop.h"
 #include "Msgs.h"
@@ -39,7 +40,6 @@
 #include "image.h"
 #include "memfile.h"
 #include "integrate.h"
-#include "cool.h"
 #include "nrutil.h"
 #include "units.h"
 
@@ -164,8 +164,10 @@ int do_burning;    /* used in sph.c, turns network on */
 float **tablep; //array to hold cooling curve table values
 float **ionfracp; //array to hold ionfraction table values
 
+/*
 int **inNW;
 int nparr[NISO], nnarr[NISO];
+*/
 
 #ifdef __PARAGON__
 void
@@ -198,8 +200,8 @@ int
 main(int argc, char *argv[])
 {
     FILE *fp = NULL;
-    extern float **tablep; //added by CIE
-    extern float **ionfracp; //added by CIE
+    //extern float **tablep; //added by CIE
+    //extern float **ionfracp; //added by CIE
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;

@@ -1,12 +1,27 @@
-/*
-static const int NISO = 5;
+#ifndef NISO
+#define NISO 20 	/* number of isotopes tracked */
+#endif
 
-typedef struct{
-	float abund[NISO];
-	int np[NISO];
-	int nn[NISO];
-} SPHbody;
-*/
+#ifndef COOLING
+#define COOLING
+float **tablep; //array to hold cooling curve table values
+float **ionfracp; //array to hold ionfraction table values
+#else
+extern float **tablep;
+extern float **ionfracp;
+#endif
+
+#ifndef BURNING
+#define BURNING
+int NNW;	/* number of isotopes in network */
+int **inNW;
+int nparr[NISO], nnarr[NISO];
+#else
+extern int NNW;
+extern int **inNW;
+extern int nparr[NISO];
+extern int nnarr[NISO];
+#endif
 
 double find_ne(float abundarr[],int nparr[],int nnarr[],double rho,double temp,int Gridpts,int Nel);
 double calc_lcool1(float abundarr[],int nparr[],int nnarr[],double rho,double temp,int Gridpts,int Nel,int extrapolate);

@@ -46,8 +46,8 @@
 
 double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, double rho, int Gridpts,int Nel,int extrapolate)
 {
-    extern float **tablep;	/*global array with cooling values*/
-    extern float **ionfracp;	/*global array with ion fractions*/
+    //extern float **tablep;	/*global array with cooling values*/
+    //extern float **ionfracp;	/*global array with ion fractions*/
     double lcool;	/*holds final cooling term;returned*/
     double *lcoolp;	/*pointer to lcool*/
     double dy,df;	/*measure of accuracy returned from interp.*/
