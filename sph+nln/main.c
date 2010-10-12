@@ -98,6 +98,8 @@ void AdjustBtab2(SPHbody **SPHbtabp, int *nobj, int gnobj, windbody *windbtab,
 		int *added_particles, float *newmass);
 void AdjustBtab3(SPHbody **SPHbtabp, int *nobj, int gnobj, float r_limit,
 		 float r_outer);
+void AdjustBtab4(SPHbody ** SPHbtabp, int *nobj, bndry_t b, float *newmass,
+                 float *newr, float *newp, float *newl, float newt, float tpos);
 void AddWinds(SPHbody **SPHbtabp, int *nobj, template_t *tempbtab, 
 	      int windpartpershell, float r_wind, float v_wind, 
 	      float mdot_wind, float u_wind, float *t_wind, float tpos, 
@@ -151,6 +153,8 @@ static float courant_number;
 static int adaptive_dt;
 static int independent_dt;
 static int dark_independent_dt;
+
+static bndry_t bndry;
 
 /*conversion factors from user-units to cgs*/
 float massCF;
@@ -271,6 +275,10 @@ main(int argc, char *argv[])
     int wnobj;
     int do_point_mass, do_point_mass2;
     int do_boundary;
+    int do_absorbing_bndry;
+    float newp[NDIM], newl[NDIM];
+    float newr = 0.0;
+    float newmass = 0.0, totnewmass = 0.0, invmass = 0.0;
     int do_drag;
     float drag_coeff;
 /*     float newmass = 0.0, totnewmass = 0.0; */
@@ -339,6 +347,7 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "do_point_mass", &do_point_mass, 0);
     SDFgetintOrDefault(csdfp, "do_point_mass2", &do_point_mass2, 0);
     SDFgetintOrDefault(csdfp, "do_boundary", &do_boundary, 0);
+    SDFgetintOrDefault(csdfp, "do_absorbing_bndry", &do_absorbing_bndry, 0);
     SDFgetintOrDefault(csdfp, "do_drag", &do_drag, 0);
     SDFgetintOrDefault(csdfp, "has_grav_data", &has_grav_data, do_grav);
 
@@ -367,7 +376,7 @@ main(int argc, char *argv[])
 		    if (do_restart) sprintf(iname, "%s_sph.restart", name);
 		    else SDFgetstring(csdfp, "SPHdatafile", iname, 
 				      sizeof(iname));
-/* this is where the SDF file is read in (?) -CIE */
+/* this is where the SDF file is read in -CIE */
 		    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 				   set_id, setpvel, new_h, new_u);
             for ( i=0; i<NISO; i++ ) {
@@ -414,6 +423,35 @@ main(int argc, char *argv[])
 		    SDFgetfloatOrDie(csdfp, "r_outer", &r_outer);
 		    SDFgetfloatOrDie(csdfp, "centmass", &centmass);
 		}
+ 
+/* get bndry quantities from sdf file or ctl file?
+ * if from sdf file: corresponds to how it is done in snevolbrna, but then 
+ * I need to modifiy the sdf files again - or not, get initial quantities 
+ * from ctl file, and later quantities from sdf file on restart
+ * if from ctl file: much easier to add to current set up, but then on 
+ * restarts would use the wrong quantities? (how is time step/ iter done?)
+ */
+                /* first iteration, get central particle data from ctl file */
+                if (do_absorbing_bndry) {
+                    SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
+                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[0]), 0.0);
+#if NDIM>=2        
+                    SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
+                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[1]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[1]), 0.0);
+#if NDIM>=3
+                    SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
+                    SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
+                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[2]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[2]), 0.0);
+#endif
+#endif
+                    SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
+                    SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
+                }
 
 		if (do_winds) {
 		    SDFgetintOrDie(csdfp, "windpart_per_shell", 
@@ -479,6 +517,29 @@ main(int argc, char *argv[])
 	    SDFgetfloatOrDefault(sdfp, "tpos",  &tpos, (float)0.0);
 	    tvel = tpos;
 	    SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
+
+                /* not first iteration, get central data particle from sdf file */
+                if (do_absorbing_bndry && (iter > 0)) {
+                    SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
+                    SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
+                    SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
+                    SDFgetfloatOrDie(sdfp, "bndry_lx", &(bndry.l[0]));
+#if NDIM>=2        
+                    SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
+                    SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
+                    SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
+                    SDFgetfloatOrDie(sdfp, "bndry_ly", &(bndry.l[1]));
+#if NDIM>=3
+                    SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
+                    SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
+                    SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
+                    SDFgetfloatOrDie(sdfp, "bndry_lz", &(bndry.l[2]));
+#endif
+#endif
+
+                    SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
+                    SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
+                }
 	    if (cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
 	    if(sdfp) SDFclose(sdfp);
 	} else {
@@ -674,6 +735,49 @@ main(int argc, char *argv[])
 	singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
 	singlPrintf("float centmass = %e;\n", centmass);
     }
+    if (do_absorbing_bndry) {
+        /* this just prints to stdout, can print as arrays! ~CIE*/
+/*
+        singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);
+#if NDIM>=2
+        singlPrintf("float bndry_y = %g;\n", bndry.pos[1]);
+#if NDIM>=3
+        singlPrintf("float bndry_z = %g;\n", bndry.pos[2]);
+#endif
+#endif
+        singlPrintf("float bndry_vx = %g;\n", bndry.vel[0]);
+#if NDIM>=2
+        singlPrintf("float bndry_vy = %g;\n", bndry.vel[1]);
+#if NDIM>=3
+        singlPrintf("float bndry_vz = %g;\n", bndry.vel[2]);
+#endif
+#endif
+*/
+/* or 2D for now, to get it compiled
+#if NDIM=2
+        singlPrintf("float bndry_pos[2] = [ %g, %g ];\n", 
+                    bndry.pos[0], bndry.pos[1]);
+        singlPrintf("float bndry_vel[2] = [ %g, %g ];\n", 
+                    bndry.vel[0], bndry.vel[1]);
+        singlPrintf("float bndry_p[2] = [ %g, %g ];\n", 
+                    bndry.p[0], bndry.p[1]);
+        singlPrintf("float bndry_l[2] = [ %g, %g ];\n",
+                    bndry.l[0], bndry.l[1]);
+*/
+/*#elif NDIM=3*//*let's assume we're never going to run this in 1D ~CIE*/
+/*#else*/
+        singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
+                    bndry.pos[0], bndry.pos[1], bndry.pos[2]);
+        singlPrintf("float bndry_vel[3] = [ %g, %g, %g ];\n", 
+                    bndry.vel[0], bndry.vel[1], bndry.vel[2]);
+        singlPrintf("float bndry_p[3] = [ %g, %g, %g ];\n", 
+                    bndry.p[0], bndry.p[1], bndry.p[2]);
+        singlPrintf("float bndry_l[3] = [ %g, %g, %g ];\n", 
+                    bndry.l[0], bndry.l[1], bndry.l[2]);
+/*#endif*/
+        singlPrintf("float bndry_mass = %g;\n", bndry.mass);
+        singlPrintf("float bndry_r = %g;\n", bndry.r);
+    }
     if (do_drag) {
 	singlPrintf("int do_drag = %d;\n", do_drag);
 	singlPrintf("float drag_coeff = %g;\n", drag_coeff);
@@ -865,6 +969,33 @@ main(int argc, char *argv[])
 	    Msgf(("Iter: %d: Removed %d bodies from SPHbtab\n", iter, 
 		  SPHoldnobj-SPHnobj));
 	}
+ 
+        if (do_absorbing_bndry) {
+            SPHoldnobj = SPHnobj;
+            AdjustBtab4((SPHbody **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
+                        newp, newl, cosmo.GNewt, tpos);
+
+            totnewmass = 0.0;
+            MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
+            MPMY_Combine(&newmass, &totnewmass, 1, MPMY_FLOAT, MPMY_SUM);
+            MPMY_Combine(&newr, &newr, 1, MPMY_FLOAT, MPMY_MIN);
+            MPMY_Combine(newp, newp, 3, MPMY_FLOAT, MPMY_SUM);
+            MPMY_Combine(newl, newl, 3, MPMY_FLOAT, MPMY_SUM);
+
+            bndry.mass += totnewmass;
+            bndry.r = newr;
+            VV(bndry.p, += newp);
+            VV(bndry.l, += newl);
+            /* what's the difference between using 'VV' and 'VVS' for this?
+             * also, no VV ever devides, but always multiplies, and scalar is 
+             * always first ~CIE */
+            invmass = 1.0/bndry.mass;
+            VVS(bndry.vel, = bndry.p, * invmass ); /* seems safer ~CIE */
+            /* now, the call later to UpdateX will move central particle accordingly? */
+            /* how do I prevent artificial added momentum due to rounding errors? */
+            Msgf(("Iter %d: removed %d bodies from SPHbtab\nBndry mass = %g\n", iter, SPHoldnobj-SPHnobj, bndry.mass));
+            Msgf(("p-vec = ( %g, %g, %g )\nl-vec = ( %g, %g, %g )\n", bndry.p[0],bndry.p[1],bndry.p[2],bndry.l[0],bndry.l[1],bndry.l[2]));
+        }
 
 	/* comoving smoothing */
 	/* Note: behavior changed Jan. 25, 1996. Beware of old ctl files */
@@ -1197,6 +1328,11 @@ main(int argc, char *argv[])
 	    update_point_SPHmass2(SPHbtab, SPHnobj, eps*eps, cosmo.GNewt, 
 				  centmass);
 	}
+ 
+        if (do_absorbing_bndry) {
+            /*updates acc of all particles due to central particle (?) ~CIE */
+            update_point_SPHmass_bndry(SPHbtab, SPHnobj, cosmo.GNewt, bndry);
+        }
 
 	if (do_drag) {
 	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
@@ -1288,6 +1424,12 @@ main(int argc, char *argv[])
 	    }
 	    added_particles = 0;
 	}
+        if (do_absorbing_bndry) {
+            /* to get central velocity from particle absorption, need to Update 
+             * bndry.vel under consideration from absorbed (linear, +angular?) momentum?
+             */
+            UpdateX(bndry.pos, sizeof(bndry_t), bndry.vel, sizeof(bndry_t), 1, dt, dt_last);
+        }
 	/* One must be careful with this integration scheme, since v */
 	/* is a derived variable.  To really adjust v, change pos_last */
 	PUpdateV(btab[0].vel, stride, btab[0].pos, stride, btab[0].pos_last, 
@@ -1376,6 +1518,8 @@ main(int argc, char *argv[])
 	singlPrintf("udot_limit high: %d low: %d\n", udot_limit[0], 
 		    udot_limit[1]);
 	singlPrintf("Total Energy: %g\n", etot);
+        singlPrintf("Central mass: %g; boundary radius: %g\n", 
+                    bndry.mass, bndry.r);
 
 	StopTimer(&StepTot);
 	StopTimer(&StepTotWC);
@@ -2238,7 +2382,24 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	     "hubble", SDF_FLOAT, output_h,
 	     "redshift", SDF_FLOAT, output_z,
 	     "gamma", SDF_FLOAT, Gamma,
+         "massCF", SDF_FLOAT, massCF,
+         "lengthCF", SDF_FLOAT, lengthCF,
+         "timeCF", SDF_FLOAT, timeCF,
 	     "centmass", SDF_FLOAT, centmass, 
+             "bndry_x", SDF_FLOAT, bndry.pos[0],
+             "bndry_y", SDF_FLOAT, bndry.pos[1],
+             "bndry_z", SDF_FLOAT, bndry.pos[2],
+             "bndry_vx", SDF_FLOAT, bndry.vel[0],
+             "bndry_vy", SDF_FLOAT, bndry.vel[1],
+             "bndry_vz", SDF_FLOAT, bndry.vel[2],
+             "bndry_px", SDF_FLOAT, bndry.p[0],
+             "bndry_py", SDF_FLOAT, bndry.p[1],
+             "bndry_pz", SDF_FLOAT, bndry.p[2],
+             "bndry_lx", SDF_FLOAT, bndry.l[0],
+             "bndry_ly", SDF_FLOAT, bndry.l[1],
+             "bndry_lz", SDF_FLOAT, bndry.l[2],
+             "bndry_mass", SDF_FLOAT, bndry.mass,
+             "bndry_r", SDF_FLOAT, bndry.r,
 	     "ke", SDF_DOUBLE, ke,
 	     "pe", SDF_DOUBLE, pe,
 	     "te", SDF_DOUBLE, te,

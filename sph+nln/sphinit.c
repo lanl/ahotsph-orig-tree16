@@ -251,7 +251,7 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
                     /*"p1", offsetof(SPHbody, composition[0].np), &p1conf,*/
                     /*"m1", offsetof(SPHbody, composition[0].nn), &m1conf,*/
                     /* or .... */
-/* let's do this the dummest, ugliest, most painful way possible. he. he. he. -CE */
+/* let's do this the dummest, ugliest, most painful way possible. he. he. he. -CIE */
                     "f1", offsetof(SPHbody, abund[0]), &f1conf,
                     "f2", offsetof(SPHbody, abund[1]), &f1conf,
                     "f3", offsetof(SPHbody, abund[2]), &f1conf,

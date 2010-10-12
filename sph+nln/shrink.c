@@ -253,6 +253,96 @@ AdjustBtab3(SPHbody **SPHbtabp, int *nobj, int gnobj, float r_limit,
     *SPHbtabp = Realloc(btab, *nobj * sizeof(SPHbody));
 }
 
+/* adjust btab from snevolbrna to let the central particle acrete mass ~CIE */
+void
+AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
+            float *newr, float *newp, float *newl, float G, float tpos)
+{
+    SPHbody *btab = *SPHbtabp;
+    SPHbody *p, *q;
+    Stk s;
+    float r2, v2, b2, minb2 = 1e30;
+    float j[NDIM], jhat[NDIM], r_vec[NDIM], v_vec[NDIM];
+    float jm, jmax;
+
+    StkInitEz(&s);
+
+    VS(newp, = 0.0);
+    VS(newl, = 0.0);
+
+    for (*newmass = 0.0, p = btab; p < btab+*nobj; p++) {
+
+	v2 = (p->vel[0] - b.vel[0])*(p->vel[0] - b.vel[0]) + 
+	    (p->vel[1] - b.vel[1])*(p->vel[1] - b.vel[1]) + 
+	    (p->vel[2] - b.vel[2])*(p->vel[2] - b.vel[2]);
+	
+	/* One option: adjust r2 based on particle velocities to
+	   simulate capture-radius behavior */
+	/* r2 = 4.0*newt*newt*b.mass*b.mass / (v2 * v2); */
+
+	/* Another option: start small and move r2 out after eating
+	   all particles to 10% of the radius of the next-nearest
+	   particle */
+
+	r2 = b.r*b.r;
+
+	b2 = (p->pos[0] - b.pos[0])*(p->pos[0] - b.pos[0]) + 
+	    (p->pos[1] - b.pos[1])*(p->pos[1] - b.pos[1]) + 
+	    (p->pos[2] - b.pos[2])*(p->pos[2] - b.pos[2]);
+
+	if ( b2 >= r2 ) {  /* If distance to bndry > capture radius = not eaten */
+	    q = StkPush(&s, sizeof(SPHbody));
+	    *q = *p;
+	    if (b2 < minb2) minb2 = b2;
+	} else { /*eat particle*/
+	    *newmass += p->mass;
+
+		VVV(r_vec, = p->pos, - b.pos);
+        VVV(v_vec, = p->vel, - b.vel);
+
+        VVS(newp, += v_vec, * p->mass);
+
+		/* this assumes that the central particle is at the origin? ~CIE */
+/*
+		j[0] = p->mass * (p->pos[1]*p->vel[2] - p->pos[2]*p->vel[1]);
+		j[1] = p->mass * (p->pos[2]*p->vel[0] - p->pos[0]*p->vel[2]);
+		j[2] = p->mass * (p->pos[0]*p->vel[1] - p->pos[1]*p->vel[0]);
+*/
+
+        j[0] = p->mass * ( r_vec[1]*v_vec[2] - r_vec[2]*v_vec[1] );
+        j[1] = p->mass * ( r_vec[2]*v_vec[0] - r_vec[0]*v_vec[2] );
+        j[2] = p->mass * ( r_vec[0]*v_vec[1] - r_vec[1]*v_vec[0] );
+
+		jm = sqrt( j[0]*j[0] + j[1]*j[1] + j[2]*j[2] );
+		jhat[0] = j[0]/jm;
+		jhat[1] = j[1]/jm;
+		jhat[2] = j[2]/jm;
+
+		jmax = sqrt( G * b.mass * b.r ) / p->mass;
+
+        jm = ( jm < jmax ? jm : jmax );
+
+        VVS(j, = jhat, * jm);
+
+        VV(newl, += j);
+
+	    Msgf(("t: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", tpos, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
+	   }
+    }
+
+    Free(btab);
+    StkCrunch(&s);
+    *nobj = StkSz(&s)/sizeof(SPHbody);
+    btab = StkBase(&s);
+    *SPHbtabp = Realloc(btab, *nobj * sizeof(SPHbody));
+
+    *newr = 0.5*sqrt(minb2);  /* Candidate new boundary radius =
+				 innermost particle's
+				 distance-to-boundary * 25% */
+    if (*newr < b.r) *newr = b.r;  /* Never shrink boundary */
+
+}
+
 
 void 
 AddWinds(SPHbody **SPHbtabp, int *nobj, template_t *temptab, 

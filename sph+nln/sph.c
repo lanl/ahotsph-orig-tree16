@@ -872,6 +872,32 @@ update_point_SPHmass2(SPHbody *btab, int SPHnobj, float smooth2, float newt,
     }
 }
 
+
+void
+update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, 
+		      bndry_t bndry)
+{
+    SPHbody *r;
+    float dr2, oneor, oneor2;
+    float phii;
+    Vxd(float r);
+
+    for (r = btab; r < btab+SPHnobj; r++) {
+
+	VxVV(r, = r->pos, - bndry.pos); /* 3 flops */
+	
+	dr2 = Dotx(r, r);	/* 5 flops */
+	
+	oneor = recipsqrtf(dr2);	/* 8 flops */
+	
+	oneor2 = oneor * oneor;	/* 17 flops */
+	phii = newt * oneor * bndry.mass;
+	r->phi -= phii;
+	VVx(r->acc, -= oneor2 * phii * r);
+    }
+}
+ 
+
 void 
 do_SPHgrav(const float *p, const float *end, const float *pos0, float *mass0, 
 	   float *acc0, float *phi0, const float *eps2p, int *ncut)
