@@ -74,8 +74,6 @@ typedef struct {
     unsigned int windid;
     double Y_el;
     float abund[NISO]; 
-    int np[NISO];
-    int nn[NISO];
 } SPHbody;
 
 
@@ -134,8 +132,6 @@ typedef struct {
     float temp;
     float Y_el;
     float abund[NISO];
-    int np[NISO];
-    int nn[NISO];
 } SPHoutbody;
 
 typedef struct {
