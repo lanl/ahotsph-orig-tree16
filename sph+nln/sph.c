@@ -621,10 +621,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
         ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
-	eos_u = ((double)(p->u)) * ((double)(p->rho));
+		eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
-	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+		p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         mfp =(1.0/ (0.64e23*m*m/(l*l*l*l*l)*p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
         //p->Y_el = mfp;
@@ -681,7 +681,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	if (do_cooling && (mfp >= p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             tlo = 1.0e-1;
             tup = 1.0e10;
-	    u = p->u; 
+			u = p->u; 
             dt_sub = dt;
             dt_save = dt;
             dt_tot = 0.;
@@ -703,23 +703,23 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
 
                 if((p->temp > 0.0e0) && (p->temp < 1.e8) ) {
-		   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
+				   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
                    notprinted = 0;
 
-	           /* lcool contains energy lost as positive value */
-	           lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
+				   /* lcool contains energy lost as positive value */
+				   lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
 
                    /* trying to catch any NaN's */
                    if ( lcool != lcool ) lcool = 0.0;
 
-	           /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-	           udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+				   /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
+				   udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
 
                    /*determine if we need subcycling*/
-	           if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
+				   if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
                        if(cycled == 0) cycled=p->ident;
                        countc = cycles + (countc - cycles) * decr;
-	               dt_sub = dt_sub / (double)decr;
+					   dt_sub = dt_sub / (double)decr;
 /*
                        if(p->ident == cycled) 
                               printf("ID: %8d: new dt= %E udot= %.5E u= %.5E step %d\n",
@@ -727,7 +727,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 */
                        if(countc > 1e6) {
                            dt_tot = dt;
-		           printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
+						   printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
                               p->ident, u, udot, dt_sub, dt_tot);
                            cycles = countc + 1;
                        }
@@ -752,8 +752,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
             } while (cycles < countc); 
 
-            dt = dt_save;
-            p->udot += (u - p->u) / dt;
+		dt = dt_save;
+		p->udot += (u - p->u) / dt;
 
 	}
     }
