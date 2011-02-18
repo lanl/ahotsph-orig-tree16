@@ -72,7 +72,8 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
-    double Y_el;
+    float Y_el;
+    float mfp;
     float abund[NISO]; 
 } SPHbody;
 
@@ -131,6 +132,7 @@ typedef struct {
     unsigned int windid;
     float temp;
     float Y_el;
+    double mfp;
     float abund[NISO];
 } SPHoutbody;
 
@@ -172,6 +174,7 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
+    double mfp;			/* mean free path */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
@@ -202,6 +205,7 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
+    double mfp;			/* mean free path */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
 #define SPHSHORTOUTBODYDESC \

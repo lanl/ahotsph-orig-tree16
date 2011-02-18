@@ -626,9 +626,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
 		p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
-        mfp =(1.0/ (0.64e23*m*m/(l*l*l*l*l)*p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
-        //p->Y_el = mfp;
-        //printf("mfp: %.5E ne= %.5E h=%.5E\n",mfp,ne,p->h);
+        /* convert from cgs to code units */
+        mfp = 1.0/(ne * 6.65e-25) / l;
+
+        if (p->temp > 1.0e7) {
+            mfp += (1.0/ (0.64e23*m*m/(l*l*l*l*l)*
+                   p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
+        }
+        p->mfp = mfp;
 
         if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
             temp_ok = 1;
@@ -678,7 +683,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }  
 
 
-	if (do_cooling && (mfp >= p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+	if (do_cooling && (mfp >= 0.25*p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             tlo = 1.0e-1;
             tup = 1.0e10;
 			u = p->u; 
@@ -694,7 +699,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
 
-	        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+	            p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
                 if(p->temp < 0.) {
                    dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
                    udot = 0.0;
@@ -733,13 +738,16 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        }
                    } else { /* no further subcycling required, update values */
                        dt_tot += dt_sub;
+                       /* do some kind of transition between optically thick and 
+                          thin regions for radiative losses */
+                       if (mfp <= 3*p->h) udot = udot*(1.0 - exp( -p->h/mfp ));
                        u += udot * dt_sub;
                        cycles++;
-                       if(p->ident == cycled) {
 /*
+                       if(p->ident == cycled) {
                        printf("ID: %8d: cycles: %d, done %E\n",p->ident, cycles,dt_tot/dt);
-*/
                        }
+*/
                    }
 
 /*
