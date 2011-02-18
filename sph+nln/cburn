@@ -36,7 +36,7 @@ c..needed for solar tests
 
       real*8 tburnlo, tburnd, tqse, tnse
 c..cccccccc.force no nse, qse.cccc....................c..........c
-      parameter(tburnlo=1.0d-2,tburnd=5.0d-4,tnse=5.0d0,tqse=4.7d1)
+      parameter(tburnlo=1.0d-2,tburnd=5.0d-4,tnse=1.0d1,tqse=4.7d1)
 
 c..   fkt if T9>0.01 = 1e7 K
 c..   only decay if T9< 5.0d-4 = 5e5 K
