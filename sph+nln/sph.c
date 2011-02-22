@@ -557,7 +557,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     //                     {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.01, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne;
+    double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp;
     int decr,notprinted;
     long cycles=0, countc; 
@@ -619,12 +619,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
         rho = (double)p->rho * (m / (l*l*l));
 
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
 		eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
 		p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
 
         /* convert from cgs to code units */
         mfp = 1.0/(ne * 6.65e-25) / l;
@@ -633,7 +633,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             mfp += (1.0/ (0.64e23*m*m/(l*l*l*l*l)*
                    p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
         }
-        p->mfp = mfp;
+        p->mfp = (float)mfp;
 
         if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
             temp_ok = 1;
@@ -642,7 +642,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             printf("newtraph failed: particle %d for eos_u=%.4E eos_n=%.4E gives T=%.4E\n",
                   p->ident, eos_u, eos_n, p->temp);
             printf("m=%.4E l=%.4E\n",m,l);
-            for(j=0;j<NISO;j++) printf("%.4E ",p->abund[j]);
+            for( j = 0; j < NISO; j++) printf("%.4E ",p->abund[j]);
             printf("\n");
         }
 
@@ -664,7 +664,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                     }   
                 }   
             }
-            molfrac[NNW] = p->Y_el;
+            molfrac[NNW] = (double)p->Y_el;
 
             /* deltah= erg/g for this timestep */
             solven_(&dt_cgs,&temp,&rho,molfrac,&deltah,&rank,&partid);
@@ -678,12 +678,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                     }   
                 }
             }
-            p->Y_el = molfrac[NNW];
+            p->Y_el = (float)molfrac[NNW];
 
         }  
 
 
-	if (do_cooling && (mfp >= 0.25*p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+	if (do_cooling && (p->mfp > 0.25*p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             tlo = 1.0e-1;
             tup = 1.0e10;
 			u = p->u; 
@@ -694,6 +694,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             decr = 10;
             cycles = 0;
             countc = 1;
+
 
 /*            while ( cycles < countc ) */
             do {
@@ -725,17 +726,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        if(cycled == 0) cycled=p->ident;
                        countc = cycles + (countc - cycles) * decr;
 					   dt_sub = dt_sub / (double)decr;
-/*
-                       if(p->ident == cycled) 
-                              printf("ID: %8d: new dt= %E udot= %.5E u= %.5E step %d\n",
-                              p->ident, dt_sub, udot, u, countc);
-*/
+
                        if(countc > 1e6) {
                            dt_tot = dt;
 						   printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
                               p->ident, u, udot, dt_sub, dt_tot);
                            cycles = countc + 1;
                        }
+
                    } else { /* no further subcycling required, update values */
                        dt_tot += dt_sub;
                        /* do some kind of transition between optically thick and 
@@ -743,18 +741,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                        if (mfp <= 3*p->h) udot = udot*(1.0 - exp( -p->h/mfp ));
                        u += udot * dt_sub;
                        cycles++;
-/*
-                       if(p->ident == cycled) {
-                       printf("ID: %8d: cycles: %d, done %E\n",p->ident, cycles,dt_tot/dt);
-                       }
-*/
                    }
 
-/*
-                   if((float)dt_tot > (float)dt)
-                      printf("warning: dt_tot > dt: %E and %E\n",dt_tot, dt);
-*/
                    if(cycles > 1e6) printf("warning: over 1e6 subcycles\n");
+
                 } else {
                    cycles = countc+1; /*to get out of while loop if no cooling takes place */
                 }
@@ -763,7 +753,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		dt = dt_save;
 		p->udot += (u - p->u) / dt;
 
-	}
+    	}
     }
 }
 

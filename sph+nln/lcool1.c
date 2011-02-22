@@ -93,7 +93,7 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
 	
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
-      extrapolation is still a little funky - CE
+      extrapolation is still a little funky - CIE
       above table= j=-2, below table= j=-99
     */
     if ((j==-2) || (j==-99))
@@ -141,9 +141,8 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
     }
 
     for ( n = 0; n < Nel; n++) {
-	N = n+1;
-//        printf("bares:  %.2E  %.2E \n", ionfracp[ N*(N+1)/2+N ][j],tablep[ N*(N+1)/2-1+N][j]);
-	/*loop over ions for each element,dont skip any*/
+	    N = n+1;
+	    /*loop over ions for each element,dont skip any*/
         for ( m = 0; m < (N+1); m++) {
             index = (int)(N * (float)( (N+1)/2 ) ); /* to preempt int division probs */
 	    /*re-assign table values so interpolation can be done in 
@@ -169,7 +168,7 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
 	    /*interpolate*/
 	    polint(rowarr,fracns,2,logtemp,fracnp,dfp);
 
-            if(m == 0) fracneu = fracn;
+        if(m == 0) fracneu = fracn;
 
 	    /*reset value if extrapolated to unphysical value*/
 	    if (fracn<0.0)
@@ -208,7 +207,7 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
     double logtemp; 	/*log(temp) for ionfracp interpolation*/
     float temps[Gridpts];
     float X_el[Nel];		/*element fraction, i.e. number density*/
-    float ne = 0.;	/* total electron number density */
+    double nelectron = 0.;	/* total electron number density */
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
@@ -225,12 +224,15 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
 
     /* we're doing temperature in logspace */
     logtemp=log10(temp);
+    if( logtemp < ionfracp[0][0] ) logtemp = 4.0;
+    if( logtemp > ionfracp[0][Gridpts-1] ) logtemp = 9.0;
 
     /*locate the indices of the table;
       same for both tables as they go over the same range/grid points 
     */
-    for( n = 0; n < Gridpts; n++)
-	temps[n] = ionfracp[0][n];
+    for( n = 0; n < Gridpts; n++) {
+        temps[n] = ionfracp[0][n];
+    }
 
     locate(&temps[0], Gridpts, logtemp, jp); 
     j_prev=j;
@@ -240,24 +242,8 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
       extrapolation is still a little funky - CE
       above table= j=-2, below table= j=-99
     */
-    if ((j==-2) || (j==-99))
-    {
-	/*if (extrapolate)
-	{*/
-	    /*printf("extrapolating......\n");*/
-	    /*reset j for extrapolation*/
-	  /*  if (j==-2) j=0;*/
-	    /*now do interpolation, should automatically 
-	     * extrapolate as set up below*/
-
-	    /*reset j for extrapolation*/
-	    /*if (j==-99) j=Gridpts-1;*/
-	    /*now do interpolation, should automatically 
-	     * extrapolate as set up below*/
-	/*}
-	else*/
-	    return 0.0; /*we're done here*/
-    } 
+    if (j==-2) return 1.0; /*we're done here*/
+    if (j == -99) return 0.0; 
 
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
 
@@ -275,31 +261,30 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
     {
 	N = n+1;
 	/*loop over ions for each element,dont skip any*/
-        for ( m = 0; m < (N+1); m++)	
-	{
+        for ( m = 0; m < (N+1); m++) {
             index = (int)(N * (float)( (N+1)/2 ) ); /* to preempt int division probs */
-	    /*re-assign table values so interpolation can be done in 
-	      double precision (table is floats). */
-	    rowarr[0] = ionfracp[0][ j ];
-	    rowarr[1] = ionfracp[0][ j + 1 ];
+	        /* re-assign table values so interpolation can be done in 
+	           double precision (table is floats). */
+	        rowarr[0] = ionfracp[0][ j ];
+	        rowarr[1] = ionfracp[0][ j + 1 ];
 		
-	    fracns[0] = ionfracp[ index+m ][ j ];
-	    fracns[1] = ionfracp[ index+m ][ j + 1 ];
+	        fracns[0] = ionfracp[ index+m ][ j ];
+	        fracns[1] = ionfracp[ index+m ][ j + 1 ];
 
-	    /*interpolate*/
-	    polint(rowarr,fracns,2,logtemp,fracnp,dfp);
+	        /*interpolate*/
+	        polint(rowarr,fracns,2,logtemp,fracnp,dfp);
 
-	    /*reset value if extrapolated to unphysical value*/
-	    if (fracn<0.0)
-	    {
-	        if ((fracns[0]-fracns[1]) <0) fracn=1.0e-40;
-		else fracn=1.0;
+	        /*reset value if extrapolated to unphysical value*/
+	        if (fracn<0.0)
+	        {
+	            if ((fracns[0]-fracns[1]) <0) fracn=1.0e-40;
+	    	    else fracn=1.0;
+	        }
+
+            nelectron += X_el[n] * (double)(m) * fracn;
 	    }
-
-            ne += X_el[n] * (double)(m) * fracn;
-	}
     }
-    return ne;
+    return nelectron;
 } /*end find_ne*/
 
 
