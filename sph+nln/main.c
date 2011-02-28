@@ -308,6 +308,8 @@ main(int argc, char *argv[])
     int status, done,rank,idbug;
     char netrcfn[20];
     char **pnames, **nnames;
+    int calc_gamma = 1;
+    float tot_u, tot_pv;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -888,6 +890,28 @@ main(int argc, char *argv[])
 	ClearEnabledCounters();
 	StartTimer(&StepTotWC);
 	StartTimer(&StepTot);
+
+    tot_u = 0.0;
+    tot_pv = 0.0;
+
+    /* calculating gamma */
+    if(calc_gamma) {
+        for( q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
+            tot_u += q->u*q->mass;
+            tot_pv += q->pr * q->h*q->h*q->h;
+        }
+
+        /* must first MPI_COMBINE these things!! */
+        MPMY_Combine(&tot_u, &tot_u, 1, MPMY_FLOAT, MPMY_SUM);
+        MPMY_Combine(&tot_pv, &tot_pv, 1, MPMY_FLOAT, MPMY_SUM);
+
+/*
+        if(!first_step) {
+        Gamma = 1.0 + tot_pv/tot_u;
+        printf("Gamma = %e, u= %e, pv= %e\n", Gamma, tot_u, tot_pv);
+        }
+*/
+    }
 
 	if (do_point_mass2) {
 	    for(q = SPHbtab; q < SPHbtab+SPHnobj; q++) {

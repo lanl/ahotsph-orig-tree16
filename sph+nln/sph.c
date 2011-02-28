@@ -555,7 +555,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /* to do: read in from file in main and pass in, (perhaps stuff inNW as global var into cool.h?) */
     //int inNW[2][NNW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
     //                     {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
-    double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.01, minfrac=0.001;
+    double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp;
@@ -708,7 +708,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                    dt_tot = dt;
                 }
 
-                if((p->temp > 0.0e0) && (p->temp < 1.e8) ) {
+                if((p->temp > 2.0e3) && (p->temp < 1.e8) ) {
 				   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
                    notprinted = 0;
 
@@ -752,7 +752,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 		dt = dt_save;
 		p->udot += (u - p->u) / dt;
+        p->u += p->udot * dt;
 
+        printf("%d of %d cycles completed\n",cycles,countc);
     	}
     }
 }
