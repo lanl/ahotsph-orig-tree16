@@ -1,6 +1,6 @@
-# for saguaro/ASU
-#defaultCC:=/ss1-raid/opt/intel/compiler71/compiler70/ia32/bin/icc
-#defaultFC:=/ss1-raid/opt/intel/compiler71/compiler70/ia32/bin/ifc
+#for conejo
+#defaultCC:=/opt/Intel/intel-11.1.072/bin/intel64/icc
+#defaultFC:=/opt/Intel/intel-11.1.072/bin/intel64/ifort
 #use icc
 
 defaultCC:=icc
@@ -18,7 +18,7 @@ ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=
 
 override OPTIMIZE=-O3 -static -no-prec-div -xP
 override AGGRESSIVE_OPT=
-LDFLAGS:=-L$(FORTHOME)/lib
+LDFLAGS:=-L$(FORTHOME)/lib/intel64
 #LDFLAGS:=-L/packages/intel/fce/10.1.015/lib
 LOADLIBES:=-lsvml
 LEX:=flex
@@ -31,7 +31,7 @@ swsrc:=lsv.c swampi.c
 #use lampi
 
 ifeq ($(PAROS),mpi)
-LOADLIBES:=-L$(MPIHOME)/lib -lmpi 
+LOADLIBES:=-L$(MPIHOME)/lib64 -lmpi 
 #LOADLIBES:=-L/packages/intel-openmpi-1.2.7/lib -lmpi 
 PAROSCFLAGS:=-I$(MPIHOME)/include 
 #PAROSCFLAGS:=-I/packages/intel-openmpi-1.2.7/include 
