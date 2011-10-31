@@ -308,7 +308,7 @@ main(int argc, char *argv[])
     int status, done,rank,idbug;
     char netrcfn[20];
     char **pnames, **nnames;
-    int calc_gamma = 1;
+    int calc_gamma = 0;
     float tot_u, tot_pv;
 
 /*

@@ -264,6 +264,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     float r2, v2, b2, minb2 = 1e30;
     float j[NDIM], jhat[NDIM], r_vec[NDIM], v_vec[NDIM];
     float jm, jmax;
+    float small = 1.e-14;
 
     StkInitEz(&s);
 
@@ -314,9 +315,9 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
         j[2] = p->mass * ( r_vec[0]*v_vec[1] - r_vec[1]*v_vec[0] );
 
 		jm = sqrt( j[0]*j[0] + j[1]*j[1] + j[2]*j[2] );
-		jhat[0] = j[0]/jm;
-		jhat[1] = j[1]/jm;
-		jhat[2] = j[2]/jm;
+		jhat[0] = j[0]/(jm + small);
+		jhat[1] = j[1]/(jm + small);
+		jhat[2] = j[2]/(jm + small);
 
 		jmax = sqrt( G * b.mass * b.r ) / p->mass;
 
