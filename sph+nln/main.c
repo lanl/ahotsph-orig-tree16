@@ -1178,7 +1178,7 @@ main(int argc, char *argv[])
 	    WalkNT(&SPHtree);
 	    WalkTerminate();
             singlPrintf("updating final ....");
-	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos);
+	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos, R0);
             singlPrintf("updated final\n");
 	    /*update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);*/
 	    StopTimer(&RhoSPH);
@@ -1292,7 +1292,7 @@ main(int argc, char *argv[])
 	    WalkTerminate();
 	    singlPrintf("ForceSPH done\n");
 	    udot_limit[0] = udot_limit[1]  = 0;
-	    update_final(SPHsinkbtab, SPHsinknobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos);
+	    update_final(SPHsinkbtab, SPHsinknobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos, R0);
 	    StopTimer(&ForceSPH);
 	    /* This should be the high-water mark for memory use */
 	    AddCounter(&MemCnt, malloc_used()/1024);
