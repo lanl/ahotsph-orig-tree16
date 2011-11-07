@@ -306,7 +306,7 @@ main(int argc, char *argv[])
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts, Nel; 	/* for cooling tables */
     int status, done,rank,idbug;
-    char netrcfn[20];
+    char *netrcfn, tmpchr[20];
     char **pnames, **nnames;
     int calc_gamma = 1;
     float tot_u, tot_pv;
@@ -828,9 +828,9 @@ main(int argc, char *argv[])
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
-        sprintf(netrcfn, "%20c",' ');
-        sprintf(netrcfn, "net.rc.%-d",rank); 
-        strncpy( &netrcfn[ strlen(netrcfn) ], " ",1 );
+        sprintf(tmpchr, "net.rc.%-d\0",rank); 
+        netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
+        sprintf(netrcfn, "%s",tmpchr); 
         /*printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));*/
 
         singlPrintf("building network library .... ");
