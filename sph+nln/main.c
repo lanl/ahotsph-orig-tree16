@@ -306,7 +306,7 @@ main(int argc, char *argv[])
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts, Nel; 	/* for cooling tables */
     int status, done,rank,idbug;
-    char netrcfn[20];
+    char *netrcfn, tmpchr[20];
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
@@ -828,9 +828,9 @@ main(int argc, char *argv[])
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
-        sprintf(netrcfn, "%20c",' ');
-        sprintf(netrcfn, "net.rc.%-d",rank); 
-        strncpy( &netrcfn[ strlen(netrcfn) ], " ",1 );
+        sprintf(tmpchr, "net.rc.%-d\0",rank); 
+        netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
+        sprintf(netrcfn, "%s",tmpchr); 
         /*printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));*/
 
         singlPrintf("building network library .... ");
@@ -1178,7 +1178,7 @@ main(int argc, char *argv[])
 	    WalkNT(&SPHtree);
 	    WalkTerminate();
             singlPrintf("updating final ....");
-	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos);
+	    update_final(SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos, R0);
             singlPrintf("updated final\n");
 	    /*update_final(SPHbtab, SPHnobj, dt, &udot_limit[0], &udot_limit[1]);*/
 	    StopTimer(&RhoSPH);
@@ -1292,7 +1292,7 @@ main(int argc, char *argv[])
 	    WalkTerminate();
 	    singlPrintf("ForceSPH done\n");
 	    udot_limit[0] = udot_limit[1]  = 0;
-	    update_final(SPHsinkbtab, SPHsinknobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos);
+	    update_final(SPHsinkbtab, SPHsinknobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1],rank,tpos, R0);
 	    StopTimer(&ForceSPH);
 	    /* This should be the high-water mark for memory use */
 	    AddCounter(&MemCnt, malloc_used()/1024);

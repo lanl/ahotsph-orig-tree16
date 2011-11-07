@@ -540,7 +540,7 @@ extern int **inNW;
 /*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
 /*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int partid)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int partid, float R0)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -558,7 +558,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne=0.;
-    double tlo, tup, mfp;
+    double tlo, tup, mfp, radius;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
@@ -682,8 +682,17 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
         }  
 
+    radius = sqrtf_fast(p->pos[0]*p->pos[0] + p->pos[1]*p->pos[1] + p->pos[2]*p->pos[2]);
 
-	if (do_cooling && (p->mfp > 0.25*p->h) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+
+    /* hmmm, when to turn on the radiative/line cooling? couple of options:
+     * - at a certain time after the explosion, e.g 30d, 0.5yr, ...
+     * - when mfp > h. This is problematic when this is the case for particles 
+     *   inside an optically thick region.
+     * + define a photospheric radius as R0-mfp, and let all particles outside 
+     *   of that cool. This could be problematic, since mfp depends on particle. 
+    */
+	if (do_cooling && (radius >= (R0 - p->mfp)) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             tlo = 1.0e-1;
             tup = 1.0e10;
 			u = p->u; 
