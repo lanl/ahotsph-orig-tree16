@@ -773,12 +773,13 @@ void
 update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
-    float acoef;
+    float acoef, kB, pgas, prad;
     double tlo = 1.e3, tup = 2.5e11;
     int j;
     SPHbody *p;
    
     acoef = A_COEFF * ((double)(lengthCF * timeCF*timeCF / massCF));
+    kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
 
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -786,7 +787,27 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	else p->rho_est = p->rho;
 	if (p->rho_est <= (float)0.0) 
 	  Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
-	p->pr = p->u * (Gamma - (float)1.0) * p->rho_est;
+	//p->pr = p->u * (Gamma - (float)1.0) * p->rho_est;
+
+	/* Calculate temperature from u, then "create" photons (a*T^4) */
+        /* keep these in user-units */
+        eos_n = 0;
+        for( j = 0; j < NNW; j++)
+            eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
+                     p->abund[j] * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
+	eos_u = ((double)(p->u))*((double)(p->rho_est));
+
+        /* calculate the temperature based on the interal energy */
+	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+
+        /* calculate the total pressure by calculating the respective 
+           contributions of gas and radiation pressure */
+        pgas = 1.5*eos_n * kB * p->temp;
+        prad = 0.33333333333*acoef * p->temp*p->temp*p->temp*p->temp;
+        p->pr = pgas + prad;
+
+        /* this is still using Gamma. Perhaps could calculate gamma 
+           at this point? */
 	p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
 
 	if (do_diffusion) {
