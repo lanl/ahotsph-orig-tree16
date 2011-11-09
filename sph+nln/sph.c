@@ -619,11 +619,16 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
         rho = (double)p->rho * (m / (l*l*l));
 
+        /* calculation of eos_n is inconsistent with what's in update_intermediate, 
+           and both are somewhat inconsistent with the actual problem. eos_n in
+           update_intermediate assumes fully ionized gas, and includes e- in the 
+           number density. eos_n here ingores any e- that might be flying around. 
+           This should probably be fixed at some point ... ~CIE */
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
-		eos_u = ((double)(p->u)) * ((double)(p->rho));
+        eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
-		p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
         ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
 
         /* convert from cgs to code units */
@@ -709,7 +714,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
 
-	            p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+                p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
                 if(p->temp < 0.) {
                    dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
                    udot = 0.0;
@@ -718,28 +723,28 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                 }
 
                 if((p->temp > 2.0e3) && (p->temp < 1.e8) ) {
-				   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
+                   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
                    notprinted = 0;
 
-				   /* lcool contains energy lost as positive value */
-				   lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
+                   /* lcool contains energy lost as positive value */
+                   lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
 
                    /* trying to catch any NaN's */
                    if ( lcool != lcool ) lcool = 0.0;
 
-				   /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-				   udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
+                       /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
+                       udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
 
-                   /*determine if we need subcycling*/
-				   if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
+                       /*determine if we need subcycling*/
+                       if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
                        if(cycled == 0) cycled=p->ident;
                        countc = cycles + (countc - cycles) * decr;
 					   dt_sub = dt_sub / (double)decr;
 
                        if(countc > 1e6) {
                            dt_tot = dt;
-						   printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
-                              p->ident, u, udot, dt_sub, dt_tot);
+                           printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
+                           p->ident, u, udot, dt_sub, dt_tot);
                            cycles = countc + 1;
                        }
 
