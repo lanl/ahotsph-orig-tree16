@@ -828,13 +828,13 @@ main(int argc, char *argv[])
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
-        sprintf(tmpchr, "net.rc.%-d\0",rank); 
+        sprintf(tmpchr, "%-d\0",rank); 
         netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
-        sprintf(netrcfn, "%s",tmpchr); 
+        sprintf(netrcfn, "%s%s","net.rc.",tmpchr); 
         /*printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));*/
 
         singlPrintf("building network library .... ");
-        build_(&rank,&idbug,&netrcfn);
+        build_(&rank,&idbug,netrcfn);
         singlPrintf("successfully built network library\n");
     }
 
