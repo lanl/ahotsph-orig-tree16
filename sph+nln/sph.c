@@ -774,6 +774,7 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float acoef, kB, pgas, prad;
+    double P_ratio, Gammai; 
     double tlo = 1.e3, tup = 2.5e11;
     int j;
     SPHbody *p;
@@ -808,7 +809,11 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
-	p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
+        P_ratio = (double)pgas / (double)p->pr;
+        /* from D. Clayton's Stellar Evolution book */
+        Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
+                 (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
+	p->vsound = sqrtf_fast(Gammai * p->pr / p->rho_est);
 
 	if (do_diffusion) {
 
