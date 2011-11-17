@@ -766,7 +766,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 		dt = dt_save;
 		p->udot += (u - p->u) / dt;
-        p->u += p->udot * dt;
 
         printf("%d of %d cycles completed\n",cycles,countc);
     	}
