@@ -28,11 +28,11 @@ static float wij[MAX_INDEX];
 static float grwij[MAX_INDEX];
 static float fmass[MAX_INDEX];
 static float fpoten[MAX_INDEX];
-static float Gamma = (float)(5.0/3.0);
-static float alpha = (float)1.0;
-static float beta = (float)2.5;
-static float epsil = (float)1e-2;
-static float heatf1 = (float)1.0;
+static float Gamma;// = (float)(5.0/3.0);
+static float alpha;// = (float)1.0;
+static float beta;// = (float)2.5;
+static float epsil;// = (float)1e-2;
+static float heatf1;// = (float)1.0;
 static int ndim;
 static int Nobj;
 static int add_offset;
@@ -625,6 +625,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
            number density. eos_n here ingores any e- that might be flying around. 
            This should probably be fixed at some point ... ~CIE */
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
+        eos_n += ne/(lengthCF*lengthCF*lengthCF); /* add any free electrons */
         eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
@@ -774,10 +775,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 
 void
-update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit)
+update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float acoef, kB, pgas, prad;
+    float ne;
     double P_ratio, Gammai; 
     double tlo = 1.e3, tup = 2.5e11;
     int j;
@@ -799,8 +801,11 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
         eos_n = 0;
         for( j = 0; j < NNW; j++)
             eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
-                     p->abund[j] * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
+                     p->abund[j];// * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
 	eos_u = ((double)(p->u))*((double)(p->rho_est));
+
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, p->rho_est, Gridpts, Nel);
+        eos_n += ne/(lengthCF*lengthCF*lengthCF);
 
         /* calculate the temperature based on the interal energy */
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);

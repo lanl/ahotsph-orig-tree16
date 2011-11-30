@@ -1189,7 +1189,7 @@ main(int argc, char *argv[])
 	if (do_sph) {
 	    SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
 	    /* This sets rho_est and pr for communication during BuildTree */
-	    update_intermediate(SPHbtab, SPHnobj, dt_last, 
+	    update_intermediate(SPHbtab, SPHnobj, Gridpts, Nel, dt_last, 
 				!(first_step || exact_rho), 0);
 
 	    SPHsinknobj = 0;
