@@ -625,7 +625,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
            number density. eos_n here ingores any e- that might be flying around. 
            This should probably be fixed at some point ... ~CIE */
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
-        eos_n += ne/(lengthCF*lengthCF*lengthCF); /* add any free electrons */
+        /*eos_n += ne/(lengthCF*lengthCF*lengthCF);*/ /* add any free electrons */
         eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
@@ -805,7 +805,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	eos_u = ((double)(p->u))*((double)(p->rho_est));
 
         ne = find_ne(p->abund, nparr, nnarr, p->temp, p->rho_est, Gridpts, Nel);
-        eos_n += ne/(lengthCF*lengthCF*lengthCF);
+        /*eos_n += ne/(lengthCF*lengthCF*lengthCF);*/
 
         /* calculate the temperature based on the interal energy */
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
