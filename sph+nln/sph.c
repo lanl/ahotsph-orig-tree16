@@ -532,15 +532,10 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 
 #include "Msgs.h"
 double eos_n, eos_u;
-/*
-extern int nparr[NISO], nnarr[NISO];
-extern int **inNW;
-*/
 
-/*update_final(SPHbody *btab, int nobj, int Gridpts, int Nel, float dt, int *limit_high, int *limit_low)*/
-/*update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low)*/
+
 void
-update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, int partid, float R0)
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, float tpos, float R0)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
@@ -550,11 +545,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double t = (double)timeCF;  /* convert from user-units to cgs */
     double kB; 
     double *molfrac; /*float or double?? */
-/* for the purpose of making progress, hard-code for now which isotope 
- * should be included in the burning. This is UGLY!! */
-/* to do: read in from file in main and pass in, (perhaps stuff inNW as global var into cool.h?) */
-    //int inNW[2][NNW+1]={{6,8,10,12,14,15,16,18,20,20,21,22,24,26,26,27,28,0,1,2,0},/*Z*/
-    //                     {6,8,10,12,14,16,16,18,20,24,23,22,24,26,30,29,28,1,0,2,0}}; /*A-Z*/
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
     double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
     double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne=0.;
@@ -562,7 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
-    int temp_ok;
+    int temp_ok, partid;
 
     molfrac = (double *)malloc( (NNW+1) * sizeof(double) );
 
@@ -672,6 +662,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             }
             molfrac[NNW] = (double)p->Y_el;
 
+            partid = p->ident;
             /* deltah= erg/g for this timestep */
             solven_(&dt_cgs,&temp,&rho,molfrac,&deltah,&rank,&partid);
             p->udot += deltah * (t*t) / (l*l) / dt;
@@ -688,6 +679,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
         }  
 
+    if(do_cooling)
     radius = sqrtf_fast(p->pos[0]*p->pos[0] + p->pos[1]*p->pos[1] + p->pos[2]*p->pos[2]);
 
 
@@ -781,7 +773,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
     float acoef, kB, pgas, prad;
     float ne;
     double P_ratio, Gammai; 
-    double tlo = 1.e3, tup = 2.5e11;
+    double tlo = 1.e1, tup = 2.5e11;
     int j;
     SPHbody *p;
    
