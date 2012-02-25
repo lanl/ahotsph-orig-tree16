@@ -165,6 +165,13 @@ double dmassCF;
 double dlengthCF;
 double dtimeCF;
 
+float ivmassCF, ivtimeCF, ivlengthCF;
+float timeCF2, ivtimeCF2;
+float lengthCF2, ivlengthCF2,  ivlengthCF3;
+float ldivtCF, tdivlCF;
+
+float acoeff, kB, grav_c, c_light;
+
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 int do_burning;    /* used in sph.c, turns network on */
@@ -208,8 +215,6 @@ int
 main(int argc, char *argv[])
 {
     FILE *fp = NULL;
-    //extern float **tablep; //added by CIE
-    //extern float **ionfracp; //added by CIE
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
@@ -308,7 +313,7 @@ main(int argc, char *argv[])
     int has_grav_data;
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
-    int Gridpts, Nel; 	/* for cooling tables */
+    int Gridpts = 0, Nel = 0; 	/* for cooling tables */
     int status, done,rank,idbug;
     char *netrcfn, tmpchr[20];
     char **pnames, **nnames;
@@ -668,7 +673,30 @@ main(int argc, char *argv[])
 	EnableTimer(&FixCubeTm, "Fix Cube");
     }
             
-    cosmo.GNewt = GRAV_C *((double)massCF/lengthCF *timeCF/lengthCF *timeCF/lengthCF);
+    /* at this point, calculate some useful constants, factors, 
+       so these don't have to be computed every time they're needed?
+       (i.e. for every particle) */
+    ivlengthCF = 1./lengthCF;
+    ivmassCF = 1./massCF;
+    ivtimeCF = 1./timeCF;
+
+    ldivtCF = lengthCF*ivtimeCF;
+    tdivlCF = ivlengthCF*timeCF;
+    timeCF2 = timeCF*timeCF;
+    ivtimeCF2 = ivtimeCF*ivtimeCF;
+    lengthCF2 = lengthCF*lengthCF;
+    ivlengthCF2 = ivlengthCF*ivlengthCF;
+    ivlengthCF3 = ivlengthCF*ivlengthCF*ivlengthCF;
+
+    cosmo.GNewt = GRAV_C *((double)massCF*ivlengthCF *timeCF2*ivlengthCF2);
+
+    acoeff = A_COEFF * ((double)(lengthCF * timeCF2* ivmassCF));
+    kB=K_BOLTZ *((double)(timeCF2*ivmassCF*ivlengthCF*ivlengthCF));
+    grav_c = cosmo.GNewt;
+    c_light = C_LIGHT * (double)(timeCF * ivlengthCF);
+
+
+
 
     singlPrintf("float errtol = %g;\n", tol);
     singlPrintf("float dt = %g;\n", dt);
@@ -825,24 +853,24 @@ main(int argc, char *argv[])
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
     /* read in necessary files on all processors */
-    if(1) {
+    /*read in cooling curves and ion fraction tables*/
+    if(do_cooling || do_burning) {
         singlPrintf("reading in cooling tables .... ");
-        init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/
-        singlPrintf("successfully read in cooling functions\n");
+        init_CoolTable(&Gridpts, &Nel);
+        singlPrintf("success!\n");
     }
 
     rank = MPMY_Procnum();
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
+        /* each processor needs its own 'net.rc' file */
         sprintf(tmpchr, "%-d\0",rank); 
         netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
         sprintf(netrcfn, "%s%s","net.rc.",tmpchr); 
-        /*printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));*/
-
         singlPrintf("building network library .... ");
         build_(&rank,&idbug,netrcfn);
-        singlPrintf("successfully built network library\n");
+        singlPrintf("success!\n");
     }
 
     SetupTree(&thetree, NDIM,
