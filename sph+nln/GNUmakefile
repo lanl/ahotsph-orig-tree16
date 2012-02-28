@@ -5,7 +5,7 @@ treedir_sed=\.\.
 ifndef prog
 src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
-	SDFreadf.c nrutil.c readintables.c lcool1.c 
+	SDFreadf.c nrutil.c readintables.c lcool1.c coolandburn.c
 
 #fsrc=build.f solven.f
 fsrc=find.f getfkt.f abinit.f masses.f sparse_ma28.f naray.f weakread.f build.f locate.f partfun.f bilenshort.f weakintp.f rate.f rhside.f jacob.f dtnuc.f nse.f leqs.f rated.f solven.f
@@ -265,3 +265,4 @@ $(objdir)/lcool1$(objsuf): $(treedir)/include/mpmy.h $(treedir)/include/Msgs.h
 $(objdir)/lcool1$(objsuf): 
 $(objdir)/lcool1$(objsuf): $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/cool.h
 $(objdir)/lcool1$(objsuf): 
+$(objdir)/coolandburn$(objsuf): $(treedir)/include/error.h $(treedir)/include/singlio.h $(treedir)/fastflpt.h $(treedir)/sph+nln/nrutil.h $(treedir)/sph+nln/physics_sph.h $(treedir)/sph+nln/cool.h
