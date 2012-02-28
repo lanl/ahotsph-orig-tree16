@@ -5,7 +5,10 @@
 #include "tree.h"
 #include "key.h"
 #include "timers.h"
-#include "cool.h"
+
+#ifndef NISO
+#define NISO 20 	/* number of isotopes tracked */
+#endif
 
 #define NDIM 3
 #define SPH_SAVE_ACC
