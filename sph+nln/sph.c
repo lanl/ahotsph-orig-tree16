@@ -804,7 +804,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
-        pgas = 1.5*eos_n * kB * p->temp;
+        pgas = eos_n * kB * p->temp;
         prad = 0.33333333333*acoef * p->temp*p->temp*p->temp*p->temp;
         p->pr = pgas + prad;
 
@@ -814,7 +814,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
         /* from D. Clayton's Stellar Evolution book */
         Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
                  (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
-	p->vsound = sqrtf_fast(Gammai * p->pr / p->rho_est);
+	p->vsound = sqrtf_fast(Gammai * pgas / p->rho_est);
 
 	if (do_diffusion) {
 
