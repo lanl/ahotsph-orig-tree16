@@ -441,13 +441,13 @@ main(int argc, char *argv[])
 #if NDIM>=2        
                     SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
                     SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
-                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[1]), 0.0);
-                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[1]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_ly", &(bndry.l[1]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_py", &(bndry.p[1]), 0.0);
 #if NDIM>=3
                     SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
                     SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
-                    SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[2]), 0.0);
-                    SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[2]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_lz", &(bndry.l[2]), 0.0);
+                    SDFgetfloatOrDefault(csdfp, "bndry_pz", &(bndry.p[2]), 0.0);
 #endif
 #endif
                     SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
@@ -1010,7 +1010,7 @@ main(int argc, char *argv[])
             VV(bndry.p, += newp);
             VV(bndry.l, += newl);
             /* what's the difference between using 'VV' and 'VVS' for this?
-             * also, no VV ever devides, but always multiplies, and scalar is 
+             * also, no VV ever divides, but always multiplies, and scalar is 
              * always first ~CIE */
             invmass = 1.0/bndry.mass;
             VVS(bndry.vel, = bndry.p, * invmass ); /* seems safer ~CIE */
@@ -1188,7 +1188,7 @@ main(int argc, char *argv[])
 	if (do_sph) {
 	    SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
 	    /* This sets rho_est and pr for communication during BuildTree */
-	    update_intermediate(SPHbtab, SPHnobj, dt_last, 
+	    update_intermediate(SPHbtab, SPHnobj, Gridpts, Nel, dt_last, 
 				!(first_step || exact_rho), 0);
 
 	    SPHsinknobj = 0;

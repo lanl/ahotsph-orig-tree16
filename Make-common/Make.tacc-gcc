@@ -1,9 +1,9 @@
-defaultCC:=icc
-defaultFC:=ifort -nofor_main 
+defaultCC:=gcc
+defaultFC:=gfortran
 
 CC_SPECIFIC:=-DLONG_LONG_KEYS -v
 #-march=core2 -mcpu=core2
-FC_SPECIFIC:=-fpp -warn alignments 
+FC_SPECIFIC:= -cpp
 #-names as_is -assume nounderscore -assume no2underscore
 #-cm -w95 -80
 ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE
@@ -11,10 +11,11 @@ ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=
 
 # ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
 
-override OPTIMIZE=-O3 -static -no-prec-div -xP
+override OPTIMIZE=-O3 -static 
+#-mtune=nocona
 override AGGRESSIVE_OPT=
-LDFLAGS:=-L$(ICC_LIB)
-LOADLIBES:=-lsvml
+LDFLAGS:=-L$/opt/apps/gcc/4.4.5/lib64
+LOADLIBES:=-lm
 LEX:=flex
 YACC:=bison -y
 
@@ -24,9 +25,9 @@ swsrc:=lsv.c swampi.c
 
 #use lampi
 
-ifeq ($(PAROS),mpi)
-LOADLIBES:=-L$(MPICH_HOME)/lib -lmpi 
-PAROSCFLAGS:=-I$(MPICH_HOME)/include 
+ifeq ($(PAROS),mpi2)
+LOADLIBES:=-L/opt/apps/intel11_1/openmpi/1.4.3/lib -lmpi 
+PAROSCFLAGS:=-I/opt/apps/intel11_1/openmpi/1.4.3/include 
 #-DUSE_MPIIO
 endif
 
@@ -35,9 +36,9 @@ LOADLIBES:=-L/packages/intel-mvapich-1.0.1/lib -lmpich
 PAROSCFLAGS:=-I/packages/intel-mvapich-1.0.1/include
 endif
 
-ifeq ($(PAROS),mpich2)
-LOADLIBES:=-L/ss1-raid/local/mpich2-0.92/lib -lmpich
-PAROSCFLAGS:=-I/ss1-raid/local/mpich2-0.92/include
+ifeq ($(PAROS),mpich)
+LOADLIBES:=-L/opt/apps/gcc4_4/mvapich2/1.6/lib -lmpich
+PAROSCFLAGS:=-I/opt/apps/gcc4_4/mvapich2/1.6/include
 endif
 
 ifeq ($(PAROS),lam)

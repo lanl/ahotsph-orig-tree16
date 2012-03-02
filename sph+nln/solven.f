@@ -146,7 +146,7 @@ c..   insure time interval does not overshoot
             write(*,'(1p6e12.5,2i12)')dtstar,dth,dth0,dtleft,t9,rho,ncycle,k
             write(*,*)'particle',partid
             do n =1, nnuc
-               if(iDbug) write(*,*)y(n),nz(n),nn(n)
+               if(iDbug.eq.0) write(*,*)y(n),nz(n),nn(n)
             enddo
             stop'solven dth'
          endif
@@ -384,7 +384,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      2                 ypro,xalf,suma,sumd,negflag
                   write(*,*)'particle',partid
                   do n =1, nnuc
-                     if(iDbug) write(*,*)y(n),nz(n),nn(n)
+                     if(iDbug.eq.0) write(*,*)y(n),nz(n),nn(n)
                   enddo
                   stop'solven: no success'
                endif
@@ -431,7 +431,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
            write(*,*)'particle',partid
            do n =1, nnuc
-              if(iDbug) write(*,*)y(n),nz(n),nn(n)
+              if(iDbug.eq.0) write(*,*)y(n),nz(n),nn(n)
            enddo
            stop'solven too many subcycles'
          endif
