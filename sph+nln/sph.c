@@ -615,12 +615,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
            number density. eos_n here ingores any e- that might be flying around. 
            This should probably be fixed at some point ... ~CIE */
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
-        /*eos_n += ne/(lengthCF*lengthCF*lengthCF);*/ /* add any free electrons */
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
         eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
         p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
 
         /* convert from cgs to code units */
         mfp = 1.0/(ne * 6.65e-25) / l;
@@ -629,7 +629,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             mfp += (1.0/ (0.64e23*m*m/(l*l*l*l*l)*
                    p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
         }
-        p->mfp = (float)mfp;
+        //p->mfp = (float)mfp;
+        p->mfp = ne;
 
         if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
             temp_ok = 1;
@@ -797,7 +798,8 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	eos_u = ((double)(p->u))*((double)(p->rho_est));
 
         ne = find_ne(p->abund, nparr, nnarr, p->temp, p->rho_est, Gridpts, Nel);
-        /*eos_n += ne/(lengthCF*lengthCF*lengthCF);*/
+        eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
+        p->mfp = ne;
 
         /* calculate the temperature based on the interal energy */
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
@@ -811,7 +813,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
         P_ratio = (double)pgas / (double)p->pr;
-        /* from D. Clayton's Stellar Evolution book */
+        /* from D. Clayton's Stellar Evolution book, p.119 */
         Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
                  (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
 	p->vsound = sqrtf_fast(Gammai * pgas / p->rho_est);
