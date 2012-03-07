@@ -284,6 +284,8 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
             nelectron += X_el[n] * (double)(m) * fracn;
 	    }
     }
+    if(nelectron != nelectron) nelectron = 0.0;
+    if(nelectron < 0.0) nelectron = 0.0;
     return nelectron;
 } /*end find_ne*/
 
