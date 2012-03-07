@@ -905,12 +905,6 @@ main(int argc, char *argv[])
         MPMY_Combine(&tot_u, &tot_u, 1, MPMY_FLOAT, MPMY_SUM);
         MPMY_Combine(&tot_pv, &tot_pv, 1, MPMY_FLOAT, MPMY_SUM);
 
-/*
-        if(!first_step) {
-        Gamma = 1.0 + tot_pv/tot_u;
-        printf("Gamma = %e, u= %e, pv= %e\n", Gamma, tot_u, tot_pv);
-        }
-*/
     }
 
 	if (do_point_mass2) {
