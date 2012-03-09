@@ -16,7 +16,7 @@ extern float timeCF2, ivtimeCF2;
 extern float lengthCF2, ivlengthCF2, ivlengthCF3;
 extern float ldivtCF, tdivlCF;
 
-extern float acoeff, kB, grav_c, c_light;
+extern float grav_c, c_light;
 
 #ifndef CONSTS
 #define CONSTS

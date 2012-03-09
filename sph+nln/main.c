@@ -170,7 +170,7 @@ float timeCF2, ivtimeCF2;
 float lengthCF2, ivlengthCF2,  ivlengthCF3;
 float ldivtCF, tdivlCF;
 
-float acoeff, kB, grav_c, c_light;
+float grav_c, c_light;
 
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
@@ -690,12 +690,8 @@ main(int argc, char *argv[])
 
     cosmo.GNewt = GRAV_C *((double)massCF*ivlengthCF *timeCF2*ivlengthCF2);
 
-    acoeff = A_COEFF * ((double)(lengthCF * timeCF2* ivmassCF));
-    kB=K_BOLTZ *((double)(timeCF2*ivmassCF*ivlengthCF*ivlengthCF));
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * (double)(timeCF * ivlengthCF);
-
-
 
 
     singlPrintf("float errtol = %g;\n", tol);
