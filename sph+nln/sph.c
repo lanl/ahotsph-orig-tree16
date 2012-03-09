@@ -543,11 +543,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double m = (double)massCF;  /* convert from user-units to cgs */
     double l = (double)lengthCF;  /* convert from user-units to cgs */
     double t = (double)timeCF;  /* convert from user-units to cgs */
-    double kB; 
     double *molfrac; /*float or double?? */
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
-    double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne=0.;
+    double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
     int decr,notprinted;
     long cycles=0, countc; 
@@ -558,8 +556,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
     tlo = 1.0e1;
     tup = 2.5e11;
-
-    kB = K_BOLTZ * t * t / m / ( l*l );
 
     notprinted = 1;
  
@@ -598,28 +594,20 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ++*limit_low;
 	}
 
-        /* all this is done in user-units */
-        m_ave = 0;
-        abund_renorm = 0;
-        for ( j = 0; j < NNW; j++) {
-            m_ave += p->abund[j]/((double)(nparr[j] + nnarr[j]));/*mean molecular weight*/
-            abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
-        }
 
-        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
+        eos_n = 0;
+        for( j = 0; j < NNW; j++)
+            eos_n += ((double)(p->rho_est))*N_AVOG /
+                     (double)(nparr[j] + nnarr[j]) * p->abund[j];
+        eos_n = eos_n / (dlengthCF*dlengthCF*dlengthCF); /* to cgs */
+
         rho = (double)p->rho * (m / (l*l*l));
 
-        /* calculation of eos_n is inconsistent with what's in update_intermediate, 
-           and both are somewhat inconsistent with the actual problem. eos_n in
-           update_intermediate assumes fully ionized gas, and includes e- in the 
-           number density. eos_n here ingores any e- that might be flying around. 
-           This should probably be fixed at some point ... ~CIE */
-        eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
         ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-        //eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
+        eos_n += ne; /* add any free electrons */
         eos_u = ((double)(p->u)) * ((double)(p->rho));
+        eos_u = eos_u *dmassCF/(dlengthCF*dtimeCF*dtimeCF); /* to cgs */
 
-        //if(!(eos_n != eos_n) && eos_n > 0.0)
         p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         /* convert from cgs to code units */
@@ -629,8 +617,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             mfp += (1.0/ (0.64e23*m*m/(l*l*l*l*l)*
                    p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
         }
-        //p->mfp = (float)mfp;
-        p->mfp = ne;
+        p->mfp = mfp;
 
         if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
             temp_ok = 1;
@@ -638,7 +625,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             temp_ok = 0;
             printf("newtraph failed: particle %d for eos_u=%.4E eos_n=%.4E gives T=%.4E\n",
                   p->ident, eos_u, eos_n, p->temp);
-            printf("m=%.4E l=%.4E\n",m,l);
+            printf("m=%.4lE l=%.4E\n",dmassCF,l);
             for( j = 0; j < NISO; j++) printf("%.4E ",p->abund[j]);
             printf("\n");
         }
@@ -649,7 +636,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             temp = (double)p->temp;
             rho = (double)p->rho * (m / (l*l*l));
             dt_cgs = (double)(dt * t);
-            ndens = eos_n / (l*l*l);
+            ndens = eos_n;
 
             /*prepare abundance array passed into network - more ugliness!*/
             for( i = 0; i < NNW; i++ ) {
@@ -707,6 +694,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /*            while ( cycles < countc ) */
             do {
                 eos_u = ((double)u) * ((double)(p->rho));
+                eos_u = eos_u *dmassCF/(dlengthCF*dtimeCF*dtimeCF); /* need cgs */
 
                 p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
                 if(p->temp < 0.) {
@@ -771,16 +759,13 @@ void
 update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
-    float acoef, kB, pgas, prad;
+    float pgas, prad;
     float ne, rho;
     double P_ratio, Gammai; 
     double tlo = 1.e1, tup = 2.5e11;
     int j;
     SPHbody *p;
    
-    acoef = A_COEFF * ((double)(lengthCF * timeCF*timeCF / massCF));
-    kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
-
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
 	if (flag) p->rho_est = p->rho + p->drho_dt * dt_last;
@@ -790,41 +775,43 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	//p->pr = p->u * (Gamma - (float)1.0) * p->rho_est;
 
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
-        /* keep these in user-units */
+        /* keep these in cgs-units */
         eos_n = 0;
         for( j = 0; j < NNW; j++)
-            eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
-                     p->abund[j];// * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
-	eos_u = ((double)(p->u))*((double)(p->rho_est));
+            eos_n += ((double)(p->rho_est))*N_AVOG * dmassCF/
+                     (double)(nparr[j] + nnarr[j]) * p->abund[j];
+        eos_n = eos_n / (dlengthCF*dlengthCF*dlengthCF); /* to cgs */
 
-        rho = (double)p->rho * (massCF / (lengthCF*lengthCF*lengthCF));
+	eos_u = ((double)(p->u))*((double)(p->rho_est));
+        eos_u = eos_u *dmassCF/(dlengthCF*dtimeCF*dtimeCF); /* to cgs */
+
+        rho = (double)p->rho * (dmassCF / (dlengthCF*dlengthCF*dlengthCF));
         ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-        //eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
-        p->mfp = ne;
+        eos_n += ne; /* add any free electrons */
 
         /* calculate the temperature based on the interal energy */
 	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
-        pgas = eos_n * kB * p->temp;
-        prad = 0.33333333333*acoef * p->temp*p->temp*p->temp*p->temp;
-        p->pr = pgas + prad;
+        pgas = eos_n * K_BOLTZ * p->temp;
+        prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
+        p->pr = (pgas + prad)*dlengthCF*dtimeCF*dtimeCF/dmassCF;
 
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
-        P_ratio = (double)pgas / (double)p->pr;
+        P_ratio = (double)pgas / (double)(pgas+prad);
         /* from D. Clayton's Stellar Evolution book, p.119 */
         Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
                  (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
-	p->vsound = sqrtf_fast(Gammai * pgas / p->rho_est);
+	p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
 
 	if (do_diffusion) {
-
+/* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
 	    /* Figure out good upper and lower limits for temp */
-	    //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
+	    p->u_r = A_RAD*p->temp*p->temp*p->temp*p->temp*
+                     dlengthCF*dtimeCF*dtimeCF/dmassCF;
 	    p->du_r = 0.0;
 
 	    /* Calculate diffusion coefficient in user-units */
