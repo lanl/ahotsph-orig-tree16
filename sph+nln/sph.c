@@ -616,7 +616,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
            This should probably be fixed at some point ... ~CIE */
         eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
         ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-        eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
+        //eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
         eos_u = ((double)(p->u)) * ((double)(p->rho));
 
         //if(!(eos_n != eos_n) && eos_n > 0.0)
@@ -772,7 +772,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float acoef, kB, pgas, prad;
-    float ne;
+    float ne, rho;
     double P_ratio, Gammai; 
     double tlo = 1.e1, tup = 2.5e11;
     int j;
@@ -797,8 +797,9 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
                      p->abund[j];// * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
 	eos_u = ((double)(p->u))*((double)(p->rho_est));
 
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, p->rho_est, Gridpts, Nel);
-        eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
+        rho = (double)p->rho * (massCF / (lengthCF*lengthCF*lengthCF));
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        //eos_n += ne*(lengthCF*lengthCF*lengthCF); /* add any free electrons */
         p->mfp = ne;
 
         /* calculate the temperature based on the interal energy */
@@ -820,16 +821,9 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
 	if (do_diffusion) {
 
-	    /* Calculate temperature from u, then "create" photons (a*T^4) */
-            /* keep these in user-units */
-            eos_n = 0;
-            for( j = 0; j < NNW; j++)
-                eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
-                          p->abund[j] * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
-	    eos_u = ((double)(p->u))*((double)(p->rho_est));
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+	    //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
 	    p->du_r = 0.0;
 
