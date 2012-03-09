@@ -45,8 +45,6 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 /* changed: these now need to be in cgs */
 extern double eos_n;
 extern double eos_u;
-extern float acoeff;
-extern float kB;
 
 #include "physics_sph.h"
 

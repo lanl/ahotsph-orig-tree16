@@ -608,22 +608,17 @@ int prep_cool_burn(SPHbody *p, float *m_ave, float tlo, float tup) {
     float abund_renorm, rho, mfp, ne;
     float temp_ok;
 
-    *m_ave = 0;
-    abund_renorm = 0;
-    for ( j = 0; j < NNW; j++) {
-        *m_ave += (*p)->abund[j]/((double)(nparr[j] + nnarr[j]));
-        abund_renorm += (*p)->abund[j]; /* so that sum(abund) = 1 */
-    }
-
-    *m_ave = (double)(1.0/(*m_ave * abund_renorm *N_AVOG)*ivmassCF );
     rho = (double)(*p)->rho * (massCF * ivlengthCF3 );
 
-    eos_n = (double)((*p)->rho/ *m_ave); /*needed in newtraph; in user-units */
-    if((*p)->temp > 0. && (*p)->temp < tup) {
-        ne = find_ne((*p)->abund, nparr, nnarr, (*p)->temp, rho, Gridpts, Nel);
-        eos_n += ne*ivlengthCF3;/* add any free electrons */
-    }
+    eos_n = 0;
+    for( j = 0; j < NNW; j++)
+        eos_n += ((double)(rho))*N_AVOG /
+                (double)(nparr[j] + nnarr[j]) * p->abund[j];
+
+    ne = find_ne((*p)->abund, nparr, nnarr, (*p)->temp, rho, Gridpts, Nel);
+    eos_n += ne; /* add any free electrons */
     eos_u = ((double)((*p)->u)) * ((double)((*p)->rho));
+    eos_u = eos_u *massCF*ivtimeCF3; /* to cgs */
 
     //if(!(eos_n != eos_n) && eos_n > 0.0)
     (*p)->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
@@ -673,7 +668,7 @@ float burning(SPHbody *p, float dt, int rank) {
     temp = (double)(*p)->temp;
     rho = (double)(*p)->rho * (massCF*ivlengthCF3);
     dt_cgs = (double)(dt * timeCF);
-    ndens = eos_n *ivlengthCF3;
+    ndens = eos_n;
 
     /*prepare abundance array passed into network - more ugliness!*/
     for( i = 0; i < NNW; i++ ) {

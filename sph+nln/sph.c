@@ -594,7 +594,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /***********************************************************************/
         /* all this is done in user-units */
         if(do_cooling || do_burning) {
-            temp_ok = prep_cool_burn(p, &m_ave, 1.e1, 1.0e11);
+            temp_ok = prep_cool_burn(p, 1.e1, 1.0e11);
         }
 
 /*************************************/
@@ -607,7 +607,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /********** do the cooling ***********/
 /*************************************/
 	if (do_cooling && (tpos >= 1.57788e7*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
-            dt_cool = cooling(p, frac, Gridpts, Nel, notprinted);
+            dt_cool = cooling(p, frac, Gridpts, Nel, &notprinted);
         /*
         if ( iter%interval == 0) {
             print_ionization_state();
