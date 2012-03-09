@@ -8,6 +8,10 @@ extern float massCF;
 extern float lengthCF;
 extern float timeCF;
 
+extern double dmassCF;
+extern double dlengthCF;
+extern double dtimeCF;
+
 #ifndef CONSTS
 #define CONSTS
 static const double GRAV_C =6.67428e-8;

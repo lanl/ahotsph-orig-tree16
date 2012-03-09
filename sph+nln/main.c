@@ -161,6 +161,10 @@ float massCF;
 float lengthCF;
 float timeCF;
 
+double dmassCF;
+double dlengthCF;
+double dtimeCF;
+
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 int do_burning;    /* used in sph.c, turns network on */
@@ -603,6 +607,9 @@ main(int argc, char *argv[])
     SDFgetfloatOrDefault(csdfp, "massCF", &massCF, 1.0);/*mass conversion factor; CE*/
     SDFgetfloatOrDefault(csdfp, "lengthCF", &lengthCF, 1.0);/*length conversion factor; CE*/
     SDFgetfloatOrDefault(csdfp, "timeCF", &timeCF, 1.0);/*time conversion factor; CE*/
+    dmassCF= (double)massCF;
+    dlengthCF= (double)lengthCF;
+    dtimeCF= (double)timeCF;
     if (adaptive_dt) {
 	SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
 	SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
