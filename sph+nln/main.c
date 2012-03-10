@@ -157,20 +157,16 @@ static int dark_independent_dt;
 static bndry_t bndry;
 
 /*conversion factors from user-units to cgs*/
-float massCF;
-float lengthCF;
-float timeCF;
+double massCF;
+double lenCF;
+double timeCF;
 
-double dmassCF;
-double dlengthCF;
-double dtimeCF;
+double ivmassCF, ivtimeCF, ivlenCF;
+double timeCF2, ivtimeCF2;
+double lenCF2, ivlenCF2,  ivlenCF3;
+double ldivtCF, tdivlCF;
 
-float ivmassCF, ivtimeCF, ivlengthCF;
-float timeCF2, ivtimeCF2;
-float lengthCF2, ivlengthCF2,  ivlengthCF3;
-float ldivtCF, tdivlCF;
-
-float grav_c, c_light;
+double grav_c, c_light;
 
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
@@ -610,11 +606,13 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "dark_independent_dt", &dark_independent_dt, 0);
     SDFgetintOrDefault(csdfp, "default_nterms", &default_nterms, 100);
     SDFgetfloatOrDefault(csdfp, "massCF", &massCF, 1.0);/*mass conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "lengthCF", &lengthCF, 1.0);/*length conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "lenCF", &lenCF, 1.0);/*length conversion factor; CE*/
     SDFgetfloatOrDefault(csdfp, "timeCF", &timeCF, 1.0);/*time conversion factor; CE*/
+/*
     dmassCF= (double)massCF;
-    dlengthCF= (double)lengthCF;
+    dlenCF= (double)lenCF;
     dtimeCF= (double)timeCF;
+*/
     if (adaptive_dt) {
 	SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
 	SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
@@ -676,22 +674,22 @@ main(int argc, char *argv[])
     /* at this point, calculate some useful constants, factors, 
        so these don't have to be computed every time they're needed?
        (i.e. for every particle) */
-    ivlengthCF = 1./lengthCF;
+    ivlenCF = 1./lenCF;
     ivmassCF = 1./massCF;
     ivtimeCF = 1./timeCF;
 
-    ldivtCF = lengthCF*ivtimeCF;
-    tdivlCF = ivlengthCF*timeCF;
+    ldivtCF = lenCF*ivtimeCF;
+    tdivlCF = ivlenCF*timeCF;
     timeCF2 = timeCF*timeCF;
     ivtimeCF2 = ivtimeCF*ivtimeCF;
-    lengthCF2 = lengthCF*lengthCF;
-    ivlengthCF2 = ivlengthCF*ivlengthCF;
-    ivlengthCF3 = ivlengthCF*ivlengthCF*ivlengthCF;
+    lenCF2 = lenCF*lenCF;
+    ivlenCF2 = ivlenCF*ivlenCF;
+    ivlenCF3 = ivlenCF*ivlenCF*ivlenCF;
 
-    cosmo.GNewt = GRAV_C *((double)massCF*ivlengthCF *timeCF2*ivlengthCF2);
+    cosmo.GNewt = GRAV_C *((double)massCF*ivlenCF *tdivlCF*tdivlCF);
 
     grav_c = cosmo.GNewt;
-    c_light = C_LIGHT * (double)(timeCF * ivlengthCF);
+    c_light = C_LIGHT * tdivlCF;
 
 
     singlPrintf("float errtol = %g;\n", tol);
@@ -710,7 +708,7 @@ main(int argc, char *argv[])
     singlPrintf("float gamma = %f;\n", Gamma);
     singlPrintf("float Gnewt = %g;\n", cosmo.GNewt);
     singlPrintf("float massCF = %g;\n", massCF);/*added by CE*/
-    singlPrintf("float lengthCF = %g;\n", lengthCF);/*added by CE*/
+    singlPrintf("float lenCF = %g;\n", lenCF);/*added by CE*/
     singlPrintf("float timeCF = %g;\n", timeCF);/*added by CE*/
     singlPrintf("float visc_alpha = %g;\n", visc_alpha);
     singlPrintf("float visc_beta = %g;\n", visc_beta);
@@ -2433,9 +2431,9 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	     "hubble", SDF_FLOAT, output_h,
 	     "redshift", SDF_FLOAT, output_z,
 	     "gamma", SDF_FLOAT, Gamma,
-         "massCF", SDF_FLOAT, massCF,
-         "lengthCF", SDF_FLOAT, lengthCF,
-         "timeCF", SDF_FLOAT, timeCF,
+             "massCF", SDF_FLOAT, massCF,
+             "lenCF", SDF_FLOAT, lenCF,
+             "timeCF", SDF_FLOAT, timeCF,
 	     "centmass", SDF_FLOAT, centmass, 
              "bndry_x", SDF_FLOAT, bndry.pos[0],
              "bndry_y", SDF_FLOAT, bndry.pos[1],

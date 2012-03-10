@@ -4,19 +4,16 @@
  * in  user-units, and convert FROM CGS TO USER-UNITS. They are 
  * set in the .ctl file. ADD */
 
-extern float massCF;
-extern float lengthCF;
-extern float timeCF;
+extern double massCF;
+extern double lenCF;
+extern double timeCF;
 
-extern double dmassCF;
-extern double dlengthCF;
-extern double dtimeCF;
-extern float ivmassCF, ivtimeCF, ivlengthCF;
-extern float timeCF2, ivtimeCF2;
-extern float lengthCF2, ivlengthCF2, ivlengthCF3;
-extern float ldivtCF, tdivlCF;
+extern double ivmassCF, ivtimeCF, ivlenCF;
+extern double timeCF2, ivtimeCF2;
+extern double lenCF2, ivlenCF2, ivlenCF3;
+extern double ldivtCF, tdivlCF;
 
-extern float grav_c, c_light;
+extern double grav_c, c_light;
 
 #ifndef CONSTS
 #define CONSTS
