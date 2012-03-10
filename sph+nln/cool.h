@@ -1,4 +1,4 @@
-#include"physics_sph.h"
+/*#include"physics_sph.h"*/
 
 #ifndef NISO
 #define NISO 20 	/* number of isotopes tracked */
@@ -41,9 +41,9 @@ void polin2d(double x1a[], double x2a[], double **ya, int m, int n, double x1, d
 
 void init_CoolTable(int *Gridpts, int *Nel);
 
-int prep_cool_burn(SPHbody *p, float *m_ave, float tlo, float tup);
+int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel);
 
 float burning(SPHbody *p, float dt, int rank);
 
-float cooling(SPHbody *p, float frac, int Gridpts, int Nel, int *notprinted);
+float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notprinted);
 

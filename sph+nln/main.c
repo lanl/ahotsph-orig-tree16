@@ -19,7 +19,6 @@
 #include "SDFwrite.h"
 #include "SDFread.h"
 #include "physics.h"
-#include "cool.h"
 #include "physics_sph.h"
 #include "vop.h"
 #include "Msgs.h"
@@ -42,6 +41,7 @@
 #include "integrate.h"
 #include "nrutil.h"
 #include "units.h"
+#include "cool.h"
 
 #define MAXCOEF 16
 
@@ -157,6 +157,12 @@ static int dark_independent_dt;
 static bndry_t bndry;
 
 /*conversion factors from user-units to cgs*/
+/* need to read in as floats, then convert to double */
+/* SDFgetfloat* won't do that by itself */
+float fmassCF;
+float flenCF;
+float ftimeCF;
+
 double massCF;
 double lenCF;
 double timeCF;
@@ -605,14 +611,12 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "independent_dt", &independent_dt, 0);
     SDFgetintOrDefault(csdfp, "dark_independent_dt", &dark_independent_dt, 0);
     SDFgetintOrDefault(csdfp, "default_nterms", &default_nterms, 100);
-    SDFgetfloatOrDefault(csdfp, "massCF", &massCF, 1.0);/*mass conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "lenCF", &lenCF, 1.0);/*length conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "timeCF", &timeCF, 1.0);/*time conversion factor; CE*/
-/*
-    dmassCF= (double)massCF;
-    dlenCF= (double)lenCF;
-    dtimeCF= (double)timeCF;
-*/
+    SDFgetfloatOrDefault(csdfp, "massCF", &fmassCF, 1.0);/*mass conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "lengthCF", &flenCF, 1.0);/*length conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "timeCF", &ftimeCF, 1.0);/*time conversion factor; CE*/
+    massCF= (double)fmassCF;
+    lenCF= (double)flenCF;
+    timeCF= (double)ftimeCF;
     if (adaptive_dt) {
 	SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
 	SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);

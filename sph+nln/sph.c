@@ -7,9 +7,9 @@
 #include "timers.h"
 #include "error.h"
 #include "singlio.h"
-#include "cool.h"
 #include "nrutil.h"
 #include "units.h"
+#include "cool.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -593,7 +593,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /************* prepare for cooling and burning calculation *************/
 /***********************************************************************/
         if(do_cooling || do_burning) {
-            temp_ok = prep_cool_burn(p, 1.e1, 1.0e11);
+            temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
         }
 
 /*************************************/
@@ -606,7 +606,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /********** do the cooling ***********/
 /*************************************/
 	if (do_cooling && (tpos >= 1.57788e7*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
-            dt_cool = cooling(p, frac, Gridpts, Nel, &notprinted);
+            dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
         /*
         if ( iter%interval == 0) {
             print_ionization_state();
