@@ -592,7 +592,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 /***********************************************************************/
 /************* prepare for cooling and burning calculation *************/
 /***********************************************************************/
-        /* all this is done in user-units */
         if(do_cooling || do_burning) {
             temp_ok = prep_cool_burn(p, 1.e1, 1.0e11);
         }
@@ -639,16 +638,17 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
         /* = prep_cool_burn(p, );*/
+
+        rho = (double)p->rho_est * massCF * ivlenCF3;
+
         eos_n = 0;
         for( j = 0; j < NNW; j++)
-            eos_n += ((double)(p->rho_est))*N_AVOG * dmassCF/
+            eos_n += (double)rho*N_AVOG /
                      (double)(nparr[j] + nnarr[j]) * p->abund[j];
-        eos_n = eos_n / (dlengthCF*dlengthCF*dlengthCF); /* to cgs */
 
 	eos_u = ((double)(p->u))*((double)(p->rho_est));
-        eos_u = eos_u *dmassCF/(dlengthCF*dtimeCF*dtimeCF); /* to cgs */
+        eos_u = eos_u *massCF*ivlenCF*ivtimeCF2; /* to cgs */
 
-        rho = (double)p->rho * (dmassCF / (dlengthCF*dlengthCF*dlengthCF));
         ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
         eos_n += ne; /* add any free electrons */
 
@@ -659,7 +659,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
            contributions of gas and radiation pressure */
         pgas = eos_n * K_BOLTZ * p->temp;
         prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
-        p->pr = (pgas + prad)*dlengthCF*dtimeCF*dtimeCF/dmassCF;
+        p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
 
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
@@ -674,14 +674,14 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
 	    /* Figure out good upper and lower limits for temp */
 	    p->u_r = A_RAD*p->temp*p->temp*p->temp*p->temp*
-                     dlengthCF*dtimeCF*dtimeCF/dmassCF;
+                     lenCF*timeCF2*ivmassCF;
 	    p->du_r = 0.0;
 
 	    /* Calculate diffusion coefficient in user-units */
-	    kes = KES_COEFF/MH *((double) (massCF * ivlengthCF2));
+	    kes = KES_COEFF/MH *(massCF * ivlenCF2);
 	    kff = (KFF_COEFF) * p->rho_est*pow(p->temp, -3.5)*
-                  (double)(massCF * ivlengthCF); 
-	    p->D = C_LIGHT *((double)(tdivlCF)) /
+                  (massCF * ivlenCF); 
+	    p->D = C_LIGHT * tdivlCF /
                    ( 3.0*(kes+kff)*p->rho_est );
 
 	    /* Also, eventually, handle lightbulb approximation here */

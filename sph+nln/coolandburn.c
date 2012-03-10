@@ -608,7 +608,7 @@ int prep_cool_burn(SPHbody *p, float *m_ave, float tlo, float tup) {
     float abund_renorm, rho, mfp, ne;
     float temp_ok;
 
-    rho = (double)(*p)->rho * (massCF * ivlengthCF3 );
+    rho = (double)(*p)->rho * (massCF * ivlenCF3 );
 
     eos_n = 0;
     for( j = 0; j < NNW; j++)
@@ -625,10 +625,10 @@ int prep_cool_burn(SPHbody *p, float *m_ave, float tlo, float tup) {
 
     /* calc mean-free-path; convert from cgs to code units */
     if(do_cooling) {
-        mfp = 1.0/(ne * 6.65e-25 * lengthCF);
+        mfp = 1.0/(ne * 6.65e-25 * lenCF);
         /* add free-free transitions */
         if ((*p)->temp > 1.0e7) {
-            mfp += (1.0/ (0.64e23*(massCF*massCF*ivlengthCF3*ivlengthCF2)*
+            mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
                    (*p)->rho*(*p)->rho*pow((*p)->temp,-3.5)) );
         }
         (*p)->mfp = (float)mfp;
@@ -640,7 +640,7 @@ int prep_cool_burn(SPHbody *p, float *m_ave, float tlo, float tup) {
         temp_ok = 0;
         printf("newtraph failed: particle %d for eos_u=%.4E eos_n=%.4E gives T=%.4E\n",
               (*p)->ident, eos_u, eos_n, (*p)->temp);
-        printf("m=%.4E l=%.4E\n",massCF,lengthCF);
+        printf("m=%.4E l=%.4E\n",massCF,lenCF);
         for( j = 0; j < NISO; j++) printf("%.4E ",(*p)->abund[j]);
         printf("\n");
     }
@@ -666,7 +666,7 @@ float burning(SPHbody *p, float dt, int rank) {
 
     /* solven operates in cgs. must convert from user-units to cgs! */
     temp = (double)(*p)->temp;
-    rho = (double)(*p)->rho * (massCF*ivlengthCF3);
+    rho = (double)(*p)->rho * (massCF*ivlenCF3);
     dt_cgs = (double)(dt * timeCF);
     ndens = eos_n;
 
@@ -685,7 +685,7 @@ float burning(SPHbody *p, float dt, int rank) {
     partid = (*p)->ident;
     /* deltah= erg/g for this timestep */
     solven_(&dt_cgs,&temp,&rho,molfrac,&deltah,&rank,&partid);
-    (*p)->udot += deltah * timeCF2*ivlengthCF2 / dt;
+    (*p)->udot += deltah * timeCF2*ivlenCF2 / dt;
 
     /*update composition of particle from updated abundance array*/
     for( i = 0; i < NNW; i++ ) {
@@ -723,7 +723,7 @@ float cooling(SPHbody *p, float frac, int Gridpts, int Nel, int *notprinted) {
     cycles = 0;
     countc = 1;
 
-    rho = (double)(*p)->rho * (massCF*ivlengthCF3);
+    rho = (double)(*p)->rho * (massCF*ivlenCF3);
 
 /*            while ( cycles < countc ) */
     do {
@@ -748,7 +748,7 @@ float cooling(SPHbody *p, float frac, int Gridpts, int Nel, int *notprinted) {
            if ( lcool != lcool ) lcool = 0.0;
 
            /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-           udot = -1.0*lcool * timeCF2*timeCF*lengthCF*ivmassCF / (*p)->rho;
+           udot = -1.0*lcool * timeCF2*timeCF*lenCF*ivmassCF / (*p)->rho;
 
            /*determine if we need subcycling*/
            if ( (fabs(udot*dt_sub)/u > frac) && !((*p)->ident & (1<<30)) ) {
@@ -786,5 +786,5 @@ float cooling(SPHbody *p, float frac, int Gridpts, int Nel, int *notprinted) {
 
     return dt;
 
-    }
+}
 
