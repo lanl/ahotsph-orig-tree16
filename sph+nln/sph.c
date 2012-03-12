@@ -552,9 +552,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     notprinted = 1;
  
     for (p = btab; p < btab+nobj; p++) {
-/********************************************/
 /********* checking udot and hdot ***********/
-/********************************************/
 	if (!SPH_need_update(p)) continue;
 	VV(p->acc, += p->grav_acc);
 	/* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */
@@ -589,22 +587,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ++*limit_low;
 	}
 
-/***********************************************************************/
-/************* prepare for cooling and burning calculation *************/
-/***********************************************************************/
-        if(do_cooling || do_burning) {
-            temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
-        }
+/************* update T, eos_n, eos_u *************/
+        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
 
-/*************************************/
 /********** do the burning ***********/
-/*************************************/
         if(do_burning && temp_ok)
             deltah = burning(p, dt, rank);
 
-/*************************************/
 /********** do the cooling ***********/
-/*************************************/
 	if (do_cooling && (tpos >= 1.57788e7*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
         /*
@@ -625,7 +615,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
     float ne, rho;
     double P_ratio, Gammai; 
     double tlo = 1.e1, tup = 2.5e11;
-    int j;
+    int j, temp_ok;
     SPHbody *p;
    
     for (p = btab; p < btab+nobj; p++) {
@@ -637,23 +627,23 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
-        /* = prep_cool_burn(p, );*/
+        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
 
-        rho = (double)p->rho_est * massCF * ivlenCF3;
+        //rho = (double)p->rho_est * massCF * ivlenCF3;
 
-        eos_n = 0;
-        for( j = 0; j < NNW; j++)
-            eos_n += (double)rho*N_AVOG /
-                     (double)(nparr[j] + nnarr[j]) * p->abund[j];
+        //eos_n = 0;
+        //for( j = 0; j < NNW; j++)
+        //    eos_n += (double)rho*N_AVOG /
+        //            (double)(nparr[j] + nnarr[j]) * p->abund[j];
 
-	eos_u = ((double)(p->u))*((double)(p->rho_est));
-        eos_u = eos_u *massCF*ivlenCF*ivtimeCF2; /* to cgs */
+	//eos_u = ((double)(p->u))*((double)(p->rho_est));
+        //eos_u = eos_u *massCF*ivlenCF*ivtimeCF2; /* to cgs */
 
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-        eos_n += ne; /* add any free electrons */
+        //ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        //eos_n += ne; /* add any free electrons */
 
         /* calculate the temperature based on the interal energy */
-	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+	//p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */

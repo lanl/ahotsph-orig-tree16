@@ -602,7 +602,7 @@ polin2d(double x1a[], double x2a[], double **ya, int m, int n, double x1,
 extern double eos_u;
 extern double eos_n;
 
-/* set the temperature and mean free path */
+/* set eos, the temperature, and mean free path */
 int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel) {
 
     int i, j, k;
