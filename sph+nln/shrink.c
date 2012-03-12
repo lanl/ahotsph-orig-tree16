@@ -13,6 +13,7 @@
 #include "singlio.h"
 #include "error.h"
 #include "mpmy.h"
+#include "units.h"
 
 void hunt(winddata_t *w, int wnobj, float t, float *v, float *mdot, float *u);
 
@@ -264,7 +265,8 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     float r2, v2, b2, minb2 = 1e30;
     float j[NDIM], jhat[NDIM], r_vec[NDIM], v_vec[NDIM];
     float jm, jmax;
-    float small = 1.e-14;
+    float small = 1.e-12;
+    float r_ns2, r_sw2, vel_i;
 
     StkInitEz(&s);
 
@@ -273,9 +275,13 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 
     for (*newmass = 0.0, p = btab; p < btab+*nobj; p++) {
 
+        /* r and v w.r.t. to bndry */
         VVV(v_vec, = p->vel, - b.vel);
         v2 = Dot(v_vec, v_vec);
         
+        VVV(r_vec, = p->pos, - b.pos);
+        r2 = Dot(r_vec, r_vec);
+
         /* One option: adjust r2 based on particle velocities to
            simulate capture-radius behavior */
         /* r2 = 4.0*newt*newt*b.mass*b.mass / (v2 * v2); */
@@ -284,17 +290,28 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
            all particles to 10% of the radius of the next-nearest
            particle */
 
-        r2 = b.r*b.r;
+	b2 = b.r*b.r;
 
-        VVV(r_vec, = p->pos, - b.pos);
-        b2 = Dot(r_vec, r_vec);
+        /* this hopefully keeps the absorbing radius small. - yes, too small */
+        /* miminum bndry_r: Neutron star radius of 10km */
+        r_ns2 = 1.e6*1.e6*ivlenCF2; 
 
-        if ( b2 >= r2 ) {  /* If distance to bndry > capture radius = not eaten */
-            q = StkPush(&s, sizeof(SPHbody));
-            *q = *p;
-            if (b2 < minb2) minb2 = b2;
-            } else { /*eat particle*/
-                *newmass += p->mass;
+        /* "Schwarzschild radius"; i.e. where v_esc==0.1c */
+        r_sw2 = 2.*GRAV_C*(b.mass*massCF)/(C_LIGHT*C_LIGHT*0.05); 
+        r_sw2 = r_sw2*ivlenCF; /* convert to code-units */
+        r_sw2 = r_sw2 * r_sw2;
+
+        /* the purpose of this is to impose a sort of minimum bndry radius */
+        b2 = (r_ns2 > b2 ? r_ns2 : b2); /* pick the bigger one */ 
+        b2 = (r_sw2 > b2 ? r_sw2 : b2); /* pick the bigger one */ 
+
+        //vel_i = v_vec[0]*r_vec[0]+v_vec[1]*r_vec[1]+v_vec[2]*r_vec[2];
+        vel_i = Dot(v_vec, r_vec); /* vel of particle in bndry frame of ref. */
+        vel_i = vel_i/sqrt(r2);
+        /* don't need to normalize, just want to know if inward (<0) or not */
+
+        if ( b2 >= r2 || (vel_i < -2.0 && r2 <= 25.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
+            *newmass += p->mass;
 
             VVS(newp, += v_vec, * p->mass);
 
@@ -323,7 +340,11 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
             VV(newl, += j);
 
             Msgf(("t: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", tpos, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
-           }
+        } else { /* dont eat particle*/
+            q = StkPush(&s, sizeof(SPHbody));
+            *q = *p;
+            if (b2 < minb2) minb2 = b2;
+        }
     }
 
     Free(btab);
