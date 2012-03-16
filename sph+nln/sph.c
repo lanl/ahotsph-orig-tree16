@@ -546,7 +546,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
     //molfrac = (double *)malloc( (NNW+1) * sizeof(double) );
 
-    tlo = 1.0e1;
+    tlo = 1.0e0;
     tup = 2.5e11;
 
     notprinted = 1;
@@ -614,7 +614,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
     float pgas, prad;
     float ne, rho;
     double P_ratio, Gammai; 
-    double tlo = 1.e1, tup = 2.5e11;
+    double tlo = 1.e0, tup = 2.5e11;
     int j, temp_ok;
     SPHbody *p;
    
@@ -628,22 +628,6 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
         temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
-
-        //rho = (double)p->rho_est * massCF * ivlenCF3;
-
-        //eos_n = 0;
-        //for( j = 0; j < NNW; j++)
-        //    eos_n += (double)rho*N_AVOG /
-        //            (double)(nparr[j] + nnarr[j]) * p->abund[j];
-
-	//eos_u = ((double)(p->u))*((double)(p->rho_est));
-        //eos_u = eos_u *massCF*ivlenCF*ivtimeCF2; /* to cgs */
-
-        //ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-        //eos_n += ne; /* add any free electrons */
-
-        /* calculate the temperature based on the interal energy */
-	//p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
