@@ -310,7 +310,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
         vel_i = vel_i/sqrt(r2);
         /* don't need to normalize, just want to know if inward (<0) or not */
 
-        if ( b2 >= r2 || (vel_i < -2.0 && r2 <= 25.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
+        if ( b2 >= r2 || (vel_i < -1.5 && r2 <= 25.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
             *newmass += p->mass;
 
             VVS(newp, += v_vec, * p->mass);
@@ -343,7 +343,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
         } else { /* dont eat particle*/
             q = StkPush(&s, sizeof(SPHbody));
             *q = *p;
-            if (b2 < minb2) minb2 = b2;
+            if (r2 < minb2) minb2 = r2;
         }
     }
 
@@ -353,7 +353,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     btab = StkBase(&s);
     *SPHbtabp = Realloc(btab, *nobj * sizeof(SPHbody));
 
-    *newr = 0.5*sqrt(minb2);  /* Candidate new boundary radius =
+    *newr = 0.64*sqrt(minb2);  /* Candidate new boundary radius =
                                  innermost particle's
                                  distance-to-boundary * 25% */
     if (*newr < b.r) *newr = b.r;  /* Never shrink boundary */
