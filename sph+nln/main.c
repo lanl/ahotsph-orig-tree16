@@ -852,11 +852,14 @@ main(int argc, char *argv[])
 
     /* read in necessary files on all processors */
     /*read in cooling curves and ion fraction tables*/
+/*
     if(do_cooling || do_burning) {
+    }
+    read in cooling curves and ion. tables in any case. need for temp calculation
+*/
         singlPrintf("reading in cooling tables .... ");
         init_CoolTable(&Gridpts, &Nel);
         singlPrintf("success!\n");
-    }
 
     rank = MPMY_Procnum();
 
