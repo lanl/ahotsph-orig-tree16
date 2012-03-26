@@ -607,7 +607,7 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel) {
 
     int i, j, k;
     double rho, mfp, ne;
-    float temp_ok;
+    float temp_ok,prev_temp;
 
     rho = (double)p->rho * (massCF * ivlenCF3 );
 
@@ -622,28 +622,33 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel) {
     eos_u = eos_u *massCF*ivtimeCF2*ivlenCF; /* to cgs */
 
     //if(!(eos_n != eos_n) && eos_n > 0.0)
+    prev_temp = p->temp;
     p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-
-    /* calc mean-free-path; convert from cgs to code units */
-    if(do_cooling) {
-        mfp = 1.0/(ne * 6.65e-25 * lenCF);
-        /* add free-free transitions */
-        if (p->temp > 1.0e7) {
-            mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
-                   p->rho*p->rho*pow(p->temp,-3.5)) );
-        }
-        p->mfp = (float)mfp;
-    }
 
     if((p->temp > 0.0) && (p->temp < tup) && !(p->temp != p->temp)) {
         temp_ok = 1;
     } else {
         temp_ok = 0;
-        printf("newtraph failed: particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\n",
-              p->ident, eos_u, eos_n, ne, p->temp);
-        printf("m=%.4E l=%.4E\n",massCF,lenCF);
+        SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
+              p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
+        SeriousWarning("m=%.4E l=%.4E\n",massCF,lenCF);
         for( j = 0; j < NISO; j++) printf("%.4E ",p->abund[j]);
         printf("\n");
+    /* set a floor on the temperature, cuz I kinda just want this to run ... */
+    /* assume material is cold, low density; thus can assume gas contribution only */
+        p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+
+    }
+
+    /* calc mean-free-path; convert from cgs to code units */
+    if(do_cooling) {
+        mfp = 1.0/(ne * 6.65e-25 * lenCF);
+        /* add free-free transitions */
+        if (p->temp > 1.0e7 && temp_ok) {
+            mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
+                   p->rho*p->rho*pow(p->temp,-3.5)) );
+        }
+        p->mfp = (float)mfp;
     }
 
     return temp_ok;
