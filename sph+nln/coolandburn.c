@@ -713,10 +713,11 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     int i,j,k;
     int decr, cycles, countc;
     int cycled;
+    int temp_ok;
     double tlo, tup, dt_sub, dt_save, dt_tot;
     double u, lcool, udot, rho;
 
-    tlo = 1.0e-1;
+    tlo = 1.0e+1;
     tup = 1.0e10;
     u = (double)p->u;
     dt_sub = (double)dt;
@@ -731,17 +732,16 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
 
 /*            while ( cycles < countc ) */
     do {
-        eos_u = ((double)u) * ((double)(p->rho));
-
-        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-        if(p->temp < 0.) {
+        //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+        temp_ok = prep_cool_burn(p, tlo, tup, Gridpts, Nel);
+        if(temp_ok == 0) {
            dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
            udot = 0.0;
         } else if (p->temp < 2.0e3) {
            dt_tot = dt;
         }
 
-        if((p->temp > 2.0e3) && (p->temp < 1.e8) ) {
+        if((p->temp > 2.0e3) && (p->temp < 1.e9) ) {
            if(*notprinted) singlPrintf("cooling! %d\n",p->ident);
            *notprinted = 0;
 
@@ -786,7 +786,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     dt = dt_save;
     p->udot += (u - p->u) / dt;
 
-    printf("%d of %d cycles completed\n",cycles,countc);
+    //printf("%d of %d cycles completed\n",cycles,countc);
 
     return dt;
 
