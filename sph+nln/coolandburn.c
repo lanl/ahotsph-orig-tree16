@@ -341,7 +341,7 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
 
     /* we're doing temperature in logspace */
     logtemp=log10(temp);
-    if( logtemp < ionfracp[0][0] ) logtemp = 4.0;
+    if( logtemp < ionfracp[0][0] ) return 0.0; /* assume not ionized */
     if( logtemp > ionfracp[0][Gridpts-1] ) logtemp = 9.0;
 
     /*locate the indices of the table;
