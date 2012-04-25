@@ -41,7 +41,7 @@ void polin2d(double x1a[], double x2a[], double **ya, int m, int n, double x1, d
 
 void init_CoolTable(int *Gridpts, int *Nel);
 
-int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel);
+int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int rho_or_rhoest);
 
 float burning(SPHbody *p, float dt, int rank);
 
