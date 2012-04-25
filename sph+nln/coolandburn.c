@@ -660,7 +660,7 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         /* add free-free transitions */
         if (p->temp > 1.0e7 && temp_ok) {
             mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
-                   p->rho_est*p->rho*pow(p->temp,-3.5)) );
+                   p->rho*p->rho*pow(p->temp,-3.5)) );
         }
         p->mfp = (float)mfp;
     }
