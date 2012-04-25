@@ -603,13 +603,20 @@ extern double eos_u;
 extern double eos_n;
 
 /* set eos, the temperature, and mean free path */
-int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel) {
+int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int rho_or_rhoest) {
 
     int i, j, k;
     double rho, mfp, ne;
     float temp_ok,prev_temp;
 
-    rho = (double)p->rho * (massCF * ivlenCF3 );
+    switch(rho_or_rhoest) {
+    case 0:
+        rho = (double)p->rho* (massCF * ivlenCF3 );
+        break;
+    case 1:
+        rho = (double)p->rho_est * (massCF * ivlenCF3 );
+        break;
+    }
 
     eos_n = 0;
     for( j = 0; j < NNW; j++)
@@ -618,7 +625,14 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel) {
 
     ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
     eos_n += ne; /* add any free electrons */
-    eos_u = ((double)(p->u)) * ((double)(p->rho));
+    switch(rho_or_rhoest) {
+    case 0:
+        eos_u = ((double)(p->u)) * ((double)(p->rho));
+        break;
+    case 1:
+        eos_u = ((double)(p->u)) * ((double)(p->rho_est));
+        break;
+    }
     eos_u = eos_u *massCF*ivtimeCF2*ivlenCF; /* to cgs */
 
     //if(!(eos_n != eos_n) && eos_n > 0.0)
@@ -646,7 +660,7 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel) {
         /* add free-free transitions */
         if (p->temp > 1.0e7 && temp_ok) {
             mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
-                   p->rho*p->rho*pow(p->temp,-3.5)) );
+                   p->rho_est*p->rho*pow(p->temp,-3.5)) );
         }
         p->mfp = (float)mfp;
     }
@@ -733,7 +747,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
 /*            while ( cycles < countc ) */
     do {
         //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-        temp_ok = prep_cool_burn(p, tlo, tup, Gridpts, Nel);
+        temp_ok = prep_cool_burn(p, tlo, tup, Gridpts, Nel, 0);
         if(temp_ok == 0) {
            dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
            udot = 0.0;

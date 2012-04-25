@@ -178,6 +178,8 @@ int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 int do_burning;    /* used in sph.c, turns network on */
 
+int do_Pext;
+
 float **tablep; //array to hold cooling curve table values
 float **ionfracp; //array to hold ionfraction table values
 
@@ -321,6 +323,7 @@ main(int argc, char *argv[])
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
+    float P_ext;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -363,6 +366,7 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "do_absorbing_bndry", &do_absorbing_bndry, 0);
     SDFgetintOrDefault(csdfp, "do_drag", &do_drag, 0);
     SDFgetintOrDefault(csdfp, "has_grav_data", &has_grav_data, do_grav);
+    SDFgetintOrDefault(csdfp, "do_Pext", &do_Pext, 0);
 
 /* read in Z and N for abundances. at some later point, populate nparr/nnarr ~CIE*/
     if( (fp = fopen("networklist","r"))==NULL ) printf("error opening networklist\n");
@@ -623,6 +627,9 @@ main(int argc, char *argv[])
 	SDFgetintOrDefault(csdfp, "dt_long", &dt_long, 10);
 	SDFgetfloatOrDefault(csdfp, "dt_max", &dt_max, 1e30);
     }
+    if (do_Pext)
+        SDFgetfloatOrDie(csdfp, "P_ext", &P_ext);
+
     if (do_Bmax) MACtype = BMAX_MAC;
     else if (do_BH) MACtype = BH_MAC;
     else if (do_Arel) MACtype = AREL_MAC;
@@ -813,12 +820,14 @@ main(int argc, char *argv[])
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
     }
+    if (do_Pext)
+        singlPrintf("float P_ext = %g;\n", P_ext);
     if (do_drag) {
 	singlPrintf("int do_drag = %d;\n", do_drag);
 	singlPrintf("float drag_coeff = %g;\n", drag_coeff);
     }
     if (do_cooling)
-	    singlPrintf("int do_cooling = %d;\n", do_cooling);
+        singlPrintf("int do_cooling = %d;\n", do_cooling);
     singlPrintf("int do_diffusion = %d;\n", do_diffusion);
     singlPrintf("int do_burning = %d;\n", do_burning);
     if( do_output ){
@@ -1220,7 +1229,7 @@ main(int argc, char *argv[])
 	    SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
 	    /* This sets rho_est and pr for communication during BuildTree */
 	    update_intermediate(SPHbtab, SPHnobj, Gridpts, Nel, dt_last, 
-				!(first_step || exact_rho), 0);
+				!(first_step || exact_rho), 0, P_ext, sysradius);
 
 	    SPHsinknobj = 0;
 	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {

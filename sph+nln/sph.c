@@ -45,6 +45,8 @@ extern int do_diffusion;
 extern int do_cooling;
 extern int do_burning;
 
+extern int do_Pext;
+
 void
 SetSPHOffset(float *off, float *voff)
 {
@@ -588,7 +590,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	}
 
 /************* update T, eos_n, eos_u *************/
-        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
+        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 0);
 
 /********** do the burning ***********/
         if(do_burning && temp_ok)
@@ -608,15 +610,17 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 
 void
-update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit)
+update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit, float P_ext, float R0)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float pgas, prad;
-    float ne, rho;
+    float ne, rho, max_rad, r2;
     double P_ratio, Gammai; 
     double tlo = 1.e0, tup = 2.5e11;
     int j, temp_ok;
     SPHbody *p;
+
+    max_rad = 0.95*R0*R0;
    
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
@@ -627,13 +631,18 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
-        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel);
+        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
         pgas = eos_n * K_BOLTZ * p->temp;
         prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
         p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
+
+        r2 = Dot(p->pos, p->pos);
+        if( r2 > max_rad) {
+            p->pr = ((p->pr - P_ext) > 0.0) ? (p->pr - P_ext) : 0.0;
+        }
 
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
