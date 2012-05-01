@@ -645,9 +645,6 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         temp_ok = 0;
         SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
               p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
-        SeriousWarning("m=%.4E l=%.4E\n",massCF,lenCF);
-        for( j = 0; j < NISO; j++) printf("%.4E ",p->abund[j]);
-        printf("\n");
     /* set a floor on the temperature, cuz I kinda just want this to run ... */
     /* assume material is cold, low density; thus can assume gas contribution only */
         p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);

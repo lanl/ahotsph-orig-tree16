@@ -590,7 +590,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	}
 
 /************* update T, eos_n, eos_u *************/
-        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 0);
+        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 0);
 
 /********** do the burning ***********/
         if(do_burning && temp_ok)
@@ -631,7 +631,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
-        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
+        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 1);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
@@ -639,9 +639,11 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
         prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
         p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
 
+        if(do_Pext) {
         r2 = Dot(p->pos, p->pos);
         if( r2 > max_rad) {
             p->pr = ((p->pr - P_ext) > 0.0) ? (p->pr - P_ext) : 0.0;
+        }
         }
 
         /* this is still using Gamma. Perhaps could calculate gamma 
