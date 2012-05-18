@@ -525,12 +525,13 @@ void ReadWindData(char *filename, winddata_t **wdata, int *wnobj)
     *wdata = NULL;
     *wnobj = 0;
     /* BEWARE OF UNITS BELOW!!! */
+    /* assume it's in cgs, convert to user-units */
     while (fscanf(fp, "%g %g %*g %*g %g %g", &t, &dt, &mdot, &v_inf) == 4) {
 	(*wnobj)++;
 	*wdata = (winddata_t *)Realloc(*wdata, *wnobj * sizeof(winddata_t));
-	(*wdata)[*wnobj - 1].t = dt/TIM;
-	(*wdata)[*wnobj - 1].mdot = -mdot*1.0e6;  /* Flip sign from input */
-	(*wdata)[*wnobj - 1].v_inf = v_inf*TIM/LEN;
+	(*wdata)[*wnobj - 1].t = dt/timeCF;
+	(*wdata)[*wnobj - 1].mdot = -mdot*timeCF/massCF;  /* Flip sign from input */
+	(*wdata)[*wnobj - 1].v_inf = v_inf*tdivlCF;
 	(*wdata)[*wnobj - 1].u = 0.102547;  /* From src/winds/proto */
     }
 
