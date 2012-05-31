@@ -576,7 +576,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	      : 0.0 );
 
 	if (!finite(p->udot)) 
-	    Error("Bad value for udot: drho/dt=%.4E pr=%.4E rho=%.4E\n",p->drho_dt,p->pr,p->rho);
+	    Error("%d Bad value for udot: drho/dt=%.4E pr=%.4E rho=%.4E\n",
+                  p->ident,p->drho_dt,p->pr,p->rho);
 
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */

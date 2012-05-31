@@ -267,6 +267,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     float jm, jmax;
     float small = 1.e-12;
     float r_ns2, r_sw2, vel_i;
+    float v_max = -1.0e9*tdivlCF;
 
     StkInitEz(&s);
 
@@ -310,7 +311,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
         vel_i = vel_i/sqrt(r2);
         /* don't need to normalize, just want to know if inward (<0) or not */
 
-        if ( b2 >= r2 || (vel_i < -1.5 && r2 <= 25.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
+        if ( b2 >= r2 || (vel_i < v_max && r2 <= 25.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
             *newmass += p->mass;
 
             VVS(newp, += v_vec, * p->mass);
