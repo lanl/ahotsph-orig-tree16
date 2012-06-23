@@ -216,19 +216,20 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
       extrapolation is still a little funky - CIE
-      above table= j=-2, below table= j=-99
+      outside first table entry: j=-2, 
+      outside last table entry: j=Gridpts+1;
     */
-    if ((j==-2) || (j==-99))
+    if ((j<=-1) || (j>=Gridpts))
     {
         if (extrapolate)
         {
             /*reset j for extrapolation*/
-            if (j==-2) j=0;
+            if (j<=-1) j=0;
             /*now do interpolation, should automatically
              * extrapolate as set up below*/
 
             /*reset j for extrapolation*/
-            if (j==-99) j=Gridpts-1;
+            if (j>=Gridpts) j=Gridpts-2;
             /*now do interpolation, should automatically
              * extrapolate as set up below*/
         }
@@ -273,11 +274,12 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
             polint(rowarr,interp,2,logtemp,lcoolp,dyp);
 
             /*reset value if extrapolated to negative value*/
-            if (lcool<0.0)
-            {
-                if ((interp[0]-interp[1]) <0) lcool=0.0;
+            /* could be negative if becoming ionized? in any case, staying inside table */
+            //if (lcool<0.0)
+            //{
+            //    if ((interp[0]-interp[1]) <0) lcool=0.0;
                 /*else fracn=1.0;*//*this case shouldn't happen*/
-            }
+            //}
 
             fracns[0] = ionfracp[ index+m ][ j ];
             fracns[1] = ionfracp[ index+m ][ j + 1 ];
@@ -357,10 +359,16 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
       extrapolation is still a little funky - CE
-      above table= j=-2, below table= j=-99
+      outside first table entry: j=-2, 
+      outside last table entry: j=Gridpts+1;
     */
-    if (j==-2) return 1.0; /*we're done here*/
-    if (j == -99) return 0.0;
+    if ((j<=-1) || (j>=Gridpts))
+    {
+        if (j<=-1) return 0.0; /* below 1e4 K, assume no free e- */
+
+        /*reset j for extrapolation*/
+        if (j>=Gridpts) j=Gridpts-2; /* above 1e9 K, assume ions at 1e9 K */
+    }
 
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
 
@@ -415,8 +423,8 @@ double analytic_cool(double temp)
         double lcool;
 
         if (temp < 1.0e4)
-                lcool = 1.0e-26 * exp(-1.0e5/temp) * sqrt(temp);//guessed; for O - CE
-                //lcool = 1.0e-27 * exp(-1.0e2/temp) * sqrt(temp);
+                //lcool = 1.0e-26 * exp(-1.0e5/temp) * sqrt(temp);//guessed; for O - CE
+                lcool = 1.0e-27 * exp(-1.0e2/temp) * sqrt(temp);
         else if (temp < 3.0e5)
                 lcool=1.0e-21;
         else
@@ -462,11 +470,11 @@ locate(float xx[], long Nel, float x, long *j)
          ju=jm;
    }
    /*if (true && true) && true (1 is true) then below (j<0) table*/
-   if ( (((x - xx[0])*sign <0) && ((x-xx[Nel-1])*sign <0)) && 1)
+   if ( ((x - xx[0])*sign <0) && ((x-xx[Nel-1])*sign <0) )
            *j=-2;
    /*if (not false && not false) && true (1 is true) then above (j>Nel) table*/
-   else if ( (!((x - xx[0])*sign <0) && !((x-xx[Nel-1])*sign <0)) && 1)
-           *j=-99;
+   else if ( ((x - xx[0])*sign >0) && ((x-xx[Nel-1])*sign >0))
+           *j=Nel+1;
    else *j=jl;
 } /*end locate*/
 
