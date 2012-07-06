@@ -267,7 +267,9 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     float jm, jmax;
     float small = 1.e-12;
     float r_ns2, r_sw2, vel_i;
-    float v_max = -1.0e9*tdivlCF;
+    float v_max;
+
+    v_max = -1.0e9*tdivlCF;
 
     StkInitEz(&s);
 
