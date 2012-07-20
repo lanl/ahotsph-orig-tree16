@@ -1036,7 +1036,7 @@ main(int argc, char *argv[])
         if (do_absorbing_bndry) {
             SPHoldnobj = SPHnobj;
             AdjustBtab4((SPHbody **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
-                        newp, newl, cosmo.GNewt, tpos);
+                        newp, newl, cosmo.GNewt, dt);
 
             totnewmass = 0.0;
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);

@@ -257,7 +257,7 @@ AdjustBtab3(SPHbody **SPHbtabp, int *nobj, int gnobj, float r_limit,
 /* adjust btab from snevolbrna to let the central particle acrete mass ~CIE */
 void
 AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
-            float *newr, float *newp, float *newl, float G, float tpos)
+            float *newr, float *newp, float *newl, float G, float dt)
 {
     SPHbody *btab = *SPHbtabp;
     SPHbody *p, *q;
@@ -267,9 +267,9 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     float jm, jmax;
     float small = 1.e-12;
     float r_ns2, r_sw2, vel_i;
-    float v_max;
+    float v_max, tff, m_accret;
 
-    v_max = -1.0e9*tdivlCF;
+    v_max = -0.033*C_LIGHT*tdivlCF;
 
     StkInitEz(&s);
 
@@ -296,7 +296,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 
 	b2 = b.r;
 
-        /* this hopefully keeps the absorbing radius small. - yes, too small */
+        /* the purpose of this is to impose a sort of minimum bndry radius */
         /* miminum bndry_r: Neutron star radius of 10km */
         r_ns2 = 1.e6*ivlenCF; 
 
@@ -304,19 +304,38 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
         r_sw2 = 2.*GRAV_C*(b.mass*massCF)/(C_LIGHT*C_LIGHT*0.05); 
         r_sw2 = r_sw2*ivlenCF; /* convert to code-units */
 
-        /* the purpose of this is to impose a sort of minimum bndry radius */
         b2 = (r_ns2 > b2 ? r_ns2 : b2); /* pick the bigger one */ 
         b2 = (r_sw2 > b2 ? r_sw2 : b2); /* pick the bigger one */ 
 
-        //vel_i = v_vec[0]*r_vec[0]+v_vec[1]*r_vec[1]+v_vec[2]*r_vec[2];
+
         vel_i = Dot(v_vec, r_vec); /* vel of particle in bndry frame of ref. */
         vel_i = vel_i/r1;
-        /* don't need to normalize, just want to know if inward (<0) or not */
 
-        if ( b2 >= r1 || (vel_i < v_max && r1 <= 2.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
-            *newmass += p->mass;
+        /* if within bndry.r || falling in at greater than 14000km/s and 
+           within 5*bndry.r then eat particle */
+        if ( (b2+p->h) >= r1 || (vel_i < v_max && r1 <= 2.*b2)) {
 
-            VVS(newp, += v_vec, * p->mass);
+            /* eat partial particle */
+            /* outside bndry_r, but overlapping and not moving too fast */
+            if( (fabs(b2-r1) < p->h) && (vel_i > v_max) ) {
+                tff= sqrt( 2.*b.r*b.r*b.r/ (G*b.mass));
+                m_accret = p->mass * dt/tff;
+
+                /* partially eat */
+                if( p->mass > m_accret) {
+                    q = StkPush(&s, sizeof(SPHbody));
+                    *q = *p;
+                    q->mass = p->mass - m_accret;
+                }
+
+            /* eat whole particle */
+            } else {
+                m_accret = p->mass;
+            }
+
+            *newmass += m_accret;
+
+            VVS(newp, += v_vec, * m_accret);
 
             /* this assumes that the central particle is at the origin? ~CIE */
 /*
@@ -325,16 +344,16 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
             j[2] = p->mass * (p->pos[0]*p->vel[1] - p->pos[1]*p->vel[0]);
 */
 
-            j[0] = p->mass * ( r_vec[1]*v_vec[2] - r_vec[2]*v_vec[1] );
-            j[1] = p->mass * ( r_vec[2]*v_vec[0] - r_vec[0]*v_vec[2] );
-            j[2] = p->mass * ( r_vec[0]*v_vec[1] - r_vec[1]*v_vec[0] );
+            j[0] = m_accret * ( r_vec[1]*v_vec[2] - r_vec[2]*v_vec[1] );
+            j[1] = m_accret * ( r_vec[2]*v_vec[0] - r_vec[0]*v_vec[2] );
+            j[2] = m_accret * ( r_vec[0]*v_vec[1] - r_vec[1]*v_vec[0] );
 
             jm = sqrt( j[0]*j[0] + j[1]*j[1] + j[2]*j[2] );
             jhat[0] = j[0]/(jm + small);
             jhat[1] = j[1]/(jm + small);
             jhat[2] = j[2]/(jm + small);
 
-            jmax = sqrt( G * b.mass * b.r ) / p->mass;
+            jmax = sqrt( G * b.mass * b.r ) / m_accret;
 
             jm = ( jm < jmax ? jm : jmax );
 
@@ -342,7 +361,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 
             VV(newl, += j);
 
-            Msgf(("t: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", tpos, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
+            Msgf(("dt: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", dt, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
         } else { /* dont eat particle*/
             q = StkPush(&s, sizeof(SPHbody));
             *q = *p;
