@@ -44,6 +44,20 @@ float v_wind = 1.02e-4;
 float mdot_wind = 1.0e-7;
 float u_wind = 1.08e-10;
 
+# central gravity source 
+int do_absorbing_bndry = 1;
+float bndry_x = 0.0;
+float bndry_y = 0.0;
+float bndry_z = 0.0;
+float bndry_vx = 0.0;
+float bndry_vy = 0.0;
+float bndry_vz = 0.0;
+float bndry_px = 0.0;
+float bndry_py = 0.0;
+float bndry_pz = 0.0;
+float bndry_mass = 1.0000e0;
+float bndry_r = 5.0e+3;
+
 # Adjustment of smoothing lengths
 int nbrcut_max = 100;
 int nbrcut_min = 45;
