@@ -20,7 +20,8 @@ override OPTIMIZE=-O3 -static -no-prec-div -xP
 override AGGRESSIVE_OPT=
 LDFLAGS:=-L$(FORTHOME)/lib/intel64
 #LDFLAGS:=-L/packages/intel/fce/10.1.015/lib
-LOADLIBES:=-lsvml
+LOADLIBES:=
+#-lsvml
 LEX:=flex
 YACC:=bison -y
 
@@ -33,7 +34,7 @@ swsrc:=lsv.c swampi.c
 ifeq ($(PAROS),mpi)
 LOADLIBES:=-L$(MPIHOME)/lib64 -lmpi 
 #LOADLIBES:=-L/packages/intel-openmpi-1.2.7/lib -lmpi 
-PAROSCFLAGS:=-I$(MPIHOME)/include 
+PAROSCFLAGS:=-I$(MPIHOME)/include -DUSE_MPIIO
 #PAROSCFLAGS:=-I/packages/intel-openmpi-1.2.7/include 
 #-DUSE_MPIIO
 #PAROSCFLAGS:=-I/ss1-raid/local/mpich-1.2.5-ssh/include
