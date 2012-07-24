@@ -7,9 +7,9 @@
 #include "timers.h"
 #include "error.h"
 #include "singlio.h"
-#include "cool.h"
 #include "nrutil.h"
 #include "units.h"
+#include "cool.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -45,10 +45,7 @@ extern int do_diffusion;
 extern int do_cooling;
 extern int do_burning;
 
-/*
-extern float **tablep; //added by CE
-extern float **ionfracp; //added by CE
-*/
+extern int do_Pext;
 
 void
 SetSPHOffset(float *off, float *voff)
@@ -539,31 +536,25 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
-    double u, n, lcool, deltah;
-    double m = (double)massCF;  /* convert from user-units to cgs */
-    double l = (double)lengthCF;  /* convert from user-units to cgs */
-    double t = (double)timeCF;  /* convert from user-units to cgs */
-    double kB; 
+    double u, n, lcool, deltah, dt_cool;
     double *molfrac; /*float or double?? */
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
-    double m_ave;	/* average mass of particles (i.e. nuclei, not SPH particles) */
-    double abund_renorm,temp,rho, dt_cgs, ndens = 0., ne=0.;
+    double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
     int temp_ok, partid;
 
-    molfrac = (double *)malloc( (NNW+1) * sizeof(double) );
+    //molfrac = (double *)malloc( (NNW+1) * sizeof(double) );
 
-    tlo = 1.0e1;
+    tlo = 1.0e0;
     tup = 2.5e11;
-
-    kB = K_BOLTZ * t * t / m / ( l*l );
 
     notprinted = 1;
  
     for (p = btab; p < btab+nobj; p++) {
+/********* checking udot and hdot ***********/
 	if (!SPH_need_update(p)) continue;
 	VV(p->acc, += p->grav_acc);
 	/* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */
@@ -585,7 +576,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	      : 0.0 );
 
 	if (!finite(p->udot)) 
-	    Error("Bad value for udot\n");
+	    Error("%d Bad value for udot: drho/dt=%.4E pr=%.4E rho=%.4E\n",
+                  p->ident,p->drho_dt,p->pr,p->rho);
 
 	/* Are these limits appropriate? */
 	/* Does this enforce the Courant limit correctly with diffusion? */
@@ -598,245 +590,85 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	    ++*limit_low;
 	}
 
-        /* all this is done in user-units */
-        m_ave = 0;
-        abund_renorm = 0;
-        for ( j = 0; j < NNW; j++) {
-            m_ave += p->abund[j]/((double)(nparr[j] + nnarr[j]));/*mean molecular weight*/
-            abund_renorm += p->abund[j]; /* so that sum(abund) = 1 */
+/************* update T, eos_n, eos_u *************/
+        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 0);
+
+/********** do the burning ***********/
+        if(do_burning && temp_ok)
+            deltah = burning(p, dt, rank);
+
+/********** do the cooling ***********/
+	if (do_cooling && (tpos >= 1.57788e7*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+            dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
+        /*
+        if ( iter%interval == 0) {
+            print_ionization_state();
         }
-
-        m_ave = (double)(1.0/m_ave / abund_renorm /(N_AVOG*m) );
-        rho = (double)p->rho * (m / (l*l*l));
-
-        /* calculation of eos_n is inconsistent with what's in update_intermediate, 
-           and both are somewhat inconsistent with the actual problem. eos_n in
-           update_intermediate assumes fully ionized gas, and includes e- in the 
-           number density. eos_n here ingores any e- that might be flying around. 
-           This should probably be fixed at some point ... ~CIE */
-        eos_n = (double)(p->rho/m_ave); /*needed in newtraph; in user-units */
-        /*eos_n += ne/(lengthCF*lengthCF*lengthCF);*/ /* add any free electrons */
-        eos_u = ((double)(p->u)) * ((double)(p->rho));
-
-        //if(!(eos_n != eos_n) && eos_n > 0.0)
-        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-
-        /* convert from cgs to code units */
-        mfp = 1.0/(ne * 6.65e-25) / l;
-
-        if (p->temp > 1.0e7) {
-            mfp += (1.0/ (0.64e23*m*m/(l*l*l*l*l)*
-                   p->rho*p->rho*pow(p->temp,-3.5)) ); /*free-free transitions*/
-        }
-        p->mfp = (float)mfp;
-
-        if((p->temp > 0.0) && (p->temp < 2.5e11) && !(p->temp != p->temp)) {
-            temp_ok = 1;
-        } else {
-            temp_ok = 0;
-            printf("newtraph failed: particle %d for eos_u=%.4E eos_n=%.4E gives T=%.4E\n",
-                  p->ident, eos_u, eos_n, p->temp);
-            printf("m=%.4E l=%.4E\n",m,l);
-            for( j = 0; j < NISO; j++) printf("%.4E ",p->abund[j]);
-            printf("\n");
-        }
-
-        if(do_burning && temp_ok) {
-
-            /* solven operates in cgs. must convert from user-units to cgs! */
-            temp = (double)p->temp;
-            rho = (double)p->rho * (m / (l*l*l));
-            dt_cgs = (double)(dt * t);
-            ndens = eos_n / (l*l*l);
-
-            /*prepare abundance array passed into network - more ugliness!*/
-            for( i = 0; i < NNW; i++ ) {
-                for( j = 0; j < NISO; j++ ) {
-                    if((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])){
-                        molfrac[i] = p->abund[j];
-                        j = NISO; /* get out, so we don't overwrite molfrac
-                                   * with junk from trailing abund columns */
-                    }   
-                }   
-            }
-            molfrac[NNW] = (double)p->Y_el;
-
-            partid = p->ident;
-            /* deltah= erg/g for this timestep */
-            solven_(&dt_cgs,&temp,&rho,molfrac,&deltah,&rank,&partid);
-            p->udot += deltah * (t*t) / (l*l) / dt;
-
-            /*update composition of particle from updated abundance array*/
-            for( i = 0; i < NNW; i++ ) {
-                for( j = 0; j < NISO; j++ ) {
-                    if((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])){
-                        p->abund[j] = molfrac[i];
-                    }   
-                }
-            }
-            p->Y_el = (float)molfrac[NNW];
-
-        }  
-
-    if(do_cooling)
-    radius = sqrtf_fast(p->pos[0]*p->pos[0] + p->pos[1]*p->pos[1] + p->pos[2]*p->pos[2]);
-
-
-    /* hmmm, when to turn on the radiative/line cooling? couple of options:
-     * - at a certain time after the explosion, e.g 30d, 0.5yr, ...
-     * - when mfp > h. This is problematic when this is the case for particles 
-     *   inside an optically thick region.
-     * + define a photospheric radius as R0-mfp, and let all particles outside 
-     *   of that cool. This could be problematic, since mfp depends on particle. 
-    */
-	if (do_cooling && (radius >= (R0 - p->mfp)) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
-            tlo = 1.0e-1;
-            tup = 1.0e10;
-			u = p->u; 
-            dt_sub = dt;
-            dt_save = dt;
-            dt_tot = 0.;
-
-            decr = 10;
-            cycles = 0;
-            countc = 1;
-
-
-/*            while ( cycles < countc ) */
-            do {
-                eos_u = ((double)u) * ((double)(p->rho));
-
-                p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-                if(p->temp < 0.) {
-                   dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
-                   udot = 0.0;
-                } else if (p->temp < 2.0e3) {
-                   dt_tot = dt;
-                }
-
-                if((p->temp > 2.0e3) && (p->temp < 1.e8) ) {
-                   if(notprinted) singlPrintf("cooling! %d\n",p->ident);
-                   notprinted = 0;
-
-                   /* lcool contains energy lost as positive value */
-                   lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
-
-                   /* trying to catch any NaN's */
-                   if ( lcool != lcool ) lcool = 0.0;
-
-                       /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-                       udot = -1.0*lcool * ( t*t*t* l/ m ) / p->rho;
-
-                       /*determine if we need subcycling*/
-                       if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
-                       if(cycled == 0) cycled=p->ident;
-                       countc = cycles + (countc - cycles) * decr;
-					   dt_sub = dt_sub / (double)decr;
-
-                       if(countc > 1e6) {
-                           dt_tot = dt;
-                           printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
-                           p->ident, u, udot, dt_sub, dt_tot);
-                           cycles = countc + 1;
-                       }
-
-                   } else { /* no further subcycling required, update values */
-                       dt_tot += dt_sub;
-                       /* do some kind of transition between optically thick and 
-                          thin regions for radiative losses */
-                       if (mfp <= 3*p->h) udot = udot*(1.0 - exp( -p->h/mfp ));
-                       u += udot * dt_sub;
-                       cycles++;
-                   }
-
-                   if(cycles > 1e6) printf("warning: over 1e6 subcycles\n");
-
-                } else {
-                   cycles = countc+1; /*to get out of while loop if no cooling takes place */
-                }
-            } while (cycles < countc); 
-
-		dt = dt_save;
-		p->udot += (u - p->u) / dt;
-
-        printf("%d of %d cycles completed\n",cycles,countc);
+        */
     	}
     }
 }
 
 
 void
-update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit)
+update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit, float P_ext, float R0)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
-    float acoef, kB, pgas, prad;
-    float ne;
+    float pgas, prad;
+    float ne, rho, max_rad, r2;
     double P_ratio, Gammai; 
-    double tlo = 1.e1, tup = 2.5e11;
-    int j;
+    double tlo = 1.e0, tup = 2.5e11;
+    int j, temp_ok;
     SPHbody *p;
-   
-    acoef = A_COEFF * ((double)(lengthCF * timeCF*timeCF / massCF));
-    kB=K_BOLTZ *((double)(timeCF*timeCF / (massCF *lengthCF*lengthCF)));
 
+    max_rad = 0.95*R0*R0;
+   
     for (p = btab; p < btab+nobj; p++) {
 	if (!SPH_need_update(p)) continue;
 	if (flag) p->rho_est = p->rho + p->drho_dt * dt_last;
 	else p->rho_est = p->rho;
 	if (p->rho_est <= (float)0.0) 
 	  Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
-	//p->pr = p->u * (Gamma - (float)1.0) * p->rho_est;
 
 	/* Calculate temperature from u, then "create" photons (a*T^4) */
-        /* keep these in user-units */
-        eos_n = 0;
-        for( j = 0; j < NNW; j++)
-            eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
-                     p->abund[j];// * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
-	eos_u = ((double)(p->u))*((double)(p->rho_est));
-
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, p->rho_est, Gridpts, Nel);
-        /*eos_n += ne/(lengthCF*lengthCF*lengthCF);*/
-
-        /* calculate the temperature based on the interal energy */
-	p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+        /* keep these in cgs-units */
+        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 1);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
-        pgas = 1.5*eos_n * kB * p->temp;
-        prad = 0.33333333333*acoef * p->temp*p->temp*p->temp*p->temp;
-        p->pr = pgas + prad;
+        pgas = eos_n * K_BOLTZ * p->temp;
+        prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
+        p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
+
+        if(do_Pext) {
+        r2 = Dot(p->pos, p->pos);
+        if( r2 > max_rad) {
+            p->pr = ((p->pr - P_ext) > 0.0) ? (p->pr - P_ext) : 0.0;
+        }
+        }
 
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
-        P_ratio = (double)pgas / (double)p->pr;
-        /* from D. Clayton's Stellar Evolution book */
+        P_ratio = (double)pgas / (double)(pgas+prad);
+        /* from D. Clayton's Stellar Evolution book, p.119 */
         Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
                  (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
-	p->vsound = sqrtf_fast(Gammai * p->pr / p->rho_est);
+	p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
 
 	if (do_diffusion) {
-
-	    /* Calculate temperature from u, then "create" photons (a*T^4) */
-            /* keep these in user-units */
-            eos_n = 0;
-            for( j = 0; j < NNW; j++)
-                eos_n += ((double)(p->rho_est))*N_AVOG * massCF /(double)(nparr[j] + nnarr[j]) *
-                          p->abund[j] * (double)(nparr[j] + 1.0);/* accounts for electrons!*/
-	    eos_u = ((double)(p->u))*((double)(p->rho_est));
+/* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
 	    /* Figure out good upper and lower limits for temp */
-	    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-	    p->u_r = acoef*p->temp*p->temp*p->temp*p->temp;
+	    p->u_r = A_RAD*p->temp*p->temp*p->temp*p->temp*
+                     lenCF*timeCF2*ivmassCF;
 	    p->du_r = 0.0;
 
 	    /* Calculate diffusion coefficient in user-units */
-	    kes = KES_COEFF/MH *((double) (massCF / (lengthCF*lengthCF)));
+	    kes = KES_COEFF/MH *(massCF * ivlenCF2);
 	    kff = (KFF_COEFF) * p->rho_est*pow(p->temp, -3.5)*
-                ((double)(massCF /(lengthCF*lengthCF))); 
-	    p->D = C_LIGHT *((double)(timeCF /lengthCF)) 
-                           / ( 3.0*(kes+kff)*p->rho_est );
+                  (massCF * ivlenCF); 
+	    p->D = C_LIGHT * tdivlCF /
+                   ( 3.0*(kes+kff)*p->rho_est );
 
 	    /* Also, eventually, handle lightbulb approximation here */
 	}

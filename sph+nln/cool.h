@@ -1,3 +1,5 @@
+/*#include"physics_sph.h"*/
+
 #ifndef NISO
 #define NISO 20 	/* number of isotopes tracked */
 #endif
@@ -9,6 +11,7 @@ float **ionfracp; //array to hold ionfraction table values
 #else
 extern float **tablep;
 extern float **ionfracp;
+extern int do_cooling;
 #endif
 
 #ifndef BURNING
@@ -21,6 +24,7 @@ extern int NNW;
 extern int **inNW;
 extern int nparr[NISO];
 extern int nnarr[NISO];
+extern int do_burning;
 #endif
 
 double find_ne(float abundarr[],int nparr[],int nnarr[],double rho,double temp,int Gridpts,int Nel);
@@ -36,3 +40,10 @@ void polint(double xa[], double ya[], int n, double x, double *y, double *dy);
 void polin2d(double x1a[], double x2a[], double **ya, int m, int n, double x1, double x2, double *y, double *dy);
 
 void init_CoolTable(int *Gridpts, int *Nel);
+
+int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int rho_or_rhoest);
+
+float burning(SPHbody *p, float dt, int rank);
+
+float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notprinted);
+

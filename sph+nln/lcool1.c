@@ -241,9 +241,10 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
       or extrapolate if extrapolate=1:
       extrapolation is still a little funky - CE
       above table= j=-2, below table= j=-99
+      edit: should the above line be vice versa?? -CIE
     */
-    if (j==-2) return 1.0; /*we're done here*/
-    if (j == -99) return 0.0; 
+    if (j==-2) j=0;
+    if (j == -99) j=Gridpts-1;
 
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
 
@@ -256,6 +257,8 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
                N_AVOG / ((float)(nnarr[n] + nparr[n]));
         }
     }
+
+    nelectron = 0.0;
 
     for ( n = 0; n < Nel; n++)	
     {
@@ -284,6 +287,8 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
             nelectron += X_el[n] * (double)(m) * fracn;
 	    }
     }
+    if(nelectron != nelectron) nelectron = 0.0;
+    if(nelectron < 0.0) nelectron = 0.0;
     return nelectron;
 } /*end find_ne*/
 

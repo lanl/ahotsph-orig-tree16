@@ -19,7 +19,6 @@
 #include "SDFwrite.h"
 #include "SDFread.h"
 #include "physics.h"
-#include "cool.h"
 #include "physics_sph.h"
 #include "vop.h"
 #include "Msgs.h"
@@ -42,6 +41,7 @@
 #include "integrate.h"
 #include "nrutil.h"
 #include "units.h"
+#include "cool.h"
 
 #define MAXCOEF 16
 
@@ -157,13 +157,28 @@ static int dark_independent_dt;
 static bndry_t bndry;
 
 /*conversion factors from user-units to cgs*/
-float massCF;
-float lengthCF;
-float timeCF;
+/* need to read in as floats, then convert to double */
+/* SDFgetfloat* won't do that by itself */
+float fmassCF;
+float flenCF;
+float ftimeCF;
+
+double massCF;
+double lenCF;
+double timeCF;
+
+double ivmassCF, ivtimeCF, ivlenCF;
+double timeCF2, ivtimeCF2;
+double lenCF2, ivlenCF2,  ivlenCF3;
+double ldivtCF, tdivlCF;
+
+double grav_c, c_light;
 
 int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 int do_burning;    /* used in sph.c, turns network on */
+
+int do_Pext;
 
 float **tablep; //array to hold cooling curve table values
 float **ionfracp; //array to hold ionfraction table values
@@ -204,8 +219,6 @@ int
 main(int argc, char *argv[])
 {
     FILE *fp = NULL;
-    //extern float **tablep; //added by CIE
-    //extern float **ionfracp; //added by CIE
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
@@ -304,12 +317,13 @@ main(int argc, char *argv[])
     int has_grav_data;
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
-    int Gridpts, Nel; 	/* for cooling tables */
+    int Gridpts = 0, Nel = 0; 	/* for cooling tables */
     int status, done,rank,idbug;
     char *netrcfn, tmpchr[20];
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
+    float P_ext;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -351,6 +365,7 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "do_absorbing_bndry", &do_absorbing_bndry, 0);
     SDFgetintOrDefault(csdfp, "do_drag", &do_drag, 0);
     SDFgetintOrDefault(csdfp, "has_grav_data", &has_grav_data, do_grav);
+    SDFgetintOrDefault(csdfp, "do_Pext", &do_Pext, 0);
 
 /* read in Z and N for abundances. at some later point, populate nparr/nnarr ~CIE*/
     if( (fp = fopen("networklist","r"))==NULL ) printf("error opening networklist\n");
@@ -599,15 +614,21 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "independent_dt", &independent_dt, 0);
     SDFgetintOrDefault(csdfp, "dark_independent_dt", &dark_independent_dt, 0);
     SDFgetintOrDefault(csdfp, "default_nterms", &default_nterms, 100);
-    SDFgetfloatOrDefault(csdfp, "massCF", &massCF, 1.0);/*mass conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "lengthCF", &lengthCF, 1.0);/*length conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "timeCF", &timeCF, 1.0);/*time conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "massCF", &fmassCF, 1.0);/*mass conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "lengthCF", &flenCF, 1.0);/*length conversion factor; CE*/
+    SDFgetfloatOrDefault(csdfp, "timeCF", &ftimeCF, 1.0);/*time conversion factor; CE*/
+    massCF= (double)fmassCF;
+    lenCF= (double)flenCF;
+    timeCF= (double)ftimeCF;
     if (adaptive_dt) {
 	SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
 	SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
 	SDFgetintOrDefault(csdfp, "dt_long", &dt_long, 10);
 	SDFgetfloatOrDefault(csdfp, "dt_max", &dt_max, 1e30);
     }
+    if (do_Pext)
+        SDFgetfloatOrDie(csdfp, "P_ext", &P_ext);
+
     if (do_Bmax) MACtype = BMAX_MAC;
     else if (do_BH) MACtype = BH_MAC;
     else if (do_Arel) MACtype = AREL_MAC;
@@ -660,7 +681,26 @@ main(int argc, char *argv[])
 	EnableTimer(&FixCubeTm, "Fix Cube");
     }
             
-    cosmo.GNewt = GRAV_C *((double)massCF/lengthCF *timeCF/lengthCF *timeCF/lengthCF);
+    /* at this point, calculate some useful constants, factors, 
+       so these don't have to be computed every time they're needed?
+       (i.e. for every particle) */
+    ivlenCF = 1./lenCF;
+    ivmassCF = 1./massCF;
+    ivtimeCF = 1./timeCF;
+
+    ldivtCF = lenCF*ivtimeCF;
+    tdivlCF = ivlenCF*timeCF;
+    timeCF2 = timeCF*timeCF;
+    ivtimeCF2 = ivtimeCF*ivtimeCF;
+    lenCF2 = lenCF*lenCF;
+    ivlenCF2 = ivlenCF*ivlenCF;
+    ivlenCF3 = ivlenCF*ivlenCF*ivlenCF;
+
+    cosmo.GNewt = GRAV_C *((double)massCF*ivlenCF *tdivlCF*tdivlCF);
+
+    grav_c = cosmo.GNewt;
+    c_light = C_LIGHT * tdivlCF;
+
 
     singlPrintf("float errtol = %g;\n", tol);
     singlPrintf("float dt = %g;\n", dt);
@@ -678,7 +718,7 @@ main(int argc, char *argv[])
     singlPrintf("float gamma = %f;\n", Gamma);
     singlPrintf("float Gnewt = %g;\n", cosmo.GNewt);
     singlPrintf("float massCF = %g;\n", massCF);/*added by CE*/
-    singlPrintf("float lengthCF = %g;\n", lengthCF);/*added by CE*/
+    singlPrintf("float lenCF = %g;\n", lenCF);/*added by CE*/
     singlPrintf("float timeCF = %g;\n", timeCF);/*added by CE*/
     singlPrintf("float visc_alpha = %g;\n", visc_alpha);
     singlPrintf("float visc_beta = %g;\n", visc_beta);
@@ -779,12 +819,14 @@ main(int argc, char *argv[])
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
     }
+    if (do_Pext)
+        singlPrintf("float P_ext = %g;\n", P_ext);
     if (do_drag) {
 	singlPrintf("int do_drag = %d;\n", do_drag);
 	singlPrintf("float drag_coeff = %g;\n", drag_coeff);
     }
     if (do_cooling)
-	    singlPrintf("int do_cooling = %d;\n", do_cooling);
+        singlPrintf("int do_cooling = %d;\n", do_cooling);
     singlPrintf("int do_diffusion = %d;\n", do_diffusion);
     singlPrintf("int do_burning = %d;\n", do_burning);
     if( do_output ){
@@ -817,24 +859,27 @@ main(int argc, char *argv[])
     if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
     /* read in necessary files on all processors */
-    if(1) {
-        singlPrintf("reading in cooling tables .... ");
-        init_CoolTable(&Gridpts, &Nel); /*read in cooling curves and ion fraction tables*/
-        singlPrintf("successfully read in cooling functions\n");
+    /*read in cooling curves and ion fraction tables*/
+/*
+    if(do_cooling || do_burning) {
     }
+    read in cooling curves and ion. tables in any case. need for temp calculation
+*/
+        singlPrintf("reading in cooling tables .... ");
+        init_CoolTable(&Gridpts, &Nel);
+        singlPrintf("success!\n");
 
     rank = MPMY_Procnum();
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(do_burning) {
+        /* each processor needs its own 'net.rc' file */
         sprintf(tmpchr, "%-d\0",rank); 
         netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
         sprintf(netrcfn, "%s%s","net.rc.",tmpchr); 
-        /*printf("netrc file name: %s  %d\n", netrcfn,strlen(netrcfn));*/
-
         singlPrintf("building network library .... ");
         build_(&rank,&idbug,netrcfn);
-        singlPrintf("successfully built network library\n");
+        singlPrintf("success!\n");
     }
 
     SetupTree(&thetree, NDIM,
@@ -904,12 +949,6 @@ main(int argc, char *argv[])
         MPMY_Combine(&tot_u, &tot_u, 1, MPMY_FLOAT, MPMY_SUM);
         MPMY_Combine(&tot_pv, &tot_pv, 1, MPMY_FLOAT, MPMY_SUM);
 
-/*
-        if(!first_step) {
-        Gamma = 1.0 + tot_pv/tot_u;
-        printf("Gamma = %e, u= %e, pv= %e\n", Gamma, tot_u, tot_pv);
-        }
-*/
     }
 
 	if (do_point_mass2) {
@@ -996,7 +1035,7 @@ main(int argc, char *argv[])
         if (do_absorbing_bndry) {
             SPHoldnobj = SPHnobj;
             AdjustBtab4((SPHbody **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
-                        newp, newl, cosmo.GNewt, tpos);
+                        newp, newl, cosmo.GNewt, dt);
 
             totnewmass = 0.0;
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
@@ -1189,7 +1228,7 @@ main(int argc, char *argv[])
 	    SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
 	    /* This sets rho_est and pr for communication during BuildTree */
 	    update_intermediate(SPHbtab, SPHnobj, Gridpts, Nel, dt_last, 
-				!(first_step || exact_rho), 0);
+				!(first_step || exact_rho), 0, P_ext, sysradius);
 
 	    SPHsinknobj = 0;
 	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
@@ -2407,9 +2446,9 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
 	     "hubble", SDF_FLOAT, output_h,
 	     "redshift", SDF_FLOAT, output_z,
 	     "gamma", SDF_FLOAT, Gamma,
-         "massCF", SDF_FLOAT, massCF,
-         "lengthCF", SDF_FLOAT, lengthCF,
-         "timeCF", SDF_FLOAT, timeCF,
+             "massCF", SDF_FLOAT, massCF,
+             "lenCF", SDF_FLOAT, lenCF,
+             "timeCF", SDF_FLOAT, timeCF,
 	     "centmass", SDF_FLOAT, centmass, 
              "bndry_x", SDF_FLOAT, bndry.pos[0],
              "bndry_y", SDF_FLOAT, bndry.pos[1],
