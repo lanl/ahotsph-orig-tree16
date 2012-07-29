@@ -613,6 +613,7 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 
     int i, j, k;
     double rho, mfp, ne;
+    float opacity, temp;
     float temp_ok,prev_temp;
 
     switch(rho_or_rhoest) {
@@ -657,14 +658,18 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 
     }
 
-    /* calc mean-free-path; convert from cgs to code units */
+    /* calc mean-free-path mfp=1/(rho*kappa_tot); convert from cgs to code units */
     if(do_cooling) {
-        mfp = 1.0/(ne * 6.65e-25 * lenCF);
-        /* add free-free transitions */
-        if (p->temp > 1.0e7 && temp_ok) {
-            mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
-                   p->rho*p->rho*pow(p->temp,-3.5)) );
-        }
+        temp = p->temp;
+        /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
+        opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);
+        /* free-free opacity */
+        opacity = (opacity + KFF_COEFF*(p->abund[18]+p->abund[19])*(p->abund[18]+1.0))*
+                     rho*rho*pow(temp,-3.5);
+        /* Thomson scattering opacity */
+        opacity += ne * KES_COEFF; /* this is kappa_tot * rho */
+        mfp = 1.0/opacity * ivlenCF; /* also convert to code units. here or next line? */
+
         p->mfp = (float)mfp;
     }
 
@@ -725,19 +730,23 @@ float burning(SPHbody *p, float dt, int rank) {
 }
 
 
+#include "vop.h"
+
 float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notprinted) {
 
     int i,j,k;
     int decr, cycles, countc;
     int cycled;
     int temp_ok;
+    float r2, temp, m_kboltz;
     double tlo, tup, dt_sub, dt_save, dt_tot;
-    double u, lcool, udot, rho;
+    double u, u_last, lcool, udot, rho;
 
     tlo = 1.0e+1;
     tup = 1.0e10;
-    u = (double)p->u;
-    dt_sub = (double)dt;
+    u = (double)p->u * lenCF2 * ivtimeCF2;
+    u_last = u;
+    dt_sub = (double)dt * timeCF;
     dt_save = dt_sub;
     dt_tot = 0.;
 
@@ -745,50 +754,53 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     cycles = 0;
     countc = 1;
 
+    r2 = Dot(p->pos,p->pos);
+
+    /* bail if "optically thick" */
+    if(p->mfp*p->mfp < r2) return 0.;
+
     rho = (double)p->rho * (massCF*ivlenCF3);
+    m_kboltz = 0.;
+    for(i = 0; i < NISO; i++) m_kboltz += p->abund[i]/((float)(nparr[i]+nnarr[i]));
+    m_kboltz = (float)(MH/(double)(m_kboltz*K_BOLTZ));
 
 /*            while ( cycles < countc ) */
     do {
         //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-        temp_ok = prep_cool_burn(p, tlo, tup, Gridpts, Nel, 0);
-        if(temp_ok == 0) {
-           dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
-           udot = 0.0;
-        } else if (p->temp < 2.0e3) {
+        temp = 1.5* u * m_kboltz;
+        if (temp < 2.0e3) {
            dt_tot = dt;
+           break;
         }
 
-        if((p->temp > 2.0e3) && (p->temp < 1.e9) ) {
+        if((temp > 2.0e3) && (temp < 1.e9) ) {
            if(*notprinted) singlPrintf("cooling! %d\n",p->ident);
            *notprinted = 0;
 
            /* lcool contains energy lost as positive value */
-           lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
+           lcool = calc_lcool1(p->abund, nparr, nnarr, temp, rho, Gridpts, Nel, 1);
 
            /* trying to catch any NaN's */
            if ( lcool != lcool ) lcool = 0.0;
 
-           /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-           udot = -1.0*lcool * timeCF2*timeCF*lenCF*ivmassCF / p->rho;
+           /* lcool has units of erg/cm^3/s, need energy/mass/time */
+           udot = -1.0*lcool * rho;
 
            /*determine if we need subcycling*/
            if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
-               if(cycled == 0) cycled=p->ident;
+               if(cycled == 0) cycled = p->ident;
                countc = cycles + (countc - cycles) * decr;
                dt_sub = dt_sub / (double)decr;
 
                if(countc > 1e6) {
                    dt_tot = dt;
-                   printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
+                   printf("ID (cgs): %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
                    p->ident, u, udot, dt_sub, dt_tot);
                    cycles = countc + 1;
                }
 
            } else { /* no further subcycling required, update values */
                dt_tot += dt_sub;
-               /* do some kind of transition between optically thick and
-                  thin regions for radiative losses */
-               if (p->mfp <= 3*p->h) udot = udot*(1.0 - exp( -p->h/p->mfp ));
                u += udot * dt_sub;
                cycles++;
            }
@@ -801,11 +813,12 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     } while (cycles < countc);
 
     dt = dt_save;
-    p->udot += (u - p->u) / dt;
+    p->udot += (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
+    p->Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
 
     //printf("%d of %d cycles completed\n",cycles,countc);
 
-    return dt;
+    return dt *ivtimeCF;
 
 }
 
