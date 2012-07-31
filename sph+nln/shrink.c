@@ -313,7 +313,8 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 
         /* if within bndry.r || falling in at greater than 14000km/s and 
            within 5*bndry.r then eat particle */
-        if ( (b2+p->h) >= r1 || (vel_i < v_max && r1 <= 2.*b2)) {
+        /*if ( (b2+p->h) >= r1 || (vel_i < v_max && r1 <= 2.*b2)) {*/
+        if ( (b2+p->h) >= r1 ) {
 
             /* eat partial particle */
             /* outside bndry_r, but overlapping and not moving too fast */
@@ -326,16 +327,15 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
                     q = StkPush(&s, sizeof(SPHbody));
                     *q = *p;
                     q->mass = p->mass - m_accret;
-                }
+                    p->mass = m_accret;
+                } 
 
-            /* eat whole particle */
-            } else {
-                m_accret = p->mass;
             }
+            /* eat whole particle */
 
-            *newmass += m_accret;
+            *newmass += p->mass;
 
-            VVS(newp, += v_vec, * m_accret);
+            VVS(newp, += v_vec, * p->mass);
 
             /* this assumes that the central particle is at the origin? ~CIE */
 /*
@@ -344,16 +344,16 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
             j[2] = p->mass * (p->pos[0]*p->vel[1] - p->pos[1]*p->vel[0]);
 */
 
-            j[0] = m_accret * ( r_vec[1]*v_vec[2] - r_vec[2]*v_vec[1] );
-            j[1] = m_accret * ( r_vec[2]*v_vec[0] - r_vec[0]*v_vec[2] );
-            j[2] = m_accret * ( r_vec[0]*v_vec[1] - r_vec[1]*v_vec[0] );
+            j[0] = p->mass * ( r_vec[1]*v_vec[2] - r_vec[2]*v_vec[1] );
+            j[1] = p->mass * ( r_vec[2]*v_vec[0] - r_vec[0]*v_vec[2] );
+            j[2] = p->mass * ( r_vec[0]*v_vec[1] - r_vec[1]*v_vec[0] );
 
             jm = sqrt( j[0]*j[0] + j[1]*j[1] + j[2]*j[2] );
             jhat[0] = j[0]/(jm + small);
             jhat[1] = j[1]/(jm + small);
             jhat[2] = j[2]/(jm + small);
 
-            jmax = sqrt( G * b.mass * b.r ) / m_accret;
+            jmax = sqrt( G * b.mass * b.r ) / p->mass;
 
             jm = ( jm < jmax ? jm : jmax );
 
@@ -375,7 +375,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     btab = StkBase(&s);
     *SPHbtabp = Realloc(btab, *nobj * sizeof(SPHbody));
 
-    *newr = 0.75*minb2;  /* Candidate new boundary radius =
+    *newr = 0.9*minb2;  /* Candidate new boundary radius =
                                  innermost particle's
                                  distance-to-boundary * 25% */
     if (*newr < b.r) *newr = b.r;  /* Never shrink boundary */
