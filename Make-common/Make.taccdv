@@ -26,8 +26,7 @@ swsrc:=lsv.c swampi.c
 
 ifeq ($(PAROS),mpi)
 LOADLIBES:=-L$(MPICH_HOME)/lib -lmpi
-PAROSCFLAGS:=-I$(MPICH_HOME)/include 
-#-DUSE_MPIIO
+PAROSCFLAGS:=-I$(MPICH_HOME)/include -DUSE_MPIIO
 endif
 
 ifeq ($(PAROS),mvapipich) 

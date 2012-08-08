@@ -598,7 +598,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             deltah = burning(p, dt, rank);
 
 /********** do the cooling ***********/
-	if (do_cooling && (tpos >= 1.57788e7*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+	if (do_cooling && (tpos >= 2.62980e6*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
         /*
         if ( iter%interval == 0) {
@@ -630,7 +630,6 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	if (p->rho_est <= (float)0.0) 
 	  Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
 
-	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
         temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 1);
 
@@ -638,6 +637,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
            contributions of gas and radiation pressure */
         pgas = eos_n * K_BOLTZ * p->temp;
         prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
+        if( p->mfp > 4.*p->h ) prad = 0.0; /* "optically thin" */
         p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
 
         if(do_Pext) {
@@ -658,6 +658,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	if (do_diffusion) {
 /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
+	    /* Calculate temperature from u, then "create" photons (a*T^4) */
 	    /* Figure out good upper and lower limits for temp */
 	    p->u_r = A_RAD*p->temp*p->temp*p->temp*p->temp*
                      lenCF*timeCF2*ivmassCF;

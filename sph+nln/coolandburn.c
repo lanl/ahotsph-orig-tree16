@@ -756,8 +756,8 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
 
     r2 = Dot(p->pos,p->pos);
 
-    /* bail if "optically thick" */
-    if(p->mfp*p->mfp < r2) return 0.;
+    /* bail if "optically thick" (= diameter of sph particle) */
+    if(p->mfp < 4.*p->h) return 0.;
 
     rho = (double)p->rho * (massCF*ivlenCF3);
     m_kboltz = 0.;
