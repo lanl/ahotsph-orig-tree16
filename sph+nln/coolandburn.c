@@ -630,7 +630,11 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         eos_n += ((double)(rho))*N_AVOG /
                 (double)(nparr[j] + nnarr[j]) * p->abund[j];
 
-    ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+    /* do everything assuming gas is and remains fully ionized until the SN shock 
+       becomes radiative, i.e. for the full duration of the simulation that I'm 
+       considering */
+
+    ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
     eos_n += ne; /* add any free electrons */
     switch(rho_or_rhoest) {
     case 0:
@@ -659,8 +663,12 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
     }
 
     /* calc mean-free-path mfp=1/(rho*kappa_tot); convert from cgs to code units */
-    if(do_cooling) {
-        temp = p->temp;
+    //if(do_cooling) {
+        /* assumes optically thin conditions ... */
+        temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+        /* p->temp seems to hold the temperature of radiation dominated gas.
+           use the larger of the two to calculate the opacity */
+        temp = (temp > p->temp) ? temp : p->temp;
         /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
         opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);
         /* free-free opacity */
@@ -671,7 +679,7 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         mfp = 1.0/opacity * ivlenCF; /* also convert to code units. here or next line? */
 
         p->mfp = (float)mfp;
-    }
+    //}
 
     return temp_ok;
 }
