@@ -285,6 +285,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
     float poro2;
     float projv, vsbar, est_divv, t12;
     float rij, rij1;
+    float clight;
     int interactions = 0;
 
     VxS(f, = (float)0.0);
@@ -368,8 +369,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	if (do_diffusion)
 	    if (grpm < 0.0) {  /* What does this condition really mean? */
 		float Dmeanr = 2.0*rij1*sink->D/(sink->D+bp->D)*bp->D;
+                clight = C_LIGHT*tdivlCF* rij1;
 
-		sink->du_r += ( (C_LIGHT < Dmeanr) ? C_LIGHT : Dmeanr ) *
+		sink->du_r += ( (clight < Dmeanr) ? clight : Dmeanr ) *
 		    (sink->u_r - bp->u_r) * grpm / bp->rho_est;
 	    }
 
