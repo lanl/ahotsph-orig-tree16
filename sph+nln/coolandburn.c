@@ -219,17 +219,15 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
       outside first table entry: j=-2, 
       outside last table entry: j=Gridpts+1;
     */
-    if ((j<=-1) || (j>=Gridpts))
-    {
-        if (extrapolate)
-        {
+    if ((j < -1) || (j > Gridpts-1)) {
+        if (extrapolate) {
             /*reset j for extrapolation*/
             if (j<=-1) j=0;
             /*now do interpolation, should automatically
              * extrapolate as set up below*/
 
             /*reset j for extrapolation*/
-            if (j>=Gridpts) j=Gridpts-2;
+            if (j > Gridpts-1) j=Gridpts-2;
             /*now do interpolation, should automatically
              * extrapolate as set up below*/
         }
@@ -362,12 +360,11 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
       outside first table entry: j=-2, 
       outside last table entry: j=Gridpts+1;
     */
-    if ((j<=-1) || (j>=Gridpts))
-    {
+    if ((j < -1) || (j > Gridpts-1)) {
         if (j<=-1) return 0.0; /* below 1e4 K, assume no free e- */
 
         /*reset j for extrapolation*/
-        if (j>=Gridpts) j=Gridpts-2; /* above 1e9 K, assume ions at 1e9 K */
+        if (j > Gridpts-1) j = Gridpts-2; /* above 1e9 K, assume ions at 1e9 K */
     }
 
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
@@ -449,10 +446,11 @@ locate(float xx[], long Nel, float x, long *j)
 {
    /*floats should be enough for finding correct indices*/
    long ju, jm, jl;
-   int ascnd,sign;
+   int ascnd;
+   float sign;
 
-   jl=-1;
-   ju=Nel;
+   jl=0;
+   ju=Nel-1;
    /*check whether the table is in increasing (ascnd=1) or
      decreasing (ascnd=0) order
    */
@@ -470,10 +468,10 @@ locate(float xx[], long Nel, float x, long *j)
          ju=jm;
    }
    /*if (true && true) && true (1 is true) then below (j<0) table*/
-   if ( ((x - xx[0])*sign <0) && ((x-xx[Nel-1])*sign <0) )
+   if ( ((x - xx[0])*sign <0.) && ((x-xx[Nel-1])*sign <0.) )
            *j=-2;
    /*if (not false && not false) && true (1 is true) then above (j>Nel) table*/
-   else if ( ((x - xx[0])*sign >0) && ((x-xx[Nel-1])*sign >0))
+   else if ( ((x - xx[0])*sign >0.) && ((x-xx[Nel-1])*sign >0.))
            *j=Nel+1;
    else *j=jl;
 } /*end locate*/
