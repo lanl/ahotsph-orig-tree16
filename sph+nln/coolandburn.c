@@ -634,8 +634,12 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
        becomes radiative, i.e. for the full duration of the simulation that I'm 
        considering */
 
-    ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
+    if(p->mfp < p->h)
+        ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
+    else
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
     eos_n += ne; /* add any free electrons */
+
     switch(rho_or_rhoest) {
     case 0:
         eos_u = ((double)(p->u)) * ((double)(p->rho));
@@ -646,19 +650,24 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
     }
     eos_u = eos_u *massCF*ivtimeCF2*ivlenCF; /* to cgs */
 
+    if(p->mfp > p->h) {
+        p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+    } else {
+
     //if(!(eos_n != eos_n) && eos_n > 0.0)
-    prev_temp = p->temp;
     p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
-    if((p->temp > 0.0) && (p->temp < tup) && !(p->temp != p->temp)) {
-        temp_ok = 1;
-    } else {
-        temp_ok = 0;
-        SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
-              p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
-    /* set a floor on the temperature, cuz I kinda just want this to run ... */
-    /* assume material is cold, low density; thus can assume gas contribution only */
-        p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+        if((p->temp > 0.0) && (p->temp < tup) && !(p->temp != p->temp)) {
+            temp_ok = 1;
+        } else {
+            temp_ok = 0;
+        //    SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
+        //          p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
+        /* set a floor on the temperature, cuz I kinda just want this to run ... */
+        /* assume material is cold, low density; thus can assume gas contribution only */
+            p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+    
+        }
 
     }
 
@@ -667,8 +676,8 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         /* assumes optically thin conditions ... */
         temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
         /* p->temp seems to hold the temperature of radiation dominated gas.
-           use the larger of the two to calculate the opacity */
-        temp = (temp > p->temp) ? temp : p->temp;
+           use the gas temp only for the opacity */
+        //temp = (temp > p->temp) ? temp : p->temp;
         /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
         opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);
         /* free-free opacity */
@@ -765,7 +774,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     r2 = Dot(p->pos,p->pos);
 
     /* bail if "optically thick" (= diameter of sph particle) */
-    if(p->mfp < 4.*p->h) return 0.;
+    if(p->mfp < 2.*p->h) return 0.;
 
     rho = (double)p->rho * (massCF*ivlenCF3);
     m_kboltz = 0.;

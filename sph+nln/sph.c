@@ -593,7 +593,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	}
 
 /************* update T, eos_n, eos_u *************/
-        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 0);
+        temp_ok = prep_cool_burn(p, 1.e4, 2.5e11, Gridpts, Nel, 0);
 
 /********** do the burning ***********/
         if(do_burning && temp_ok)
@@ -633,14 +633,16 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	  Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
 
         /* keep these in cgs-units */
-        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 1);
+        temp_ok = prep_cool_burn(p, 1.e4, 1.0e11, Gridpts, Nel, 1);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
-        pgas = eos_n * K_BOLTZ * p->temp;
-        prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
-        if( p->mfp > 4.*p->h ) prad = 0.0; /* "optically thin" */
-        p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
+        pgas = (double)(eos_n * K_BOLTZ * p->temp);
+        prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
+        p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
+        if( p->mfp > p->h ) { prad = 0.0; /* "optically thin" */
+            p->pr = p->u*p->rho_est*0.6666666666666666667;
+        }
 
         if(do_Pext) {
         r2 = Dot(p->pos, p->pos);
