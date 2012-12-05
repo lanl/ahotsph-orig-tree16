@@ -375,7 +375,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     btab = StkBase(&s);
     *SPHbtabp = Realloc(btab, *nobj * sizeof(SPHbody));
 
-    *newr = 0.7*minb2;  /* Candidate new boundary radius =
+    *newr = 0.8*minb2;  /* Candidate new boundary radius =
                                  innermost particle's
                                  distance-to-boundary * 25% */
     if (*newr < b.r) *newr = b.r;  /* Never shrink boundary */
