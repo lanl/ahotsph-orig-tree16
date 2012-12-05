@@ -285,6 +285,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
     float poro2;
     float projv, vsbar, est_divv, t12;
     float rij, rij1;
+    float clight;
     int interactions = 0;
 
     VxS(f, = (float)0.0);
@@ -368,8 +369,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	if (do_diffusion)
 	    if (grpm < 0.0) {  /* What does this condition really mean? */
 		float Dmeanr = 2.0*rij1*sink->D/(sink->D+bp->D)*bp->D;
+                clight = C_LIGHT*tdivlCF* rij1;
 
-		sink->du_r += ( (C_LIGHT < Dmeanr) ? C_LIGHT : Dmeanr ) *
+		sink->du_r += ( (clight < Dmeanr) ? clight : Dmeanr ) *
 		    (sink->u_r - bp->u_r) * grpm / bp->rho_est;
 	    }
 
@@ -591,14 +593,14 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	}
 
 /************* update T, eos_n, eos_u *************/
-        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 0);
+        temp_ok = prep_cool_burn(p, 1.e2, 2.5e11, Gridpts, Nel, 0);
 
 /********** do the burning ***********/
         if(do_burning && temp_ok)
             deltah = burning(p, dt, rank);
 
 /********** do the cooling ***********/
-	if (do_cooling && (tpos >= 1.57788e7*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+	if (do_cooling && (tpos >= 2.62980e6*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
         /*
         if ( iter%interval == 0) {
@@ -630,15 +632,16 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	if (p->rho_est <= (float)0.0) 
 	  Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
 
-	/* Calculate temperature from u, then "create" photons (a*T^4) */
         /* keep these in cgs-units */
-        temp_ok = prep_cool_burn(p, 1.e0, 1.0e11, Gridpts, Nel, 1);
+        temp_ok = prep_cool_burn(p, 1.e2, 1.0e11, Gridpts, Nel, 1);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
-        pgas = eos_n * K_BOLTZ * p->temp;
-        prad = 0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp;
-        p->pr = (pgas + prad)*lenCF*timeCF2*ivmassCF;
+        pgas = prad = 0.d;
+        pgas = (double)(eos_n * K_BOLTZ * p->temp);
+        if( 20.*p->h > p->mfp) 
+            prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
+        p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
 
         if(do_Pext) {
         r2 = Dot(p->pos, p->pos);
@@ -658,6 +661,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	if (do_diffusion) {
 /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
+	    /* Calculate temperature from u, then "create" photons (a*T^4) */
 	    /* Figure out good upper and lower limits for temp */
 	    p->u_r = A_RAD*p->temp*p->temp*p->temp*p->temp*
                      lenCF*timeCF2*ivmassCF;
