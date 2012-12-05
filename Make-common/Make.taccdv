@@ -1,9 +1,9 @@
 defaultCC:=icc
 defaultFC:=ifort -nofor_main 
 
-CC_SPECIFIC:=-DLONG_LONG_KEYS -v
+CC_SPECIFIC:=-DLONG_LONG_KEYS -v -g
 #-march=core2 -mcpu=core2
-FC_SPECIFIC:=-fpp -warn alignments 
+FC_SPECIFIC:=-fpp -warn alignments -g
 #-names as_is -assume nounderscore -assume no2underscore
 #-cm -w95 -80
 ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=64 -D_LARGEFILE64_SOURCE -D_USE_MPIIO
