@@ -613,49 +613,59 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 
     int i, j, k;
     double rho, mfp, ne;
-    float opacity, temp;
+    float opacity, temp, op_depth;
     float temp_ok,prev_temp;
 
     switch(rho_or_rhoest) {
     case 0:
         rho = (double)p->rho* (massCF * ivlenCF3 );
-        break;
-    case 1:
-        rho = (double)p->rho_est * (massCF * ivlenCF3 );
-        break;
-    }
-
-    eos_n = 0;
-    for( j = 0; j < NNW; j++)
-        eos_n += ((double)(rho))*N_AVOG /
-                (double)(nparr[j] + nnarr[j]) * p->abund[j];
-
-    /* do everything assuming gas is and remains fully ionized until the SN shock 
-       becomes radiative, i.e. for the full duration of the simulation that I'm 
-       considering */
-
-    if(p->mfp < p->h)
-        ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
-    else
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-    eos_n += ne; /* add any free electrons */
-
-    switch(rho_or_rhoest) {
-    case 0:
         eos_u = ((double)(p->u)) * ((double)(p->rho));
         break;
     case 1:
+        rho = (double)p->rho_est * (massCF * ivlenCF3 );
         eos_u = ((double)(p->u)) * ((double)(p->rho_est));
         break;
     }
     eos_u = eos_u *massCF*ivtimeCF2*ivlenCF; /* to cgs */
 
-    if(p->mfp > p->h) {
+    /* calc mean-free-path mfp=1/(rho*kappa_tot); convert from cgs to code units */
+
+    /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
+/*    opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);*/
+    /* free-free opacity */
+/*    opacity = (opacity + KFF_COEFF*(p->abund[18]+p->abund[19])*(p->abund[18]+1.0))*
+                 rho*rho*pow(temp,-3.5);*/
+    /* Thomson scattering opacity */
+/*    opacity += ne * KES_COEFF;*/ /* this is kappa_tot * rho */
+/*    mfp = 1.0/opacity * ivlenCF; *//* also convert to code units. here or next line? */
+
+    mfp = 0.4*rho; /* actually, 1/mfp; assume Thomson opacity = 0.20*(1+X) cm^2/g */
+    p->mfp = (float)(1./mfp)*ivlenCF;
+
+    op_depth = 2.*p->h*mfp*lenCF;
+
+    /* count nuclei for particle number density */
+    eos_n = 0;
+    for( j = 0; j < NNW; j++)
+        eos_n += ((double)(rho))*N_AVOG /
+                (double)(nparr[j] + nnarr[j]) * p->abund[j];
+
+
+    /* do everything assuming gas is and remains fully ionized until the SN shock 
+       becomes radiative, i.e. for the full duration of the simulation that I'm 
+       considering */
+
+    if( op_depth < 0.1) { /* optically thin */
+
+        ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
+        eos_n += ne; /* add any free electrons */
         p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+
     } else {
 
-    //if(!(eos_n != eos_n) && eos_n > 0.0)
-    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        eos_n += ne; /* add any free electrons */
+        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
 
         if((p->temp > 0.0) && (p->temp < tup) && !(p->temp != p->temp)) {
             temp_ok = 1;
@@ -670,25 +680,6 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         }
 
     }
-
-    /* calc mean-free-path mfp=1/(rho*kappa_tot); convert from cgs to code units */
-    //if(do_cooling) {
-        /* assumes optically thin conditions ... */
-        temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
-        /* p->temp seems to hold the temperature of radiation dominated gas.
-           use the gas temp only for the opacity */
-        //temp = (temp > p->temp) ? temp : p->temp;
-        /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
-        opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);
-        /* free-free opacity */
-        opacity = (opacity + KFF_COEFF*(p->abund[18]+p->abund[19])*(p->abund[18]+1.0))*
-                     rho*rho*pow(temp,-3.5);
-        /* Thomson scattering opacity */
-        opacity += ne * KES_COEFF; /* this is kappa_tot * rho */
-        mfp = 1.0/opacity * ivlenCF; /* also convert to code units. here or next line? */
-
-        p->mfp = (float)mfp;
-    //}
 
     return temp_ok;
 }
