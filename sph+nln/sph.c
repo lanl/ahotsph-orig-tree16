@@ -593,7 +593,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	}
 
 /************* update T, eos_n, eos_u *************/
-        temp_ok = prep_cool_burn(p, 1.e2, 2.5e11, Gridpts, Nel, 0);
+        temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
 
 /********** do the burning ***********/
         if(do_burning && temp_ok)
@@ -633,7 +633,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	  Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
 
         /* keep these in cgs-units */
-        temp_ok = prep_cool_burn(p, 1.e2, 1.0e11, Gridpts, Nel, 1);
+        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
 
         /* calculate the total pressure by calculating the respective 
            contributions of gas and radiation pressure */
