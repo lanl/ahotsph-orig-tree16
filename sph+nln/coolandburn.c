@@ -216,19 +216,18 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
       extrapolation is still a little funky - CIE
-      above table= j=-2, below table= j=-99
+      outside first table entry: j=-2, 
+      outside last table entry: j=Gridpts+1;
     */
-    if ((j==-2) || (j==-99))
-    {
-        if (extrapolate)
-        {
+    if ((j < -1) || (j > Gridpts-1)) {
+        if (extrapolate) {
             /*reset j for extrapolation*/
-            if (j==-2) j=0;
+            if (j<=-1) j=0;
             /*now do interpolation, should automatically
              * extrapolate as set up below*/
 
             /*reset j for extrapolation*/
-            if (j==-99) j=Gridpts-1;
+            if (j > Gridpts-1) j=Gridpts-2;
             /*now do interpolation, should automatically
              * extrapolate as set up below*/
         }
@@ -273,11 +272,12 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
             polint(rowarr,interp,2,logtemp,lcoolp,dyp);
 
             /*reset value if extrapolated to negative value*/
-            if (lcool<0.0)
-            {
-                if ((interp[0]-interp[1]) <0) lcool=0.0;
+            /* could be negative if becoming ionized? in any case, staying inside table */
+            //if (lcool<0.0)
+            //{
+            //    if ((interp[0]-interp[1]) <0) lcool=0.0;
                 /*else fracn=1.0;*//*this case shouldn't happen*/
-            }
+            //}
 
             fracns[0] = ionfracp[ index+m ][ j ];
             fracns[1] = ionfracp[ index+m ][ j + 1 ];
@@ -357,10 +357,15 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
       extrapolation is still a little funky - CE
-      above table= j=-2, below table= j=-99
+      outside first table entry: j=-2, 
+      outside last table entry: j=Gridpts+1;
     */
-    if (j==-2) return 1.0; /*we're done here*/
-    if (j == -99) return 0.0;
+    if ((j < -1) || (j > Gridpts-1)) {
+        if (j<=-1) return 0.0; /* below 1e4 K, assume no free e- */
+
+        /*reset j for extrapolation*/
+        if (j > Gridpts-1) j = Gridpts-2; /* above 1e9 K, assume ions at 1e9 K */
+    }
 
     for( n = 0; n < Nel; n++) X_el[n] = 0.; /*initialize all to zero*/
 
@@ -415,8 +420,8 @@ double analytic_cool(double temp)
         double lcool;
 
         if (temp < 1.0e4)
-                lcool = 1.0e-26 * exp(-1.0e5/temp) * sqrt(temp);//guessed; for O - CE
-                //lcool = 1.0e-27 * exp(-1.0e2/temp) * sqrt(temp);
+                //lcool = 1.0e-26 * exp(-1.0e5/temp) * sqrt(temp);//guessed; for O - CE
+                lcool = 1.0e-27 * exp(-1.0e2/temp) * sqrt(temp);
         else if (temp < 3.0e5)
                 lcool=1.0e-21;
         else
@@ -441,10 +446,11 @@ locate(float xx[], long Nel, float x, long *j)
 {
    /*floats should be enough for finding correct indices*/
    long ju, jm, jl;
-   int ascnd,sign;
+   int ascnd;
+   float sign;
 
-   jl=-1;
-   ju=Nel;
+   jl=0;
+   ju=Nel-1;
    /*check whether the table is in increasing (ascnd=1) or
      decreasing (ascnd=0) order
    */
@@ -462,11 +468,11 @@ locate(float xx[], long Nel, float x, long *j)
          ju=jm;
    }
    /*if (true && true) && true (1 is true) then below (j<0) table*/
-   if ( (((x - xx[0])*sign <0) && ((x-xx[Nel-1])*sign <0)) && 1)
+   if ( ((x - xx[0])*sign <0.) && ((x-xx[Nel-1])*sign <0.) )
            *j=-2;
    /*if (not false && not false) && true (1 is true) then above (j>Nel) table*/
-   else if ( (!((x - xx[0])*sign <0) && !((x-xx[Nel-1])*sign <0)) && 1)
-           *j=-99;
+   else if ( ((x - xx[0])*sign >0.) && ((x-xx[Nel-1])*sign >0.))
+           *j=Nel+1;
    else *j=jl;
 } /*end locate*/
 
@@ -607,62 +613,72 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 
     int i, j, k;
     double rho, mfp, ne;
+    float opacity, temp, op_depth;
     float temp_ok,prev_temp;
 
     switch(rho_or_rhoest) {
     case 0:
         rho = (double)p->rho* (massCF * ivlenCF3 );
-        break;
-    case 1:
-        rho = (double)p->rho_est * (massCF * ivlenCF3 );
-        break;
-    }
-
-    eos_n = 0;
-    for( j = 0; j < NNW; j++)
-        eos_n += ((double)(rho))*N_AVOG /
-                (double)(nparr[j] + nnarr[j]) * p->abund[j];
-
-    ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
-    eos_n += ne; /* add any free electrons */
-    switch(rho_or_rhoest) {
-    case 0:
         eos_u = ((double)(p->u)) * ((double)(p->rho));
         break;
     case 1:
+        rho = (double)p->rho_est * (massCF * ivlenCF3 );
         eos_u = ((double)(p->u)) * ((double)(p->rho_est));
         break;
     }
     eos_u = eos_u *massCF*ivtimeCF2*ivlenCF; /* to cgs */
 
-    //if(!(eos_n != eos_n) && eos_n > 0.0)
-    prev_temp = p->temp;
-    p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+    /* calc mean-free-path mfp=1/(rho*kappa_tot); convert from cgs to code units */
 
-    if((p->temp > 0.0) && (p->temp < tup) && !(p->temp != p->temp)) {
-        temp_ok = 1;
-    } else {
-        temp_ok = 0;
-        SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
-              p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
-        SeriousWarning("m=%.4E l=%.4E\n",massCF,lenCF);
-        for( j = 0; j < NISO; j++) printf("%.4E ",p->abund[j]);
-        printf("\n");
-    /* set a floor on the temperature, cuz I kinda just want this to run ... */
-    /* assume material is cold, low density; thus can assume gas contribution only */
+    /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
+/*    opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);*/
+    /* free-free opacity */
+/*    opacity = (opacity + KFF_COEFF*(p->abund[18]+p->abund[19])*(p->abund[18]+1.0))*
+                 rho*rho*pow(temp,-3.5);*/
+    /* Thomson scattering opacity */
+/*    opacity += ne * KES_COEFF;*/ /* this is kappa_tot * rho */
+/*    mfp = 1.0/opacity * ivlenCF; *//* also convert to code units. here or next line? */
+
+    mfp = 0.4*rho; /* actually, 1/mfp; assume Thomson opacity = 0.20*(1+X) cm^2/g */
+    p->mfp = (float)(1./mfp)*ivlenCF;
+
+    op_depth = 2.*p->h*mfp*lenCF;
+
+    /* count nuclei for particle number density */
+    eos_n = 0;
+    for( j = 0; j < NNW; j++)
+        eos_n += ((double)(rho))*N_AVOG /
+                (double)(nparr[j] + nnarr[j]) * p->abund[j];
+
+
+    /* do everything assuming gas is and remains fully ionized until the SN shock 
+       becomes radiative, i.e. for the full duration of the simulation that I'm 
+       considering */
+
+    if( op_depth < 0.1) { /* optically thin */
+
+        ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
+        eos_n += ne; /* add any free electrons */
         p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
 
-    }
+    } else {
 
-    /* calc mean-free-path; convert from cgs to code units */
-    if(do_cooling) {
-        mfp = 1.0/(ne * 6.65e-25 * lenCF);
-        /* add free-free transitions */
-        if (p->temp > 1.0e7 && temp_ok) {
-            mfp += (1.0/ (0.64e23*(massCF*ivlenCF3*massCF*ivlenCF2)*
-                   p->rho*p->rho*pow(p->temp,-3.5)) );
+        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        eos_n += ne; /* add any free electrons */
+        p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+
+        if((p->temp > 0.0) && (p->temp < tup) && !(p->temp != p->temp)) {
+            temp_ok = 1;
+        } else {
+            temp_ok = 0;
+        //    SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
+        //          p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
+        /* set a floor on the temperature, cuz I kinda just want this to run ... */
+        /* assume material is cold, low density; thus can assume gas contribution only */
+            p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
+    
         }
-        p->mfp = (float)mfp;
+
     }
 
     return temp_ok;
@@ -722,19 +738,23 @@ float burning(SPHbody *p, float dt, int rank) {
 }
 
 
+#include "vop.h"
+
 float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notprinted) {
 
     int i,j,k;
     int decr, cycles, countc;
     int cycled;
     int temp_ok;
+    float r2, temp, m_kboltz;
     double tlo, tup, dt_sub, dt_save, dt_tot;
-    double u, lcool, udot, rho;
+    double u, u_last, lcool, udot, rho;
 
     tlo = 1.0e+1;
     tup = 1.0e10;
-    u = (double)p->u;
-    dt_sub = (double)dt;
+    u = (double)p->u * lenCF2 * ivtimeCF2;
+    u_last = u;
+    dt_sub = (double)dt * timeCF;
     dt_save = dt_sub;
     dt_tot = 0.;
 
@@ -742,50 +762,53 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     cycles = 0;
     countc = 1;
 
+    r2 = Dot(p->pos,p->pos);
+
+    /* bail if "optically thick" (= diameter of sph particle) */
+    if(p->mfp < 2.*p->h) return 0.;
+
     rho = (double)p->rho * (massCF*ivlenCF3);
+    m_kboltz = 0.;
+    for(i = 0; i < NISO; i++) m_kboltz += p->abund[i]/((float)(nparr[i]+nnarr[i]));
+    m_kboltz = (float)(MH/(double)(m_kboltz*K_BOLTZ));
 
 /*            while ( cycles < countc ) */
     do {
         //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
-        temp_ok = prep_cool_burn(p, tlo, tup, Gridpts, Nel, 0);
-        if(temp_ok == 0) {
-           dt_tot = dt;    /*catching errors in newtraph (T=-99.) */
-           udot = 0.0;
-        } else if (p->temp < 2.0e3) {
+        temp = 1.5* u * m_kboltz;
+        if (temp < 2.0e3) {
            dt_tot = dt;
+           break;
         }
 
-        if((p->temp > 2.0e3) && (p->temp < 1.e9) ) {
+        if((temp > 2.0e3) && (temp < 1.e9) ) {
            if(*notprinted) singlPrintf("cooling! %d\n",p->ident);
            *notprinted = 0;
 
            /* lcool contains energy lost as positive value */
-           lcool = calc_lcool1(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel, 1);
+           lcool = calc_lcool1(p->abund, nparr, nnarr, temp, rho, Gridpts, Nel, 1);
 
            /* trying to catch any NaN's */
            if ( lcool != lcool ) lcool = 0.0;
 
-           /* lcool has units of erg/cm^3/s, need energy/mass/time in user-units */
-           udot = -1.0*lcool * timeCF2*timeCF*lenCF*ivmassCF / p->rho;
+           /* lcool has units of erg/cm^3/s, need energy/mass/time */
+           udot = -1.0*lcool * rho;
 
            /*determine if we need subcycling*/
            if ( (fabs(udot*dt_sub)/u > frac) && !(p->ident & (1<<30)) ) {
-               if(cycled == 0) cycled=p->ident;
+               if(cycled == 0) cycled = p->ident;
                countc = cycles + (countc - cycles) * decr;
                dt_sub = dt_sub / (double)decr;
 
                if(countc > 1e6) {
                    dt_tot = dt;
-                   printf("ID: %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
+                   printf("ID (cgs): %8d: u=%.2E udot= %.2E, new dt= %.2E of %.2E\n",
                    p->ident, u, udot, dt_sub, dt_tot);
                    cycles = countc + 1;
                }
 
            } else { /* no further subcycling required, update values */
                dt_tot += dt_sub;
-               /* do some kind of transition between optically thick and
-                  thin regions for radiative losses */
-               if (p->mfp <= 3*p->h) udot = udot*(1.0 - exp( -p->h/p->mfp ));
                u += udot * dt_sub;
                cycles++;
            }
@@ -798,11 +821,12 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     } while (cycles < countc);
 
     dt = dt_save;
-    p->udot += (u - p->u) / dt;
+    p->udot += (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
+    p->Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
 
     //printf("%d of %d cycles completed\n",cycles,countc);
 
-    return dt;
+    return dt *ivtimeCF;
 
 }
 

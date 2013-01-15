@@ -257,16 +257,19 @@ AdjustBtab3(SPHbody **SPHbtabp, int *nobj, int gnobj, float r_limit,
 /* adjust btab from snevolbrna to let the central particle acrete mass ~CIE */
 void
 AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
-            float *newr, float *newp, float *newl, float G, float tpos)
+            float *newr, float *newp, float *newl, float G, float dt)
 {
     SPHbody *btab = *SPHbtabp;
     SPHbody *p, *q;
     Stk s;
-    float r2, v2, b2, minb2 = 1e30;
+    float r1, r2, v2, b2, minb2 = 1e30;
     float j[NDIM], jhat[NDIM], r_vec[NDIM], v_vec[NDIM];
     float jm, jmax;
     float small = 1.e-12;
     float r_ns2, r_sw2, vel_i;
+    float v_max, tff, m_accret;
+
+    v_max = -0.033*C_LIGHT*tdivlCF;
 
     StkInitEz(&s);
 
@@ -281,6 +284,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
         
         VVV(r_vec, = p->pos, - b.pos);
         r2 = Dot(r_vec, r_vec);
+        r1 = sqrt(r2);
 
         /* One option: adjust r2 based on particle velocities to
            simulate capture-radius behavior */
@@ -290,27 +294,45 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
            all particles to 10% of the radius of the next-nearest
            particle */
 
-	b2 = b.r*b.r;
+	b2 = b.r;
 
-        /* this hopefully keeps the absorbing radius small. - yes, too small */
+        /* the purpose of this is to impose a sort of minimum bndry radius */
         /* miminum bndry_r: Neutron star radius of 10km */
-        r_ns2 = 1.e6*1.e6*ivlenCF2; 
+        r_ns2 = 1.e6*ivlenCF; 
 
         /* "Schwarzschild radius"; i.e. where v_esc==0.1c */
         r_sw2 = 2.*GRAV_C*(b.mass*massCF)/(C_LIGHT*C_LIGHT*0.05); 
         r_sw2 = r_sw2*ivlenCF; /* convert to code-units */
-        r_sw2 = r_sw2 * r_sw2;
 
-        /* the purpose of this is to impose a sort of minimum bndry radius */
         b2 = (r_ns2 > b2 ? r_ns2 : b2); /* pick the bigger one */ 
         b2 = (r_sw2 > b2 ? r_sw2 : b2); /* pick the bigger one */ 
 
-        //vel_i = v_vec[0]*r_vec[0]+v_vec[1]*r_vec[1]+v_vec[2]*r_vec[2];
-        vel_i = Dot(v_vec, r_vec); /* vel of particle in bndry frame of ref. */
-        vel_i = vel_i/sqrt(r2);
-        /* don't need to normalize, just want to know if inward (<0) or not */
 
-        if ( b2 >= r2 || (vel_i < -1.5 && r2 <= 25.*b2)) {  /* if within bndry.r || falling in at greater than 14000km/s and within 5*bndry.r then eat particle */
+        vel_i = Dot(v_vec, r_vec); /* vel of particle in bndry frame of ref. */
+        vel_i = vel_i/r1;
+
+        /* if within bndry.r || falling in at greater than 14000km/s and 
+           within 5*bndry.r then eat particle */
+        /*if ( (b2+p->h) >= r1 || (vel_i < v_max && r1 <= 2.*b2)) {*/
+        if ( (b2+p->h) >= r1 ) {
+
+            /* eat partial particle */
+            /* outside bndry_r, but overlapping and not moving too fast */
+            if( (fabs(b2-r1) < p->h) && (vel_i > v_max) ) {
+                tff= sqrt( 2.*b.r*b.r*b.r/ (G*b.mass));
+                m_accret = p->mass * dt/tff;
+
+                /* partially eat */
+                if( p->mass > m_accret) {
+                    q = StkPush(&s, sizeof(SPHbody));
+                    *q = *p;
+                    q->mass = p->mass - m_accret;
+                    p->mass = m_accret;
+                } 
+
+            }
+            /* eat whole particle */
+
             *newmass += p->mass;
 
             VVS(newp, += v_vec, * p->mass);
@@ -339,11 +361,11 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
 
             VV(newl, += j);
 
-            Msgf(("t: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", tpos, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
+            Msgf(("dt: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", dt, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
         } else { /* dont eat particle*/
             q = StkPush(&s, sizeof(SPHbody));
             *q = *p;
-            if (r2 < minb2) minb2 = r2;
+            if (r1 < minb2) minb2 = r1;
         }
     }
 
@@ -353,7 +375,7 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
     btab = StkBase(&s);
     *SPHbtabp = Realloc(btab, *nobj * sizeof(SPHbody));
 
-    *newr = 0.64*sqrt(minb2);  /* Candidate new boundary radius =
+    *newr = 0.8*minb2;  /* Candidate new boundary radius =
                                  innermost particle's
                                  distance-to-boundary * 25% */
     if (*newr < b.r) *newr = b.r;  /* Never shrink boundary */
@@ -379,10 +401,6 @@ AddWinds(SPHbody **SPHbtabp, int *nobj, template_t *temptab,
 				   (6.0*((windpartpershell)-2)) ), 2.0 )) );
 
     StkInitEz(&s);
-
-/*comment this out if no density variation is desired, also comment out 
-the Rotate by lines downstairs. note: in radians. -CE*/
-    openangle_wind=60.0;//maybe in degrees after all??
 
     /* Push all existing particles onto stack */
     for (p = btab; p < btab + *nobj; ++p) {
@@ -525,12 +543,13 @@ void ReadWindData(char *filename, winddata_t **wdata, int *wnobj)
     *wdata = NULL;
     *wnobj = 0;
     /* BEWARE OF UNITS BELOW!!! */
+    /* assume it's in cgs, convert to user-units */
     while (fscanf(fp, "%g %g %*g %*g %g %g", &t, &dt, &mdot, &v_inf) == 4) {
 	(*wnobj)++;
 	*wdata = (winddata_t *)Realloc(*wdata, *wnobj * sizeof(winddata_t));
-	(*wdata)[*wnobj - 1].t = dt/TIM;
-	(*wdata)[*wnobj - 1].mdot = -mdot*1.0e6;  /* Flip sign from input */
-	(*wdata)[*wnobj - 1].v_inf = v_inf*TIM/LEN;
+	(*wdata)[*wnobj - 1].t = dt/timeCF;
+	(*wdata)[*wnobj - 1].mdot = -mdot*timeCF/massCF;  /* Flip sign from input */
+	(*wdata)[*wnobj - 1].v_inf = v_inf*tdivlCF;
 	(*wdata)[*wnobj - 1].u = 0.102547;  /* From src/winds/proto */
     }
 

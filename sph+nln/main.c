@@ -328,7 +328,6 @@ main(int argc, char *argv[])
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
 */
-    //openangle_wind=60.0; //added by CE
 
     MPMY_Init(&argc, &argv);
     singlPrintf("Welcome to the variable O() integrator running on %d procs\n",
@@ -1036,7 +1035,7 @@ main(int argc, char *argv[])
         if (do_absorbing_bndry) {
             SPHoldnobj = SPHnobj;
             AdjustBtab4((SPHbody **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
-                        newp, newl, cosmo.GNewt, tpos);
+                        newp, newl, cosmo.GNewt, dt);
 
             totnewmass = 0.0;
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);

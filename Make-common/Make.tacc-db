@@ -11,10 +11,10 @@ ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=
 
 # ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
 
-override OPTIMIZE=-O3 -static -no-prec-div -xP
+override OPTIMIZE=-O0 -g
 override AGGRESSIVE_OPT=
 LDFLAGS:=-L$(ICC_LIB)
-LOADLIBES:= -lm -Bstatic -lsvml -Bdynamic
+LOADLIBES:=-lsvml
 LEX:=flex
 YACC:=bison -y
 
@@ -26,7 +26,8 @@ swsrc:=lsv.c swampi.c
 
 ifeq ($(PAROS),mpi)
 LOADLIBES:=-L$(MPICH_HOME)/lib -lmpi 
-PAROSCFLAGS:=-I$(MPICH_HOME)/include -DUSE_MPIIO
+PAROSCFLAGS:=-I$(MPICH_HOME)/include 
+#-DUSE_MPIIO
 endif
 
 ifeq ($(PAROS),mvapipich) 
