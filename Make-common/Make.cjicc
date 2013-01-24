@@ -1,27 +1,19 @@
-#for conejo
-#defaultCC:=/opt/Intel/intel-11.1.072/bin/intel64/icc
-#defaultFC:=/opt/Intel/intel-11.1.072/bin/intel64/ifort
-#use icc
-
+# for conejo
+#defaultCC:=/opt/Intel/c/8.1/bin/icc
+#defaultFC:=/opt/Intel/fortran/8.1/bin/ifort -nofor_main
 defaultCC:=icc
-defaultFC:=ifort -nofor_main 
+defaultFC:=ifort -nofor_main
 
-CC_SPECIFIC:=-DLONG_LONG_KEYS 
+CC_SPECIFIC:=-g -DLONG_LONG_KEYS 
 #-march=core2 -mcpu=core2
-FC_SPECIFIC:=-fpp -warn alignments 
-#-names as_is -assume nounderscore -assume no2underscore
-#-cm -w95 -80
-ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=64
-# ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC
-
-# ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
+FC_SPECIFIC:=-g
+# ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -align -Zp8 -DUSE_SYSTEM_MALLOC -DUSE_MPIIO
+ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC 
 
 override OPTIMIZE=-O3 -static -no-prec-div -xP
 override AGGRESSIVE_OPT=
 LDFLAGS:=-L$(FORTHOME)/lib/intel64
-#LDFLAGS:=-L/packages/intel/fce/10.1.015/lib
-LOADLIBES:=
-#-lsvml
+LOADLIBES:=-lsvml
 LEX:=flex
 YACC:=bison -y
 
@@ -29,18 +21,12 @@ include $(treedir)/Make-common/Make.default
 
 swsrc:=lsv.c swampi.c
 
-#use lampi
-
 ifeq ($(PAROS),mpi)
-LOADLIBES:=-L$(MPIHOME)/lib64 -lmpi 
-#LOADLIBES:=-L/packages/intel-openmpi-1.2.7/lib -lmpi 
-PAROSCFLAGS:=-I$(MPIHOME)/include 
-#PAROSCFLAGS:=-I/packages/intel-openmpi-1.2.7/include 
-#-DUSE_MPIIO
-#PAROSCFLAGS:=-I/ss1-raid/local/mpich-1.2.5-ssh/include
+LOADLIBES:=-pthread -L$(MPIHOME)/lib -lmpi -lopen-rte -lopen-pal -lrdmacm -libverbs -lpsm_infinipath -lnuma -ldl -lnsl -lutil
+PAROSCFLAGS:=-I$(MPIHOME)/include -I$(MPIHOME)/include/openmpi -pthread
 endif
 
-ifeq ($(PAROS),mvapipich) 
+ifeq ($(PAROS),mpich)
 LOADLIBES:=-L/packages/intel-mvapich-1.0.1/lib -lmpich
 PAROSCFLAGS:=-I/packages/intel-mvapich-1.0.1/include
 endif
@@ -53,9 +39,6 @@ endif
 ifeq ($(PAROS),lam)
 LOADLIBES:=-L/usr/local/ofed/mpi/intel/openmpi-1.2.3/lib/ -lmpi_cxx
 PAROSCFLAGS:=-I/usr/local/ofed/mpi/intel/openmpi-1.2.3/include/
-#
-#LOADLIBES:=-L/usr/local/lib -lmpi -llam
-#PAROSCFLAGS:=-I/usr/local/include
 endif
 
 ifeq ($(PAROS),pvm)
