@@ -362,9 +362,9 @@ c     1        write(*,'(8(a5,1pe10.2))')(cxid(i),xxeq(i),i=1,iitot)
 c..   n,p,alphas
 c         write(*,'(3(a5,1pe10.2))')(xid(i),xeq(i),i=itot-2,itot)
 c         write(*,*)' '
-         write(33,'(2i5,1p13e11.3)')ierr,niter,t9,rho,eta,
-     1        uaaa,uaaa0,uhat,uhat0,xeq(itot-1),xeq(itot-2),xeq(itot)
-     2        ,tk,enc*1.0d-18,pnc/rho*1.0d-18
+c         write(33,'(2i5,1p13e11.3)')ierr,niter,t9,rho,eta,
+c     1        uaaa,uaaa0,uhat,uhat0,xeq(itot-1),xeq(itot-2),xeq(itot)
+c     2        ,tk,enc*1.0d-18,pnc/rho*1.0d-18
 
 
 
@@ -471,8 +471,8 @@ c..   relative to C12 nuclei
          yeq(ndim) = yeeq
          write(*,'(i5,1p13e11.3)')n,t9,rho,enc*1.0d-18,xeqm,
      1        xeq(ia),xeq(ni56),xeq(ip),uaaa,pnc*1.0d-18/rho,uaaa0
-         write(33,'(i5,1p10e11.3)')n,t9,rho,enc*1.0d-18,xeqm,
-     1        xeq(ia),xeq(ni56),xeq(ip),uaaa,pnc*1.0d-18/rho,uaaa0
+c         write(33,'(i5,1p10e11.3)')n,t9,rho,enc*1.0d-18,xeqm,
+c     1        xeq(ia),xeq(ni56),xeq(ip),uaaa,pnc*1.0d-18/rho,uaaa0
 
 c----------------------------
       endif
