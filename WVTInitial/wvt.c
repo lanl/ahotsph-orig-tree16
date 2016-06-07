@@ -838,10 +838,12 @@ void WVTInitProbdistlr(SPHbody **btabp, int *gnobj, int *nobj, double min[NDIM],
 	  rho*=((double) *gnobj)/totrho*((r2*r2*r2-r1*r1*r1)/(outerbound*outerbound*outerbound));
 	  nadded=ignpoi((float)rho);
 	  
-	  if ( subtotrho/totrho >=
+	  if ( ( subtotrho/totrho >=
 	       (double)MPMY_Procnum()/((double) MPMY_Nproc()) &&
 	       subtotrho/totrho <
-	       ((double)MPMY_Procnum()+1)/((double) MPMY_Nproc())) {
+	       ((double)MPMY_Procnum()+1)/((double) MPMY_Nproc())) ||
+               (i == num[0]-1) && 
+               (MPMY_Procnum()+1 == MPMY_Nproc()) ) {
 	    for (j=0; j<nadded; j++) {
 	      testran=uniform_rand(&ranstate)-0.5;
 	      rad=exp(log(r)+testran*delta[0]);
