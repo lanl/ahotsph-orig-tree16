@@ -33,8 +33,6 @@ int cosmology=0;
 int log_time=0;
 int comov_eps=0;
 int do_periodic = 0;
-int do_Pext = 1;
-float P_ext = 1;
 
 # Wind parameters
 int do_winds = 0;

@@ -45,8 +45,6 @@ extern int do_diffusion;
 extern int do_cooling;
 extern int do_burning;
 
-extern int do_Pext;
-
 void
 SetSPHOffset(float *off, float *voff)
 {
@@ -613,7 +611,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 
 
 void
-update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit, float P_ext, float R0)
+update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit, float R0)
 {
     float kes, kff;  /* Opacities (Thomson, free-free) */
     float pgas, prad;
@@ -642,13 +640,6 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
         if( 20.*p->h > p->mfp) 
             prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
         p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
-
-        if(do_Pext) {
-        r2 = Dot(p->pos, p->pos);
-        if( r2 > max_rad) {
-            p->pr = ((p->pr - P_ext) > 0.0) ? (p->pr - P_ext) : 0.0;
-        }
-        }
 
         /* this is still using Gamma. Perhaps could calculate gamma 
            at this point? */
