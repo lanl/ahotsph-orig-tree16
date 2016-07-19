@@ -80,6 +80,58 @@ typedef struct {
     float abund[NISO]; 
 } SPHbody;
 
+typedef struct {
+#ifdef POS_IS_DOUBLE
+  /* double first for alignment */
+    double pos[NDIM];		/* position of body */
+    float mass;			/* mass of body */
+#else
+    float mass;			/* mass of body */
+    float pos[NDIM];		/* position of body */
+#endif
+    float vel[NDIM];		/* velocity of body */
+    float h;			/* smoothing length */
+    float rho;			/* density */
+    float pr;			/* pressure */
+    float vsound;		/* sound speed */
+    float rho_est;		/* estimated density */
+    float u;			/* internal energy */
+    float temp;                 /* temperature, used to enforce LTE */
+    float du;                   /* change in internal energy this timestep */
+    float dt_next;
+    /* Things declared above this line are communicated between processors */
+    /* so they can be used in in the loop over nbrs in FindRho and ForceSPH */
+    /* Don't add anything above this line unless you fix TBODYSZ */
+    float acc[NDIM];
+    float grav_acc[NDIM];
+    float acc_last[NDIM];
+    /* Do these need to go between nodes?  Can things above come down here? */
+    float u_r;                  /* electron fraction */
+    float du_r;                 /* change in u_r this timestep */
+    float phi;
+    Key_t key;
+    unsigned int ident;
+    float nterms;
+    float grav_nterms;
+    float lvel[NDIM];
+    float drho_dt;
+#ifdef POS_IS_DOUBLE
+    double pos_last[NDIM];
+#else
+    float pos_last[NDIM];
+#endif
+    float hdot;
+    float udot;
+    float udot_last;
+    unsigned int nbrs;
+    float tacc;
+    float dt;
+    float min_nbr_dt;
+    float dmg;                  /* damage parameter */
+    float ddmgdt;               /* rate of change of damage */
+    float stress[9];         /* stress tensor */
+    float dstressdt[9];      /* rate of change of stress tensor */
+} Strengthbody;
 
 /* windbody and WINDOUTBODYDESC need to be padded to a double boundary for
    correct alignment in memory and on disk */
@@ -151,6 +203,35 @@ typedef struct {
     float u;
     float h;
     float rho;
+    float drho_dt;
+    float udot;
+#ifdef SPH_SAVE_ACC
+    float acc[NDIM];
+    float acc_last[NDIM];
+    float phi;
+    float dt;
+#endif
+    float pr;
+    unsigned int nbrs; 
+    unsigned int ident;		/* unique? identifier */
+    float temp;
+    float dmg;
+    float ddmgdt;
+    float stress[9];
+    float dstressdt[9];
+} Strengthoutbody;
+
+typedef struct {
+#ifdef POS_IS_DOUBLE
+    double pos[NDIM];		/* position of body */
+#else
+    float pos[NDIM];		/* position of body */
+#endif
+    float mass;			/* mass of body */
+    float vel[NDIM];		/* velocity of body */
+    float u;
+    float h;
+    float rho;
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
@@ -159,6 +240,29 @@ typedef struct {
 /* This is the descriptor that goes into the SDF header. */
 
 #ifdef SPH_SAVE_ACC
+#define STRENGTHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float ax, ay, az;		/* acceleration */\n\
+    float lax, lay, laz;	/* acceleration at tpos-dt */\n\
+    float phi;			/* potential */\n\
+    float idt;			/* timestep */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    float temp;                 /* temperature */\n\
+    float dmg;                  /* damage parameter */\n\
+    float ddmgdt;			/* rate of change of damage */\n\
+    float stress[9];        /* stress tensor */\n\
+    float dstressdt[9];     /* rate of change of stress tensor */\n\
+}"
 #define SPHOUTBODYDESC \
 "struct {\n\
     double x, y, z;		/* position of body */\n\
@@ -195,6 +299,26 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
 }"
 #else
+#define STRENGTHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float dmg;                  /* damage */\n\
+    float ddmgdt;			/* rate of change of damage */\n\
+    float stress[9];        /* stress tensor */\n\
+    float dstressdt[9]      /* rate of change of stress tensor */\n\
+}"
 #define SPHOUTBODYDESC \
 "struct {\n\
     double x, y, z;		/* position of body */\n\
