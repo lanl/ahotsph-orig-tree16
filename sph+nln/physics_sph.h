@@ -260,8 +260,24 @@ typedef struct {
     float temp;                 /* temperature */\n\
     float dmg;                  /* damage parameter */\n\
     float ddmgdt;			/* rate of change of damage */\n\
-    float stress[9];        /* stress tensor */\n\
-    float dstressdt[9];     /* rate of change of stress tensor */\n\
+    float stressxx;        /* stress tensor */\n\
+    float stressxy;        /* stress tensor */\n\
+    float stressxz;        /* stress tensor */\n\
+    float stressyx;        /* stress tensor */\n\
+    float stressyy;        /* stress tensor */\n\
+    float stressyz;        /* stress tensor */\n\
+    float stresszx;        /* stress tensor */\n\
+    float stresszy;        /* stress tensor */\n\
+    float stresszz;        /* stress tensor */\n\
+    float dstressxxdt      /* rate of change of stress tensor */\n\
+    float dstressxydt      /* rate of change of stress tensor */\n\
+    float dstressxzdt      /* rate of change of stress tensor */\n\
+    float dstressyxdt      /* rate of change of stress tensor */\n\
+    float dstressyydt      /* rate of change of stress tensor */\n\
+    float dstressyzdt      /* rate of change of stress tensor */\n\
+    float dstresszxdt      /* rate of change of stress tensor */\n\
+    float dstresszydt      /* rate of change of stress tensor */\n\
+    float dstresszzdt      /* rate of change of stress tensor */\n\
 }"
 #define SPHOUTBODYDESC \
 "struct {\n\
@@ -316,8 +332,24 @@ typedef struct {
     float temp;                 /* temperature */\n\
     float dmg;                  /* damage */\n\
     float ddmgdt;			/* rate of change of damage */\n\
-    float stress[9];        /* stress tensor */\n\
-    float dstressdt[9]      /* rate of change of stress tensor */\n\
+    float stressxx;        /* stress tensor */\n\
+    float stressxy;        /* stress tensor */\n\
+    float stressxz;        /* stress tensor */\n\
+    float stressyx;        /* stress tensor */\n\
+    float stressyy;        /* stress tensor */\n\
+    float stressyz;        /* stress tensor */\n\
+    float stresszx;        /* stress tensor */\n\
+    float stresszy;        /* stress tensor */\n\
+    float stresszz;        /* stress tensor */\n\
+    float dstressxxdt      /* rate of change of stress tensor */\n\
+    float dstressxydt      /* rate of change of stress tensor */\n\
+    float dstressxzdt      /* rate of change of stress tensor */\n\
+    float dstressyxdt      /* rate of change of stress tensor */\n\
+    float dstressyydt      /* rate of change of stress tensor */\n\
+    float dstressyzdt      /* rate of change of stress tensor */\n\
+    float dstresszxdt      /* rate of change of stress tensor */\n\
+    float dstresszydt      /* rate of change of stress tensor */\n\
+    float dstresszzdt      /* rate of change of stress tensor */\n\
 }"
 #define SPHOUTBODYDESC \
 "struct {\n\
