@@ -1,0 +1,23 @@
+defaultCC:=gcc
+defaultFC:=gfortran
+
+CC_SPECIFIC:=-g -DLONG_LONG_KEYS
+FC_SPECIFIC:=-g
+ARCH_SPECIFIC:=-D__POWERPC__ -DUSE_SYSTEM_MALLOC -fPIC -D_FILE_OFFSET_BITS=64 -DYY_SKIP_YYWRAP -fno-common
+override OPTIMIZE:=-O0 -static
+override AGGRESSIVE_OPT=
+##LDFLAGS=-i386
+LOADLIBES:=-Bstatic
+##-L/usr/local/lib -lm
+LEX:=flex
+YACC:=bison -y
+RANLIB:=ranlib
+
+include $(treedir)/Make-common/Make.default
+
+swsrc:=lsv.c swampi.c
+
+ifeq ($(PAROS),mpi)
+LOADLIBES:=-lmpi -lm
+PAROSCFLAGS:=
+endif
