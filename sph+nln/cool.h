@@ -6,8 +6,8 @@
 
 #ifndef COOLING
 #define COOLING
-float **tablep; //array to hold cooling curve table values
-float **ionfracp; //array to hold ionfraction table values
+extern float **tablep; /*array to hold cooling curve table values*/
+extern float **ionfracp; /*array to hold ionfraction table values*/
 #else
 extern float **tablep;
 extern float **ionfracp;
@@ -16,9 +16,9 @@ extern int do_cooling;
 
 #ifndef BURNING
 #define BURNING
-int NNW;	/* number of isotopes in network */
-int **inNW;
-int nparr[NISO], nnarr[NISO];
+extern int NNW;	/* number of isotopes in network */
+extern int **inNW;
+extern int nparr[NISO], nnarr[NISO];
 #else
 extern int NNW;
 extern int **inNW;

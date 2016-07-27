@@ -28,11 +28,11 @@ static float wij[MAX_INDEX];
 static float grwij[MAX_INDEX];
 static float fmass[MAX_INDEX];
 static float fpoten[MAX_INDEX];
-static float Gamma;// = (float)(5.0/3.0);
-static float alpha;// = (float)1.0;
-static float beta;// = (float)2.5;
-static float epsil;// = (float)1e-2;
-static float heatf1;// = (float)1.0;
+static float Gamma;/* = (float)(5.0/3.0);*/
+static float alpha;/* = (float)1.0;*/
+static float beta;/* = (float)2.5;*/
+static float epsil;/* = (float)1e-2;*/
+static float heatf1;/* = (float)1.0;*/
 static int ndim;
 static int Nobj;
 static int add_offset;
@@ -546,7 +546,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     static long cycled = 0;
     int temp_ok, partid;
 
-    //molfrac = (double *)malloc( (NNW+1) * sizeof(double) );
+    /*molfrac = (double *)malloc( (NNW+1) * sizeof(double) );*/
 
     tlo = 1.0e0;
     tup = 2.5e11;

@@ -273,11 +273,11 @@ double calc_lcool1(float abundarr[], int nparr[], int nnarr[], double temp, doub
 
             /*reset value if extrapolated to negative value*/
             /* could be negative if becoming ionized? in any case, staying inside table */
-            //if (lcool<0.0)
-            //{
-            //    if ((interp[0]-interp[1]) <0) lcool=0.0;
-                /*else fracn=1.0;*//*this case shouldn't happen*/
-            //}
+            /*if (lcool<0.0)
+            {
+                if ((interp[0]-interp[1]) <0) lcool=0.0;
+                else fracn=1.0;*//*this case shouldn't happen*//*
+            }*/
 
             fracns[0] = ionfracp[ index+m ][ j ];
             fracns[1] = ionfracp[ index+m ][ j + 1 ];
@@ -328,7 +328,7 @@ double find_ne(float abundarr[], int nparr[], int nnarr[] ,double temp, double r
     long j;	/*holds index returned by locate routine*/
     long *jp;	/*pointer to j*/
     long j_prev;
-    //int nparr[Nel], nnarr[Nel];	/*array for A,N numbers for each isotope*/
+    /*int nparr[Nel], nnarr[Nel];*/	/*array for A,N numbers for each isotope*/
     int n,m,N,index; 	/*some indices for looping and arrays*/
 
     /*initialize things so I don't get stupid warnings all the time:*/
@@ -420,13 +420,13 @@ double analytic_cool(double temp)
         double lcool;
 
         if (temp < 1.0e4)
-                //lcool = 1.0e-26 * exp(-1.0e5/temp) * sqrt(temp);//guessed; for O - CE
+                /*lcool = 1.0e-26 * exp(-1.0e5/temp) * sqrt(temp);*//*guessed; for O - CE*/
                 lcool = 1.0e-27 * exp(-1.0e2/temp) * sqrt(temp);
         else if (temp < 3.0e5)
                 lcool=1.0e-21;
         else
                 lcool=1.0e-21/(3.0*(log10(temp)-5.5)+1.0);
-                //lcool=1.0e-21/(3.0*(log10(temp)-5.5)+1.0);
+                /*lcool=1.0e-21/(3.0*(log10(temp)-5.5)+1.0);*/
 
         return lcool;
 }/*end analytic_cool*/
@@ -489,26 +489,26 @@ interpolation between tabulated points [14..17]*/
 /*~~~~~~~~~~~~~~~~~ WORKS!!!! 04/23/2009 ~~~~~~~~~~~~~~~~~*/
 void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
 {
-   //ZERO!!! offset is assumed in all indices
+   /*ZERO!!! offset is assumed in all indices*/
    int i,m,ns=0,size;
    double den,dif,dift,ho,hp,w;
    double *c, *d;
 
-   //printf("interpolating between %E and %E .... get ", ya[0], ya[1]);
-   //printf("xa= {%.1E, %.1E} \n", xa[0], xa[1]);
-   //printf("ya= {%.1E, %.1E} \n", ya[0], ya[1]);
+   /*printf("interpolating between %E and %E .... get ", ya[0], ya[1]);*/
+   /*printf("xa= {%.1E, %.1E} \n", xa[0], xa[1]);*/
+   /*printf("ya= {%.1E, %.1E} \n", ya[0], ya[1]);*/
 
-   //if we're exactly at one grid point, just return that value*/
+   /*if we're exactly at one grid point, just return that value*/
    if ((x-xa[0]) == 0.0)
            *y=ya[0];
    else if ((x-xa[1]) == 0.0)
            *y=ya[1];
-   else        //else interpolate*/
+   else        /*else interpolate*/
    {
    dif=fabs(x-xa[0]);
    c=dvector(0,n-1);
    d=dvector(0,n-1);
-   //find the index ns of the closest table entry
+   /*find the index ns of the closest table entry*/
    for (i=0;i<n;i++)
    {
       if ((dift=fabs(x-xa[i])) < dif)
@@ -516,26 +516,26 @@ void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
          ns=i;
          dif=dift;
       }
-      //initialize the tableau of c's and d's
+      /*initialize the tableau of c's and d's*/
       c[i]=ya[i];
       d[i]=ya[i];
    }
-   //initial approximation to y
+   /*initial approximation to y*/
    *y=ya[ns--];
-   //for each column of the tableau ...
+   /*for each column of the tableau ...*/
    for (m=0;m<n-1;m++)
    {
-      //... loop over current c's and d's and update them
+      /*... loop over current c's and d's and update them*/
       for (i=0;i<n-m-1;i++)
       {
          ho=xa[i]-x;
          hp=xa[i+m+1]-x;
          w=c[i+1]-d[i];
          den=ho-hp;
-         //error message: two input xa's are identical to within roundoff
-         //if (den==0.0) nerror("Error in routine polint");
+         /*error message: two input xa's are identical to within roundoff*/
+         /*if (den==0.0) nerror("Error in routine polint");*/
          den=w/den;
-         //update c's and d's
+         /*update c's and d's*/
          d[i]=hp*den;
          c[i]=ho*den;
       }
@@ -548,13 +548,13 @@ void polint(double xa[], double ya[], int n, double x, double *y, double *dy)
         partial approximations centered (insofar as possible) on the
         target x. the last dy added is thus the error indication. */
       *y += (*dy=(2*(ns+1)<(n-(m+1)) ? c[ns+1] : d[ns--]));
-      //printf("%E\n",*y);
+      /*printf("%E\n",*y);*/
    }
-   //printf("%E\n", *y);
+   /*printf("%E\n", *y);*/
    free_dvector(d,0,n-1);
    free_dvector(c,0,n-1);
    }
-} //end polint
+} /*end polint*/
 
 
 
@@ -583,25 +583,25 @@ void
 polin2d(double x1a[], double x2a[], double **ya, int m, int n, double x1,
         double x2, double *y, double *dy)
 {
-   //ZERO!!! offset is assumed in all indices
+   /*ZERO!!! offset is assumed in all indices*/
    void polint(double xa[], double ya[], int n, double x, double *y, double *dy);
 
    int j;
    double *ymtmp;
 
    ymtmp=dvector(0,m-1);
-   //loop over rows
+   /*loop over rows*/
    for (j=0;j<m;j++)
    {
-      //interpolate over the 'rows' of the grid square containing the point
-      //(x1,x2), i.e. over (x1a[j],x2). Put answer into temporary storage
-      polint(x2a,ya[j],n,x2,&ymtmp[j],dy);
+      /*interpolate over the 'rows' of the grid square containing the point
+      (x1,x2), i.e. over (x1a[j],x2). Put answer into temporary storage
+      polint(x2a,ya[j],n,x2,&ymtmp[j],dy);*/
    }
-   //do the final interpolation, i.e. sort of interpolate over the
-   //interpolated 'rows'
+   /*do the final interpolation, i.e. sort of interpolate over the*/
+   /*interpolated 'rows'*/
    polint(x1a,ymtmp,m,x1,y,dy);
    free_dvector(ymtmp,0,m-1);
-} //end polin2d
+} /*end polin2d*/
 
 
 
@@ -671,8 +671,8 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
             temp_ok = 1;
         } else {
             temp_ok = 0;
-        //    SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
-        //          p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
+        /*    SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom previous T=%4E\n",
+        /*          p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
         /* set a floor on the temperature, cuz I kinda just want this to run ... */
         /* assume material is cold, low density; thus can assume gas contribution only */
             p->temp=0.6666666666667*eos_u/(K_BOLTZ*eos_n);
@@ -774,7 +774,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
 
 /*            while ( cycles < countc ) */
     do {
-        //p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);
+        /*p->temp = newtraph(tlo, tup, eos_u*1.0e-6, uvst, duvst);*/
         temp = 1.5* u * m_kboltz;
         if (temp < 2.0e3) {
            dt_tot = dt;
@@ -824,7 +824,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     p->udot += (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
     p->Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
 
-    //printf("%d of %d cycles completed\n",cycles,countc);
+    /*printf("%d of %d cycles completed\n",cycles,countc);*/
 
     return dt *ivtimeCF;
 

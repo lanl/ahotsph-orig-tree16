@@ -427,9 +427,6 @@ SPHReadStrength(char *name, void *csdfp, Strengthbody **btabp, int *gnobjp, int 
 		SinglWarning("No \"ident\" in file, numbering sequentially\n");
 		SPHFixId(btab, nobj, gnobj);
 	}
-	if (windidconf == 0) {
-		SinglWarning("No \"windid\" in file; are you using wind source?\n");
-	}
 	if (new_h != (float)0.0) {
 		singlPrintf("Setting h to %f\n", new_h);
 		for (p = btab; p < btab+nobj; p++) p->h = new_h;

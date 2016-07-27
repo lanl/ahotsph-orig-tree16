@@ -178,8 +178,11 @@ int do_diffusion;  /* used in main and in sph.c */
 int do_cooling;
 int do_burning;    /* used in sph.c, turns network on */
 
-float **tablep; //array to hold cooling curve table values
-float **ionfracp; //array to hold ionfraction table values
+int NNW;	/* number of isotopes in network */
+int **inNW;
+int nparr[NISO], nnarr[NISO];
+float **tablep; /*array to hold cooling curve table values*/
+float **ionfracp; /*array to hold ionfraction table values*/
 
 /*
 int **inNW;
@@ -1668,8 +1671,8 @@ bndry.l[0], bndry.l[1]);
     singlPrintf("Bye!\n");
     Msgf(("Bye!\n"));
     Msg_flush();
-    //free(tablep); //CE: necessary?
-    //free(ionfracp);
+    /*free(tablep);*/ /*CE: necessary?*/
+    /*free(ionfracp);*/
     exit(0);			/* trex seems to hang in __exit() */
 }
 
@@ -2991,7 +2994,7 @@ int make_spec_names(char ***specarr, char spec, int num)
         sprintf( tmpchr, "%c%-d\0", spec, (i+1));
         *(*specarr + i) = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
         sprintf((*specarr)[i], "%s",tmpchr); 
-        //printf("isotope specifier: %s  %d\n", specarr[i],(int)strlen(specarr[i]));
+        /*printf("isotope specifier: %s  %d\n", specarr[i],(int)strlen(specarr[i]));*/
 
     }
     return i;

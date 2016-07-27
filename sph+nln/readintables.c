@@ -88,8 +88,8 @@ void init_CoolTable(int *Gridpts, int *Nel)
             tablep[i][j] = 0.0;
     }
 
-    fgets(myline,50,File1p);//read in first line of text in cooling curves
-    fgets(myline,50,File1p);//read in second line of text in cooling curves
+    fgets(myline,50,File1p);/*read in first line of text in cooling curves*/
+    fgets(myline,50,File1p);/*read in second line of text in cooling curves*/
 
     /* since the ions are from H to Zn in ascending order, don't need
      * Z of element (?) */
@@ -97,8 +97,8 @@ void init_CoolTable(int *Gridpts, int *Nel)
 	    fscanf(File1p, "%*i");
 
 
-    mychar=fgetc(File1p);//read in extra new-line in cooling curves
-    fgets(myline,50,File1p);//read in line "temperatures...." in cooling curves
+    mychar=fgetc(File1p);/*read in extra new-line in cooling curves*/
+    fgets(myline,50,File1p);/*read in line "temperatures...." in cooling curves*/
 
 
     /* we're getting log(T) from ionfractions, so skip T from cooling table*/
@@ -110,8 +110,8 @@ void init_CoolTable(int *Gridpts, int *Nel)
 	    fscanf(file2p,"%4g",&ionfracp[0][i]);
 	
 
-    fgets(myline,50,File1p);//get trailing new-line in cooling curves
-    fgets(myline,50,File1p);//get trailing new-line in cooling curves
+    fgets(myline,50,File1p);/*get trailing new-line in cooling curves*/
+    fgets(myline,50,File1p);/*get trailing new-line in cooling curves*/
 
 
     /*loop over elements*/
@@ -140,15 +140,15 @@ void init_CoolTable(int *Gridpts, int *Nel)
 	 */
 	    }
 
-            //printf("counter: %4d, j=%2d, k=%2d, tab= %.6E  ion=%.6E\n",counter1,j,k,tablep[counter1][12],ionfracp[counter1][12]);
+            /*printf("counter: %4d, j=%2d, k=%2d, tab= %.6E  ion=%.6E\n",counter1,j,k,tablep[counter1][12],ionfracp[counter1][12]);*/
 	    counter1++;
 	    counter2++;
 	}
-	mychar=fgetc(File1p);//get first trailing new-line
-	mychar=fgetc(File1p);//get second trailing new-line
+	mychar=fgetc(File1p);/*get first trailing new-line*/
+	mychar=fgetc(File1p);/*get second trailing new-line*/
     }
 
-    //close file
+    /*close file*/
     fclose(File1p);
     fclose(file2p);
     /*DO NOT free(tablep); UNTIL THE END OF THE WHOLE PROGRAM!!!!*/
