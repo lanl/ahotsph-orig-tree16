@@ -863,7 +863,7 @@ void WVTInitProbdistlr(SPHbody **btabp, int *gnobj, int *nobj, double min[NDIM],
 		qq->mass=1.0; /* anything but 0...*/
 		VS(qq->vel,=0.); /* anything but 0...*/
                 qq->h=0.;
-		//qq->h=q->h;
+		/*qq->h=q->h; */
 		qq->ident=id;
 		/* q->nterms = 1; */
 		id++;
