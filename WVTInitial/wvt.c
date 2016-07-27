@@ -50,6 +50,8 @@ static void (*bodyfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 static void (*cellfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 int inputoption=1;
 
+double *rglob, *hglob;
+int iglob;
 
 
 /* Cylindrical Grid global variables (Initialized in InitCylGrid)*/
