@@ -382,7 +382,7 @@ typedef struct{
 int SPH_need_update(const SPHbody *p);
 
 /* In physics_generic.c */
-void CellCorner(Key_t key, double *corner, double *size);
+void CellCorner(Key_t key, float *corner, float *size);
 
 /* In physics_sph.c */
 /* There are various void * decls here, since we don't want to have body *s */
@@ -464,4 +464,3 @@ double duvst(double t);
 /* In newtraph.c */
 double newtraph(double xl, double xr, double prec, double (*f)(double x), 
 		double (*df)(double x));
-

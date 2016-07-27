@@ -23,6 +23,7 @@ void SPHCofmFromDaugh(hcellptr hptr, hcellptr daughters[]){
     double dmass;
     double newbmax;
     double center[NDIM], cellsz;
+    float center_flt[NDIM], cellsz_flt;
     Vxd(double dx);
 
     assert(Sub_Flags(hptr));
@@ -91,7 +92,12 @@ void SPHCofmFromDaugh(hcellptr hptr, hcellptr daughters[]){
     }
     /* This is an alternative bound on bmax, which is sometimes tighter */
     /* than the cumulative bound computed above. */
-    CellCorner(hptr->key, center, &cellsz);
+    /* hack to get this to compile on OS X 10.11 + gcc 6.1.1 */
+    cellsz_flt = cellsz;
+    VV(center_flt, = (float)center);
+    CellCorner(hptr->key, center_flt, &cellsz_flt);
+    cellsz = cellsz_flt;
+    VV(center, = (double)center_flt);
     cmp->sz = cellsz;		/* for pure Barnes-But */
     cellsz *= (double)0.5;
     VS(center, += cellsz);
