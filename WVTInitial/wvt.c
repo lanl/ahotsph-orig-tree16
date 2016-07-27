@@ -15,6 +15,7 @@
 #include "mpmy.h"
 #include "gc.h"
 #include "wvt.h"
+#include "initial.h"
 
 #define PI 3.141592653589793238462
 #ifndef M_1_PI
@@ -523,8 +524,8 @@ void WVTInitHex2(SPHbody **btabp, int *gnobj, int *nobj, double min[NDIM],
     double yoff, xoff;
     double xmin, xmax, ymin, ymax, zmin, zmax;
 
-    singlPrintf('xmin=%g, ymin=%g, zmin=%g \n', min[0], min[1], min[2]);
-    singlPrintf('xmax=%g, ymax=%g, zmax=%g \n', max[0], max[1], max[2]);    
+    singlPrintf("xmin=%g, ymin=%g, zmin=%g \n", min[0], min[1], min[2]);
+    singlPrintf("xmax=%g, ymax=%g, zmax=%g \n", max[0], max[1], max[2]);    
 
     xmin=min[0];
     ymin=min[1];
@@ -534,15 +535,15 @@ void WVTInitHex2(SPHbody **btabp, int *gnobj, int *nobj, double min[NDIM],
     ymax=max[1];
     zmax=max[2];
 
-    singlPrintf('xmin=%g, ymin=%g, zmin=%g \n', xmin, ymin, zmin);
-    singlPrintf('xmax=%g, ymax=%g, zmax=%g \n', xmax, ymax, zmax);    
+    singlPrintf("xmin=%g, ymin=%g, zmin=%g \n", xmin, ymin, zmin);
+    singlPrintf("xmax=%g, ymax=%g, zmax=%g \n", xmax, ymax, zmax);    
 
     dr=(xmax-xmin)/((double)(num[0]-0.9));
     dz = dr*sqrt(6.0)/3.0;
     dy = dr*0.5*sqrt(3.0);
     dx = dr;
     r_outer=xmax;
-    singlPrintf('dx=%g, dy=%g, dz=%g \n', dx, dy, dz);
+    singlPrintf("dx=%g, dy=%g, dz=%g \n", dx, dy, dz);
 
     *gnobj = ((int)ceil((max[0]-min[0])/dx)) * 
 	((int)ceil((max[1]-min[1])/dy)) * 
@@ -585,14 +586,14 @@ void WVTInitHex2(SPHbody **btabp, int *gnobj, int *nobj, double min[NDIM],
 		    VS(p[*nobj-1].vel, = 0.);		    
 		}
 	    i++;	    
-	    singlPrintf('x=%g, y=%g, z=%g \n', x, y, z);
+	    singlPrintf("x=%g, y=%g, z=%g \n", x, y, z);
 	    }
 	}
 
     }
 
     *btabp = p;
-    singlPrintf(("gnobj = %d; nobj = %d; start = %d\n", *gnobj, *nobj, start));
+    singlPrintf("gnobj = %d; nobj = %d; start = %d\n", *gnobj, *nobj, start);
 }
 
 
