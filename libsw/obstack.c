@@ -28,6 +28,10 @@ Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
    program understand `configure --with-gnu-libc' and omit the object files,
    it is simpler to just do this in the source for each such file.  */
 
+#if defined (__APPLE__)
+#include <stdlib.h>
+#endif
+
 #if defined (_LIBC) || !defined (__GNU_LIBRARY__)
 
 
