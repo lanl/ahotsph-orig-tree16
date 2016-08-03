@@ -42,6 +42,7 @@
 #include "nrutil.h"
 #include "units.h"
 #include "cool.h"
+#include "params.h"
 
 #define MAXCOEF 16
 
@@ -121,6 +122,7 @@ static int maxheap(void);
 float Znow(float time);
 float Hnow(float time);
 
+/* can some of these go into the function where they're solely used? */
 Timer_t StepTot, StepTotWC, BuildTot;
 Timer_t FindForcesTm;
 Timer_t RhoSPH, ForceSPH, PerTmSPH;
@@ -139,7 +141,7 @@ static float sysradius;
 static float tpos, tvel;
 static float t_wind;
 static float dt_wind;
-static int cosmology;
+//static int cosmology; only used here
 static float R0;
 static float this_tol, this_eps;
 static float frac_tol;
@@ -155,6 +157,7 @@ static int independent_dt;
 static int dark_independent_dt;
 
 static bndry_t bndry;
+setup_params_t params;
 
 /*conversion factors from user-units to cgs*/
 /* need to read in as floats, then convert to double */
@@ -174,9 +177,9 @@ double ldivtCF, tdivlCF;
 
 double grav_c, c_light;
 
-int do_diffusion;  /* used in main and in sph.c */
-int do_cooling;
-int do_burning;    /* used in sph.c, turns network on */
+//int do_diffusion;  /* used in main and in sph.c */
+//int do_cooling;
+//int do_burning;    /* used in sph.c, turns network on */
 
 int NNW;	/* number of isotopes in network */
 int **inNW;
@@ -254,7 +257,7 @@ main(int argc, char *argv[])
     int log_time = 0;		/* if true, use dt \propto t */
     int comov_eps = 0;		/* if true, use comoving epsilon*/
     float comov_eps_epoch;
-    int setpvel = 0;
+    //int setpvel = 0;
     char outnamebase[256];
     SDF *csdfp;			/* SDF pointer to control file */
     SDF *sdfp = NULL;
@@ -266,18 +269,18 @@ main(int argc, char *argv[])
     double mtot, SPHmtot;
     sortresult_t sortedbtab, SPHsortedbtab, sortedatab;
     tree_t thetree, SPHtree, SPHsinktree, *sinkptr = NULL;
-    char name[256];
+    //char name[256];
     int do_BH, do_DL, do_Bmax, do_Arel;
     int MACtype = BMAX_MAC;
     int image_freq, x_pixels, y_pixels, log_image;
-    int do_periodic;
+    //int do_periodic;
     inherit_t inherit;
     macv_t mac;
-    int timeout;
-    int set_id;
+    //int timeout;
+    //int set_id;
     float dt_last;
     float new_h, new_u;
-    int do_sph, do_grav, do_winds;
+    //int do_sph, do_grav, do_winds;
     int old_winds, const_winds, nonconst_winds, accreting_winds;
     float r_wind, r_outer, v_wind, mdot_wind, u_wind, openangle_wind;
     float omega_wind;
@@ -287,13 +290,13 @@ main(int argc, char *argv[])
     winddata_t *wdata;
     int tempnobj;
     int wnobj;
-    int do_point_mass, do_point_mass2;
-    int do_boundary;
-    int do_absorbing_bndry;
+    //int do_point_mass, do_point_mass2;
+    //int do_boundary;
+    //int do_absorbing_bndry;
     float newp[NDIM], newl[NDIM];
     float newr = 0.0;
     float newmass = 0.0, totnewmass = 0.0, invmass = 0.0;
-    int do_drag;
+    //int do_drag;
     float drag_coeff;
 /*     float newmass = 0.0, totnewmass = 0.0; */
     int exact_rho;
@@ -309,13 +312,13 @@ main(int argc, char *argv[])
     accbody *SPHatab, *pa;
     int SPHanobj;
     void *decomp_info = NULL;
-    int do_restart;
+    //int do_restart;
     float dark_tacc = -1e30;	/* initialize so dark_need_update is true */
     float dark_dt;
     int did_dark_update;
     int SPHnupdate;
     int make_sink_tree;
-    int has_grav_data;
+    //int has_grav_data;
     int kernel_ncoef1, kernel_ncoef2;
     double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts = 0, Nel = 0; 	/* for cooling tables */
@@ -338,6 +341,9 @@ main(int argc, char *argv[])
     SetBoundary(30); /* From integrate.c; if you change this, also change
 			it in SPHDiags */
 
+	read_initial_ctl(csdfp, &params);
+    if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
+	/*
     SDFgetintOrDefault(csdfp, "timeout", &timeout, 600);
     if (timeout > 0) MPMY_TimeoutSet(timeout);
 #ifdef __PARAGON__
@@ -365,6 +371,7 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "do_absorbing_bndry", &do_absorbing_bndry, 0);
     SDFgetintOrDefault(csdfp, "do_drag", &do_drag, 0);
     SDFgetintOrDefault(csdfp, "has_grav_data", &has_grav_data, do_grav);
+	*/
 
 /* read in Z and N for abundances. at some later point, populate nparr/nnarr ~CIE*/
     if( (fp = fopen("networklist","r"))==NULL ) printf("error opening networklist\n");
@@ -380,20 +387,20 @@ main(int argc, char *argv[])
  
     make_spec_names(&pnames, 'p', NISO);
     make_spec_names(&nnames, 'n', NISO);
-    if (do_sph || do_grav) {
-	if (!((strncmp(name, "test", 4) == 0))) {
-	    if (SDFhasname("SPHdatafile", csdfp) || do_restart) {
+    if (params.do_sph || params.do_grav) {
+	if (!((strncmp(params.name, "test", 4) == 0))) {
+	    if (SDFhasname("SPHdatafile", csdfp) || params.do_restart) {
 		char iname[256];
 
-		if (do_sph) {
+		if (params.do_sph) {
 		    SDFgetfloatOrDefault(csdfp, "new_h", &new_h, 0.0);
 		    SDFgetfloatOrDefault(csdfp, "new_u", &new_u, 0.0);
-		    if (do_restart) sprintf(iname, "%s_sph.restart", name);
+		    if (params.do_restart) sprintf(iname, "%s_sph.restart", params.name);
 		    else SDFgetstring(csdfp, "SPHdatafile", iname, 
 				      sizeof(iname));
 /* this is where the SDF file is read in -CIE */
 		    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
-				   set_id, setpvel, new_h, new_u);
+				   params.set_id, params.setpvel, new_h, new_u);
             for ( i=0; i<NISO; i++ ) {
             /* need to create the 'p1/n1' specifiers */
                 SDFgetintOrDie(sdfp, pnames[i], &nparr[i]);
@@ -401,39 +408,40 @@ main(int argc, char *argv[])
             }
 		} else SPHgnobj = SPHnobj = 0;
 
-		if (has_grav_data) {
-		    if (do_restart) sprintf(iname, "%s.restart", name);
+		if (params.has_grav_data) {
+		    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
 		    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
 		    sdfp = DarkRead(iname, csdfp, (void **)&btab, &gnobj, 
-				    &nobj, set_id, setpvel);
+				    &nobj, params.set_id, params.setpvel);
 		} else {
 		    gnobj = nobj = 0;
 		    btab = Malloc(sizeof(body)); /* realloced later */
 		}
 
-		if (do_point_mass) {
+		if (params.do_point_mass) {
 		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-		    if (do_restart) sprintf(iname, "%s.restart", name);
+		    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
 		    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
 		    sdfp = DarkRead(iname, csdfp, (void **)&pmtab, &PMgnobj, 
-				    &PMnobj, set_id, setpvel);
+				    &PMnobj, params.set_id, params.setpvel);
 		    Msgf(("lx = %e; ly = %e; lz = %e; accmass = %e\n", 
 			  pmtab->l[0], pmtab->l[1], pmtab->l[2], 
 			  pmtab->accmass));
-		} else if (do_point_mass2) {
+		} else if (params.do_point_mass2) {
 		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
 		    SDFgetfloatOrDie(sdfp, "centmass", &centmass);
 		    PMgnobj = PMnobj = 0;
 		    pmtab = Malloc(sizeof(body)); /* realloced later */
 /*  		    SDFgetstring(csdfp, "windfile", iname, sizeof(iname)); */
 /*   		    sdfp = SPHRead(iname, csdfp, &SPHwind, &windnobj, */
-/* 				   &windnobj, set_id, setpvel, new_h,new_u); */
+/* 				   &windnobj, params.set_id, params.setpvel, new_h,new_u); */
+    if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
 		} else {
 		    PMgnobj = PMnobj = 0;
 		    pmtab = Malloc(sizeof(body)); /* realloced later */
 		}
 
-		if (do_boundary) {
+		if (params.do_boundary) {
 		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
 		    SDFgetfloatOrDie(csdfp, "r_outer", &r_outer);
 		    SDFgetfloatOrDie(csdfp, "centmass", &centmass);
@@ -447,7 +455,7 @@ main(int argc, char *argv[])
          * restarts would use the wrong quantities? (how is time step/ iter done?)
          */
         /* first iteration, get central particle data from ctl file */
-        if (do_absorbing_bndry) {
+        if (params.do_absorbing_bndry) {
             SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
             SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
             SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
@@ -468,7 +476,7 @@ main(int argc, char *argv[])
             SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
         }
 
-        if (do_winds) {
+        if (params.do_winds) {
             SDFgetintOrDie(csdfp, "windpart_per_shell", 
                     &windpartpershell);
             SDFgetintOrDefault(csdfp, "old_winds", &old_winds, 1);
@@ -522,9 +530,9 @@ main(int argc, char *argv[])
         SDFgetfloatOrDefault(sdfp, "dt", &dt, 0.0);
         SDFgetfloatOrDefault(sdfp, "dark_dt", &dark_dt, dt);
         } else {
-            sdfp = InitRead(name, csdfp, (void **)&btab, &gnobj, &nobj, 
+            sdfp = InitRead(params.name, csdfp, (void **)&btab, &gnobj, &nobj, 
                     &SPHbtab, &SPHgnobj, &SPHnobj, 
-                    set_id, setpvel, new_h, new_u);
+                    params.set_id, params.setpvel, new_h, new_u);
         }
         FixNterms(btab, nobj);
         SPHFixNterms(SPHbtab, SPHnobj);
@@ -534,7 +542,7 @@ main(int argc, char *argv[])
         SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
 
         /* not first iteration, get central data particle from sdf file */
-        if (do_absorbing_bndry && (iter > 0)) {
+        if (params.do_absorbing_bndry && (iter > 0)) {
             SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
             SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
             SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
@@ -555,15 +563,15 @@ main(int argc, char *argv[])
             SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
             SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
         }
-        if (cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
+        if (params.cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
         if(sdfp) SDFclose(sdfp);
     } else {
-        SPHTestData(csdfp, &SPHbtab, &SPHgnobj, &SPHnobj, do_periodic);
+        SPHTestData(csdfp, &SPHbtab, &SPHgnobj, &SPHnobj, params.do_periodic);
         nobj = gnobj = 0;
         cosmo.GNewt = (float)1.0;
         tvel = tpos = (float)0.0;
         iter = 0;
-        if (do_periodic) R0 = 1.0;
+        if (params.do_periodic) R0 = 1.0;
     }
     }
     singlPrintf("Maxmem after data read is %d (%d)\n", maxmem(), maxheap());
@@ -573,7 +581,7 @@ main(int argc, char *argv[])
     }
 
     SDFgetfloatOrDefault(csdfp, "epsilon", &eps, 0.0);
-    if (do_grav) {
+    if (params.do_grav) {
         SDFgetintOrDefault(csdfp, "do_DL", &do_DL, 0);
         SDFgetintOrDefault(csdfp, "do_BH", &do_BH, 0);
         SDFgetintOrDefault(csdfp, "do_Bmax", &do_Bmax, 0);
@@ -586,11 +594,11 @@ main(int argc, char *argv[])
     }
     SDFgetfloatOrDefault(csdfp, "CWfac", &CWfac, 0.0);
     SDFgetfloatOrDefault(csdfp, "SPHCWfac", &SPHCWfac, 0.0);
-    if (!do_restart) {
+    if (!params.do_restart) {
         SDFgetfloatOrDie(csdfp, "dt", &dt);
-        /*  SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, do_grav ? dt : 1e30); */
+        /*  SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30); */
     }
-    SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, do_grav ? dt : 1e30);
+    SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30);
     SDFgetintOrDie(csdfp, "nsteps", &nsteps);
     SDFgetintOrDefault(csdfp, "log_time", &log_time, 0);
     SDFgetintOrDefault(csdfp, "comov_eps", &comov_eps, 0);
@@ -629,7 +637,7 @@ main(int argc, char *argv[])
     if (do_Bmax) MACtype = BMAX_MAC;
     else if (do_BH) MACtype = BH_MAC;
     else if (do_Arel) MACtype = AREL_MAC;
-    else if (do_grav) Error("No MAC specified\n");
+    else if (params.do_grav) Error("No MAC specified\n");
 
     if( SDFgetstring(csdfp, "outfile", outnamebase, sizeof(outnamebase)) == 0){
         do_output = ( strlen(outnamebase) > 0 );
@@ -667,14 +675,14 @@ main(int argc, char *argv[])
         kernel_coef1[2] = -3.0/2.0;	kernel_coef2[2] = 3.0/2.0;
         kernel_coef1[3] = 3.0/4.0;	kernel_coef2[3] = -1.0/4.0;
     }
-    if (do_drag) {
+    if (params.do_drag) {
         SDFgetfloatOrDie(csdfp, "drag_coeff", &drag_coeff);
     }
 
     if(csdfp) 
         SDFclose(csdfp);
 
-    if (do_periodic) {
+    if (params.do_periodic) {
         EnableTimer(&FixCubeTm, "Fix Cube");
     }
 
@@ -698,6 +706,7 @@ main(int argc, char *argv[])
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
 
+	print_initial_ctl(params);
 
     singlPrintf("float errtol = %g;\n", tol);
     singlPrintf("float dt = %g;\n", dt);
@@ -732,8 +741,8 @@ main(int argc, char *argv[])
         singlPrintf("int dt_short = %d;\n", dt_short);
         singlPrintf("float dt_max = %g;\n", dt_max);
     }
-    if (do_winds) {
-        singlPrintf("int do_winds = %d;\n", do_winds);
+    if (params.do_winds) {
+        singlPrintf("int do_winds = %d;\n", params.do_winds);
         singlPrintf("int windpartpershell = %d;\n", windpartpershell);
         singlPrintf("int old_winds = %d;\n", old_winds);
         if (old_winds) {
@@ -762,18 +771,18 @@ main(int argc, char *argv[])
             singlPrintf("float r_outer = %g;\n", r_outer);
         }
     }
-    if (do_point_mass || do_point_mass2) {
+    if (params.do_point_mass || params.do_point_mass2) {
         singlPrintf("float r_inner = %f;\n", r_inner);
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
         singlPrintf("float centmass = %e;\n", centmass);
     }
-    if (do_boundary) {
+    if (params.do_boundary) {
         singlPrintf("float r_inner = %f;\n", r_inner);
         singlPrintf("float r_outer = %f;\n", r_outer);
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
         singlPrintf("float centmass = %e;\n", centmass);
     }
-    if (do_absorbing_bndry) {
+    if (params.do_absorbing_bndry) {
         /* this just prints to stdout, can print as arrays! ~CIE*/
         /*
            singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);
@@ -816,14 +825,14 @@ bndry.l[0], bndry.l[1]);
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
     }
-    if (do_drag) {
-        singlPrintf("int do_drag = %d;\n", do_drag);
+    if (params.do_drag) {
+        singlPrintf("int do_drag = %d;\n", params.do_drag);
         singlPrintf("float drag_coeff = %g;\n", drag_coeff);
     }
-    if (do_cooling)
-        singlPrintf("int do_cooling = %d;\n", do_cooling);
-    singlPrintf("int do_diffusion = %d;\n", do_diffusion);
-    singlPrintf("int do_burning = %d;\n", do_burning);
+    if (params.do_cooling)
+        singlPrintf("int do_cooling = %d;\n", params.do_cooling);
+    singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
+    singlPrintf("int do_burning = %d;\n", params.do_burning);
     if( do_output ){
         if (short_output) singlPrintf("Short ");
         singlPrintf("Output to %s.nnnn, every %d steps\n", 
@@ -833,7 +842,7 @@ bndry.l[0], bndry.l[1]);
     }
     singlPrintf("int timer_freq = %d;\n", timer_freq);
     singlPrintf("float sort_tol = %.4f;\n", sort_tol);
-    singlPrintf("int do_periodic = %d;\n", do_periodic);
+    singlPrintf("int do_periodic = %d;\n", params.do_periodic);
     singlPrintf("kernel coefficients:\n\t");
     for (i = 0; i < kernel_ncoef1; i++)
         singlPrintf("%12.9f ", kernel_coef1[i]);
@@ -842,21 +851,21 @@ bndry.l[0], bndry.l[1]);
         singlPrintf("%12.9f ", kernel_coef2[i]);
     singlPrintf("\n");
     if (log_time) Error("This code does not support log_time\n");
-    if (cosmology) {
-        singlPrintf("int cosmology = %d;\n", cosmology);
+    if (params.cosmology) {
+        singlPrintf("int cosmology = %d;\n", params.cosmology);
         singlPrintf("int comov_eps = %d;\n", comov_eps);
         singlPrintf("float comov_eps_epoch = %f;\n", comov_eps_epoch);
-        singlPrintf("int setpvel = %d;\n", setpvel);
+        singlPrintf("int setpvel = %d;\n", params.setpvel);
         singlPrintf("float R0 = %f;\n", R0);
     }
 
     singlFflush();
-    if (do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
+    if (params.do_sph) SPHSanityCheck(SPHbtab, SPHnobj, SPHgnobj, &SPHmtot);
 
     /* read in necessary files on all processors */
     /*read in cooling curves and ion fraction tables*/
     /*
-       if(do_cooling || do_burning) {
+       if(params.do_cooling || params.do_burning) {
        }
        read in cooling curves and ion. tables in any case. need for temp calculation
        */
@@ -867,7 +876,7 @@ bndry.l[0], bndry.l[1]);
     rank = MPMY_Procnum();
 
     /*set up network for burn code. do this AFTER do_burning is set!!*/
-    if(do_burning) {
+    if(params.do_burning) {
         /* each processor needs its own 'net.rc' file */
         sprintf(tmpchr, "%-d\0",rank); 
         netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
@@ -923,7 +932,7 @@ bndry.l[0], bndry.l[1]);
     }
 
     for (nsteps += iter; iter <= nsteps; iter++) {
-        if (timeout > 0) MPMY_TimeoutReset(timeout);
+        if (params.timeout > 0) MPMY_TimeoutReset(params.timeout);
         /* Reset timers and counters */
         ClearEnabledTimers();
         ClearEnabledCounters();
@@ -946,7 +955,7 @@ bndry.l[0], bndry.l[1]);
 
         }
 
-        if (do_point_mass2) {
+        if (params.do_point_mass2) {
             for(q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
                 /* Even if grav isn't on, I still want to zero phi at the
                    beginning of each iteration */
@@ -954,7 +963,7 @@ bndry.l[0], bndry.l[1]);
             }
         }
 
-        if (do_point_mass || do_point_mass2) {
+        if (params.do_point_mass || params.do_point_mass2) {
             SPHoldnobj = SPHnobj;
             /*  	  ShrinkBtab((SPHbody **)&SPHbtab, pmtab, &SPHnobj, r_inner); */
             /*   	  ShrinkBtab2((SPHbody **)&SPHbtab, &SPHnobj, r_inner);  */
@@ -973,7 +982,7 @@ bndry.l[0], bndry.l[1]);
             /* SPHFixId(SPHbtab, SPHnobj, SPHgnobj); */
         }
 
-        if (do_winds && const_winds) {
+        if (params.do_winds && const_winds) {
             SPHoldnobj = SPHnobj;
             /* Only proc 0 adds wind particles; would be better to add
                particles only to node that included particles close to
@@ -989,7 +998,7 @@ bndry.l[0], bndry.l[1]);
             MPMY_Combine(&dt_wind, &dt_wind, 1, MPMY_FLOAT, MPMY_MIN);
             Msgf(("Iter: %d: Added %d bodies to SPHbtab\n", iter,
                         SPHnobj-SPHoldnobj));
-        } else if (do_winds && nonconst_winds) {
+        } else if (params.do_winds && nonconst_winds) {
             SPHoldnobj = SPHnobj;
             /* Only proc 0 adds wind particles; would be better to add
                particles only to node that included particles close to
@@ -1003,7 +1012,7 @@ bndry.l[0], bndry.l[1]);
             MPMY_Combine(&dt_wind, &dt_wind, 1, MPMY_FLOAT, MPMY_MIN);
             Msgf(("Iter: %d: Added %d bodies to SPHbtab\n", iter,
                         SPHnobj-SPHoldnobj));
-        } else if (do_winds && accreting_winds) {
+        } else if (params.do_winds && accreting_winds) {
             SPHoldnobj = SPHnobj;
             dt_wind = 1e30;
             if (MPMY_Procnum() == 0) {
@@ -1018,7 +1027,7 @@ bndry.l[0], bndry.l[1]);
                         SPHnobj-SPHoldnobj));
         } else dt_wind = 1e30;
 
-        if (do_boundary) {
+        if (params.do_boundary) {
             SPHoldnobj = SPHnobj;
             AdjustBtab3((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, r_inner, 
                     r_outer);
@@ -1027,7 +1036,7 @@ bndry.l[0], bndry.l[1]);
                         SPHoldnobj-SPHnobj));
         }
 
-        if (do_absorbing_bndry) {
+        if (params.do_absorbing_bndry) {
             SPHoldnobj = SPHnobj;
             AdjustBtab4((SPHbody **)&SPHbtab, &SPHnobj, bndry, &newmass, &newr,
                     newp, newl, cosmo.GNewt, dt);
@@ -1061,12 +1070,12 @@ bndry.l[0], bndry.l[1]);
         else this_eps = eps;
 
         /* Add sph particles to btab for gravity */
-        if (do_grav) {
+        if (params.do_grav) {
             GravPlusSPH((void **)&btab, &nobj, SPHbtab, SPHnobj);
             SanityCheck(btab, nobj, gnobj+SPHgnobj, &mtot); /* need mtot */
 
-            if (do_periodic) {
-                if (cosmology)
+            if (params.do_periodic) {
+                if (params.cosmology)
                     sysradius = R0 * (1.0+1e-5) / (1.0 + Znow(tpos));
                 else
                     sysradius = R0;
@@ -1085,7 +1094,7 @@ bndry.l[0], bndry.l[1]);
                     rmin[0], rmin[1], rmin[2], 
                     rmax[0], rmax[1], rmax[2]));
 
-        if (do_grav && dark_need_update(dark_tacc, dark_dt)) {
+        if (params.do_grav && dark_need_update(dark_tacc, dark_dt)) {
             /* We aren't using the first two params */
             SetTol(0, 0, cosmo.GNewt, this_eps, gnobj+SPHgnobj);
             FixKeys(btab, nobj, GETKEY);
@@ -1115,7 +1124,7 @@ bndry.l[0], bndry.l[1]);
             StartTimer(&FindForcesTm);
             WalkInit(&thetree, &thetree, sizeof(Sink), mac, inherit);
             StartTimer(&PerTm);
-            if (do_periodic) {
+            if (params.do_periodic) {
                 singlPrintf("FindForces (periodic), this_eps=%g\n", this_eps);
                 Periodic(&thetree, 2.0*sysradius);
                 singlPrintf("FindForces (periodic) done\n");
@@ -1131,8 +1140,8 @@ bndry.l[0], bndry.l[1]);
             StartTimer(&WTermTm);
             WalkTerminate();
             StopTimer(&WTermTm);
-            if (cosmology) FixGlobalForce(btab, nobj);
-            if (do_periodic) FixCube(btab, nobj, sysradius, cosmo.GNewt*mtot);
+            if (params.cosmology) FixGlobalForce(btab, nobj);
+            if (params.do_periodic) FixCube(btab, nobj, sysradius, cosmo.GNewt*mtot);
             StopTimer(&FindForcesTm);
             singlPrintf("FindForces done %d (%d)\n", maxmem(), maxheap());
 
@@ -1145,8 +1154,8 @@ bndry.l[0], bndry.l[1]);
         } else did_dark_update = 0;
 
         /* Must do this before SPH */
-        if (setpvel) {
-            setpvel = 0;
+        if (params.setpvel) {
+            params.setpvel = 0;
             set_vels(btab, nobj, tpos);
             singlPrintf("Velocities adjusted to linear approximation.\n");
         }
@@ -1156,7 +1165,7 @@ bndry.l[0], bndry.l[1]);
             char name[256];
             float sysr, image_rmin[3], image_rmax[3];
 
-            if (cosmology)
+            if (params.cosmology)
                 sysr = R0 * (1.0+1e-5) / (1.0 + Znow(tpos));
             else
                 sysr = R0;
@@ -1170,12 +1179,12 @@ bndry.l[0], bndry.l[1]);
                     x_pixels, y_pixels, 10, 250, log_image, name);
         }
 
-        if (do_grav) GravMinusSPH((void **)&btab, &nobj, &SPHatab, &SPHanobj);
+        if (params.do_grav) GravMinusSPH((void **)&btab, &nobj, &SPHatab, &SPHanobj);
 
         /* This should be the high-water mark for memory use */
         AddCounter(&MemCnt, malloc_used()/1024);
 
-        if (do_sph && (first_step || exact_rho)) {
+        if (params.do_sph && (first_step || exact_rho)) {
             singlPrintf("BuildTree\n");
             StartTimer(&BuildTot);
             pqsortsetup(&SPHsortedbtab, SPHbtab, SPHnobj, sizeof(SPHbody), sort_tol, Realloc_f);
@@ -1201,9 +1210,9 @@ bndry.l[0], bndry.l[1]);
             }
             WalkInit(&SPHtree, &SPHtree, sizeof(SinkSPH), 
                     (macv_t)SPHgate, (inherit_t)InheritSPH);
-            if (do_periodic) {
+            if (params.do_periodic) {
                 singlPrintf("FindRho (periodic)\n");
-                vsz = (cosmology) ? 2.0*sysradius*Hnow(tvel) : 0.0;
+                vsz = (params.cosmology) ? 2.0*sysradius*Hnow(tvel) : 0.0;
                 PeriodicSPH(&SPHtree, 2.0*sysradius, vsz);
                 singlPrintf("FindRho (periodic) done\n");
             }
@@ -1219,7 +1228,7 @@ bndry.l[0], bndry.l[1]);
             singlPrintf("FreeTree done\n");
         }
 
-        if (do_sph) {
+        if (params.do_sph) {
             SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
             /* This sets rho_est and pr for communication during BuildTree */
             update_intermediate(SPHbtab, SPHnobj, Gridpts, Nel, dt_last, 
@@ -1313,9 +1322,9 @@ bndry.l[0], bndry.l[1]);
             WalkInit(&SPHtree, sinkptr, sizeof(SinkSPH), 
                     (macv_t)SPHgate, (inherit_t)InheritSPH);
             StartTimer(&PerTmSPH);
-            if (do_periodic) {
+            if (params.do_periodic) {
                 singlPrintf("ForceSPH (periodic)\n");
-                vsz = (cosmology) ? 2.0*sysradius*Hnow(tvel) : 0.0;
+                vsz = (params.cosmology) ? 2.0*sysradius*Hnow(tvel) : 0.0;
                 PeriodicSPH(sinkptr, 2.0*sysradius, vsz);
                 singlPrintf("ForceSPH (periodic) done\n");
             }
@@ -1366,7 +1375,7 @@ bndry.l[0], bndry.l[1]);
             }
         }
 
-        if (do_point_mass) {
+        if (params.do_point_mass) {
             /* Need to add code for parallel stuff here */
             for (p = pmtab; p < pmtab+PMgnobj; p++) {
                 VS(p->acc, = 0.0);
@@ -1381,17 +1390,17 @@ bndry.l[0], bndry.l[1]);
             singlPrintf("Updated %d point-mass accs\n", PMgnobj);
         }
 
-        if (do_point_mass2 || do_boundary) {
+        if (params.do_point_mass2 || params.do_boundary) {
             update_point_SPHmass2(SPHbtab, SPHnobj, eps*eps, cosmo.GNewt, 
                     centmass);
         }
 
-        if (do_absorbing_bndry) {
+        if (params.do_absorbing_bndry) {
             /*updates acc of all particles due to central particle (?) ~CIE */
             update_point_SPHmass_bndry(SPHbtab, SPHnobj, cosmo.GNewt, bndry);
         }
 
-        if (do_drag) {
+        if (params.do_drag) {
             for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
                 /* Just throws energy away */
                 VV(q->acc, -= drag_coeff*q->vel);
@@ -1404,8 +1413,8 @@ bndry.l[0], bndry.l[1]);
                 || (do_output && !first_step
                     && ((iter+output_freq) % output_freq == 0))
                 || (save_first && first_step)) {
-            if (do_sph) {
-                if (do_winds) { 
+            if (params.do_sph) {
+                if (params.do_winds) { 
                     if (old_winds) {
                         if (short_output) 
                             ShortWindOutput(SPHbtab, SPHnobj, windbtab, 
@@ -1420,8 +1429,8 @@ bndry.l[0], bndry.l[1]);
                 else
                     SPHOutput(SPHbtab, SPHnobj, outnamebase, iter);
             }
-            if (has_grav_data) Output(btab, nobj, outnamebase, iter);
-            if (do_point_mass) Output(pmtab, PMnobj, outnamebase, iter);
+            if (params.has_grav_data) Output(btab, nobj, outnamebase, iter);
+            if (params.do_point_mass) Output(pmtab, PMnobj, outnamebase, iter);
         }
 
 
@@ -1432,13 +1441,13 @@ bndry.l[0], bndry.l[1]);
 
         Msgf(("integrating positions\n"));
         dark_ke = dark_pe = 0.0;
-        if (has_grav_data) {
+        if (params.has_grav_data) {
             for (p = btab; p < btab+nobj; p++) {
                 dark_ke += 0.5 * p->mass * Dot(p->vel, p->vel);
                 dark_pe += 0.5 * p->mass * p->phi;
             }
         }
-        if (do_point_mass) {
+        if (params.do_point_mass) {
             for (p = pmtab; p < pmtab+PMnobj; p++) {
                 dark_ke += 0.5 * p->mass * Dot(p->vel, p->vel);
                 dark_pe += 0.5 * p->mass * p->phi;
@@ -1481,7 +1490,7 @@ bndry.l[0], bndry.l[1]);
             }
             added_particles = 0;
         }
-        if (do_absorbing_bndry) {
+        if (params.do_absorbing_bndry) {
             /* to get central velocity from particle absorption, need to Update 
              * bndry.vel under consideration from absorbed (linear, +angular?) momentum?
              */
@@ -1531,26 +1540,26 @@ bndry.l[0], bndry.l[1]);
         for (i = 0; i < SPHnobj; i++) {
             VV(SPHbtab[i].acc_last, = SPHbtab[i].acc);
         }
-        if(cosmology){
+        if(params.cosmology){
             CosmoPush(&cosmo, tpos);
             Msgf(("Pushed cosmo params to tpos=%g, Z=%g\n",
                         tpos, Znow(tpos)));
         }
 
-        if (do_periodic) {
-            if (cosmology)
+        if (params.do_periodic) {
+            if (params.cosmology)
                 sysradius = R0 * 1.0 / (1.0 + Znow(tpos));
             else
                 sysradius = R0;
             VS(rmin, = -sysradius);
             VS(rmax, = sysradius);
-            WrapPeriodic(btab, nobj, rmin, rmax, 2.0*sysradius, cosmology,
+            WrapPeriodic(btab, nobj, rmin, rmax, 2.0*sysradius, params.cosmology,
                     log_time, tpos, dt_last);
-            SPHWrapPeriodic(SPHbtab, SPHnobj, rmin, rmax, 2.0*sysradius, cosmology,
+            SPHWrapPeriodic(SPHbtab, SPHnobj, rmin, rmax, 2.0*sysradius, params.cosmology,
                     log_time, tpos, dt_last);
         }
 
-        if (cosmology) 
+        if (params.cosmology) 
             singlPrintf("\ntpos: %g znow: %.3f iter: %d size: %.2f, eps: %.0f\n", 
                     tposlast, Znow(tposlast), iter, sysradius, this_eps);
         else
@@ -1558,9 +1567,9 @@ bndry.l[0], bndry.l[1]);
                     tposlast, iter, sysradius);
 
         etot = 0.0;
-        if (has_grav_data) Diags(btab, nobj, dark_ke, dark_pe, &etot, dt_last, iter, gnobj);
-        if (do_point_mass) Diags(pmtab, PMnobj, dark_ke, dark_pe, &etot, dt_last, iter, PMgnobj);
-        if (do_sph) SPHDiags(SPHbtab, SPHnobj, ke, pe, te, &etot, dt_last, iter, SPHgnobj, 
+        if (params.has_grav_data) Diags(btab, nobj, dark_ke, dark_pe, &etot, dt_last, iter, gnobj);
+        if (params.do_point_mass) Diags(pmtab, PMnobj, dark_ke, dark_pe, &etot, dt_last, iter, PMgnobj);
+        if (params.do_sph) SPHDiags(SPHbtab, SPHnobj, ke, pe, te, &etot, dt_last, iter, SPHgnobj, 
                 &tmin, &tbad);
 
         MPMY_Combine(udot_limit, udot_limit, 2, MPMY_INT, MPMY_SUM);
@@ -1652,7 +1661,7 @@ bndry.l[0], bndry.l[1]);
             for (q = SPHbtab; q < SPHbtab + SPHnobj; ++q)
                 q->nterms += gnterms;
 
-            /* 	    if (do_grav) { */
+            /* 	    if (params.do_grav) { */
             /* 		ggravnterms /= SPHgnobj; */
             /* 		singlPrintf("Avg grav_nterms = %.0f, SPHCWfac is %.2f\n", ggravnterms, */
             /* 			    SPHCWfac); */
@@ -2210,7 +2219,7 @@ static void WindOutput(SPHbody *btab, int nobj, windbody *windbtab,
     MPMY_ICombine(&te, &te, 1, MPMY_DOUBLE, MPMY_SUM, req);
     MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
     MPMY_ICombine_Wait(req);
-    if (cosmology) {
+    if (params.cosmology) {
         output_z = Znow(tpos_out);
         output_h = Hnow(tpos_out);
         output_R0 = R0;
@@ -2297,7 +2306,7 @@ static void ShortWindOutput(SPHbody *btab, int nobj, windbody *windbtab,
     MPMY_ICombine_Init(&req);
     MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
     MPMY_ICombine_Wait(req);
-    if (cosmology) {
+    if (params.cosmology) {
         output_z = Znow(tpos_out);
         output_h = Hnow(tpos_out);
         output_R0 = R0;
@@ -2410,7 +2419,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
     MPMY_ICombine(&te, &te, 1, MPMY_DOUBLE, MPMY_SUM, req);
     MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
     MPMY_ICombine_Wait(req);
-    if (cosmology) {
+    if (params.cosmology) {
         output_z = Znow(tpos_out);
         output_h = Hnow(tpos_out);
         output_R0 = R0;
@@ -2573,7 +2582,7 @@ static void Output(body *btab, int nobj, const char *outnamebase, int iter)
     MPMY_ICombine(&pe, &pe, 1, MPMY_DOUBLE, MPMY_SUM, req);
     MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
     MPMY_ICombine_Wait(req);
-    if (cosmology) {
+    if (params.cosmology) {
         output_z = Znow(tpos_out);
         output_h = Hnow(tpos_out);
         output_R0 = R0;

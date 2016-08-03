@@ -10,6 +10,7 @@
 #include "nrutil.h"
 #include "units.h"
 #include "cool.h"
+#include "params.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -41,9 +42,9 @@ static float voffset[NDIM];
 static void (*bodyfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 static void (*cellfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 
-extern int do_diffusion;
-extern int do_cooling;
-extern int do_burning;
+//extern int do_diffusion;
+//extern int do_cooling;
+//extern int do_burning;
 
     void
 SetSPHOffset(float *off, float *voff)
@@ -364,7 +365,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
             dq -= t12;
         }
         /* flux-limited diffusion */
-        if (do_diffusion)
+        if (params.do_diffusion)
             if (grpm < 0.0) {  /* What does this condition really mean? */
                 float Dmeanr = 2.0*rij1*sink->D/(sink->D+bp->D)*bp->D;
                 clight = C_LIGHT*tdivlCF* rij1;
@@ -572,7 +573,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }
 
         p->udot += p->drho_dt * p->pr / (p->rho * p->rho) + 
-            ( (do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
+            ( (params.do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
               : 0.0 );
 
         if (!finite(p->udot)) 
@@ -594,11 +595,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
 
         /********** do the burning ***********/
-        if(do_burning && temp_ok)
+        if(params.do_burning && temp_ok)
             deltah = burning(p, dt, rank);
 
         /********** do the cooling ***********/
-        if (do_cooling && (tpos >= 2.62980e6*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+        if (params.do_cooling && (tpos >= 2.62980e6*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
             dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
             /*
                if ( iter%interval == 0) {
@@ -649,7 +650,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
             (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
         p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
 
-        if (do_diffusion) {
+        if (params.do_diffusion) {
             /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
             /* Calculate temperature from u, then "create" photons (a*T^4) */
