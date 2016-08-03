@@ -138,7 +138,7 @@ static float dt;
 static float dt_max;
 static float sysradius;
 static float tpos, tvel;
-static float t_wind;
+//static float t_wind;
 static float dt_wind;
 //static int cosmology; only used here
 static float R0;
@@ -224,7 +224,7 @@ main(int argc, char *argv[])
     FILE *fp = NULL;
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
-    int windgnobj, windnobj, windpartpershell;
+    int windgnobj, windnobj;// windpartpershell;
     //float r_inner;
     int PMgnobj, PMnobj;
     int SPHsinkgnobj, SPHsinknobj;
@@ -280,11 +280,11 @@ main(int argc, char *argv[])
     float dt_last;
     //float new_h, new_u;
     //int do_sph, do_grav, do_winds;
-    int old_winds, const_winds, nonconst_winds, accreting_winds;
-    float r_wind, r_outer, v_wind, mdot_wind, u_wind, openangle_wind;
-    float omega_wind;
-    char template_name[256];
-    char winddata_name[256];
+    //int old_winds, const_winds, nonconst_winds, accreting_winds;
+    //float r_wind, r_outer, v_wind, mdot_wind, u_wind, openangle_wind;
+    //float omega_wind;
+    //char template_name[256];
+    //char winddata_name[256];
     template_t *tempbtab;
     winddata_t *wdata;
     int tempnobj;
@@ -484,6 +484,7 @@ main(int argc, char *argv[])
         }
 
         if (params.do_winds) {
+			/*c
             SDFgetintOrDie(csdfp, "windpart_per_shell", 
                     &windpartpershell);
             SDFgetintOrDefault(csdfp, "old_winds", &old_winds, 1);
@@ -497,12 +498,14 @@ main(int argc, char *argv[])
                     (nonconst_winds && accreting_winds) )
                 Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
 
-            if (old_winds) {
+				*/
+            if (params.old_winds) {
                 sdfp = WindRead(iname, csdfp, &windbtab, &windgnobj, 
                         &windnobj);
             } else windgnobj = windnobj = 0;
 
-            if (const_winds || nonconst_winds || accreting_winds) {
+            if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
+				/*
                 SDFgetfloatOrDie(csdfp, "r_wind", &r_wind);
                 SDFgetfloatOrDefault(sdfp, "t_wind", &t_wind, 0.0);
                 if (const_winds || nonconst_winds)
@@ -512,24 +515,29 @@ main(int argc, char *argv[])
                     SDFgetfloatOrDie(csdfp, "omega_wind", &omega_wind);
                 SDFgetstring(csdfp, "template_name", template_name,
                         sizeof(template_name));
+						*/
                 if (MPMY_Procnum() == 0) {
-                    ReadTemplate(template_name, 
+                    ReadTemplate(params.template_name, 
                             (template_t **)&tempbtab, &tempnobj);
-                    if (tempnobj != windpartpershell) 
+                    if (tempnobj != params.windpartpershell) 
                         Error("tempnobj != windpartpershell");
                 }
             }
-            if (const_winds || accreting_winds) {
+			/*c
+            if (params.const_winds || params.accreting_winds) {
                 SDFgetfloatOrDie(csdfp, "v_wind", &v_wind);
                 SDFgetfloatOrDie(csdfp, "mdot_wind", &mdot_wind);
                 SDFgetfloatOrDie(csdfp, "u_wind", &u_wind);
             }
-            if (nonconst_winds) {
+			*/
+            if (params.nonconst_winds) {
+				/*c
                 SDFgetstring(csdfp, "winddata_name", winddata_name,
                         sizeof(winddata_name));
                 SDFgetfloatOrDefault(csdfp, "r_outer", &r_outer, 1e30);
+				*/
                 if (MPMY_Procnum() == 0)
-                    ReadWindData(winddata_name,
+                    ReadWindData(params.winddata_name,
                             (winddata_t **)&wdata, &wnobj);
             }
         } 
@@ -753,32 +761,32 @@ main(int argc, char *argv[])
     }
     if (params.do_winds) {
         singlPrintf("int do_winds = %d;\n", params.do_winds);
-        singlPrintf("int windpartpershell = %d;\n", windpartpershell);
-        singlPrintf("int old_winds = %d;\n", old_winds);
-        if (old_winds) {
+        singlPrintf("int windpartpershell = %d;\n", params.windpartpershell);
+        singlPrintf("int old_winds = %d;\n", params.old_winds);
+        if (params.old_winds) {
             singlPrintf("int windgnobj = %d;\n", windgnobj);
         }
-        singlPrintf("int const_winds = %d;\n", const_winds);
-        singlPrintf("int nonconst_winds = %d;\n", nonconst_winds);
-        singlPrintf("int accreting_winds = %d;\n", accreting_winds);
-        if (const_winds || accreting_winds) {
-            singlPrintf("float v_wind = %g;\n", v_wind);
-            singlPrintf("float mdot_wind = %g;\n", mdot_wind);
-            singlPrintf("float u_wind = %g;\n", u_wind);
+        singlPrintf("int const_winds = %d;\n", params.const_winds);
+        singlPrintf("int nonconst_winds = %d;\n", params.nonconst_winds);
+        singlPrintf("int accreting_winds = %d;\n", params.accreting_winds);
+        if (params.const_winds || params.accreting_winds) {
+            singlPrintf("float v_wind = %g;\n", params.v_wind);
+            singlPrintf("float mdot_wind = %g;\n", params.mdot_wind);
+            singlPrintf("float u_wind = %g;\n", params.u_wind);
         }
-        if (const_winds || nonconst_winds || accreting_winds) {
-            singlPrintf("float r_wind = %g;\n", r_wind);
-            singlPrintf("float t_wind = %g;\n", t_wind);
-            if (const_winds || nonconst_winds)
-                singlPrintf("float openangle_wind = %g;\n", openangle_wind);
-            singlPrintf("char template_name[] = \"%s\"\n", template_name);
+        if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
+            singlPrintf("float r_wind = %g;\n", params.r_wind);
+            singlPrintf("float t_wind = %g;\n", params.t_wind);
+            if (params.const_winds || params.nonconst_winds)
+                singlPrintf("float openangle_wind = %g;\n", params.openangle_wind);
+            singlPrintf("char template_name[] = \"%s\"\n", params.template_name);
             srand48(192837465);
         }
-        if (accreting_winds)
-            singlPrintf("float omega_wind = %g;\n", omega_wind);
-        if (nonconst_winds) {
-            singlPrintf("char winddata_name[] = \"%s\"\n", winddata_name);
-            singlPrintf("float r_outer = %g;\n", r_outer);
+        if (params.accreting_winds)
+            singlPrintf("float omega_wind = %g;\n", params.omega_wind);
+        if (params.nonconst_winds) {
+            singlPrintf("char winddata_name[] = \"%s\"\n", params.winddata_name);
+            singlPrintf("float r_outer = %g;\n", params.r_outer);
         }
     }
     if (params.do_point_mass || params.do_point_mass2) {
@@ -788,7 +796,7 @@ main(int argc, char *argv[])
     }
     if (params.do_boundary) {
         singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float r_outer = %f;\n", r_outer);
+        singlPrintf("float r_outer = %f;\n", params.r_outer);
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
         singlPrintf("float centmass = %e;\n", params.centmass);
     }
@@ -983,7 +991,7 @@ bndry.l[0], bndry.l[1]);
             /*  	  ShrinkBtab((SPHbody **)&SPHbtab, pmtab, &SPHnobj, params.r_inner); */
             /*   	  ShrinkBtab2((SPHbody **)&SPHbtab, &SPHnobj, params.r_inner);  */
             AdjustBtab((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, windbtab, 
-                    windnobj, windpartpershell, params.r_inner, dt_last, iter, tpos, 
+                    windnobj, params.windpartpershell, params.r_inner, dt_last, iter, tpos, 
                     &added_particles);
             /*  	  AdjustBtab2((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, windbtab,  */
             /* 		      windnobj, params.r_inner, dt_last, iter, tpos,  */
@@ -997,7 +1005,7 @@ bndry.l[0], bndry.l[1]);
             /* SPHFixId(SPHbtab, SPHnobj, SPHgnobj); */
         }
 
-        if (params.do_winds && const_winds) {
+        if (params.do_winds && params.const_winds) {
             SPHoldnobj = SPHnobj;
             /* Only proc 0 adds wind particles; would be better to add
                particles only to node that included particles close to
@@ -1005,36 +1013,36 @@ bndry.l[0], bndry.l[1]);
             dt_wind = 1e30;
             if (MPMY_Procnum() == 0) {
                 AddWinds((SPHbody **)&SPHbtab, &SPHnobj, tempbtab, 
-                        windpartpershell, r_wind, v_wind, mdot_wind, 
-                        u_wind, &t_wind, tpos, dt_last, &dt_wind, 
-                        openangle_wind);
+                        params.windpartpershell, params.r_wind, params.v_wind, params.mdot_wind, 
+                        params.u_wind, &(params.t_wind), tpos, dt_last, &dt_wind, 
+                        params.openangle_wind);
             }
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
             MPMY_Combine(&dt_wind, &dt_wind, 1, MPMY_FLOAT, MPMY_MIN);
             Msgf(("Iter: %d: Added %d bodies to SPHbtab\n", iter,
                         SPHnobj-SPHoldnobj));
-        } else if (params.do_winds && nonconst_winds) {
+        } else if (params.do_winds && params.nonconst_winds) {
             SPHoldnobj = SPHnobj;
             /* Only proc 0 adds wind particles; would be better to add
                particles only to node that included particles close to
                wind in the first place */
             dt_wind = 1e30;
             AddNonconstWinds((SPHbody **)&SPHbtab, &SPHnobj, tempbtab, 
-                    windpartpershell, wdata, wnobj, r_wind, 
-                    r_outer, &t_wind, tpos, dt_last, &dt_wind,
-                    openangle_wind);
+                    params.windpartpershell, wdata, wnobj, params.r_wind, 
+                    params.r_outer, &(params.t_wind), tpos, dt_last, &dt_wind,
+                    params.openangle_wind);
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
             MPMY_Combine(&dt_wind, &dt_wind, 1, MPMY_FLOAT, MPMY_MIN);
             Msgf(("Iter: %d: Added %d bodies to SPHbtab\n", iter,
                         SPHnobj-SPHoldnobj));
-        } else if (params.do_winds && accreting_winds) {
+        } else if (params.do_winds && params.accreting_winds) {
             SPHoldnobj = SPHnobj;
             dt_wind = 1e30;
             if (MPMY_Procnum() == 0) {
                 AddAccreting((SPHbody **)&SPHbtab, &SPHnobj, tempbtab, 
-                        windpartpershell, r_wind, v_wind, mdot_wind, 
-                        u_wind, &t_wind, tpos, dt_last, &dt_wind, 
-                        omega_wind);
+                        params.windpartpershell, params.r_wind, params.v_wind, params.mdot_wind, 
+                        params.u_wind, &(params.t_wind), tpos, dt_last, &dt_wind, 
+                        params.omega_wind);
             }
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
             MPMY_Combine(&dt_wind, &dt_wind, 1, MPMY_FLOAT, MPMY_MIN);
@@ -1045,7 +1053,7 @@ bndry.l[0], bndry.l[1]);
         if (params.do_boundary) {
             SPHoldnobj = SPHnobj;
             AdjustBtab3((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, params.r_inner, 
-                    r_outer);
+                    params.r_outer);
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
             Msgf(("Iter: %d: Removed %d bodies from SPHbtab\n", iter, 
                         SPHoldnobj-SPHnobj));
@@ -1430,7 +1438,7 @@ bndry.l[0], bndry.l[1]);
                 || (save_first && first_step)) {
             if (params.do_sph) {
                 if (params.do_winds) { 
-                    if (old_winds) {
+                    if (params.old_winds) {
                         if (short_output) 
                             ShortWindOutput(SPHbtab, SPHnobj, windbtab, 
                                     windnobj, outnamebase, iter);
@@ -2371,7 +2379,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
     int output_nobj = nobj;
     float tpos_out = tpos;
     float tvel_out = tvel; /* changed in Integrate() */
-    float twind_out = t_wind;
+    float twind_out = params.t_wind;
     double ke, pe, te;
     MPMY_Comm_request req;
     int output_gnobj;

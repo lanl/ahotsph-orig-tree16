@@ -61,6 +61,40 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 	    SDFgetfloatOrDie(sdfp, "r_outer", &(params->r_outer));
 	    SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
 	}
+
+    if (params->do_winds) {
+        SDFgetintOrDie(sdfp, "windpart_per_shell", &(params->windpartpershell));
+        SDFgetintOrDefault(sdfp, "old_winds", &(params->old_winds), 1);
+        SDFgetintOrDefault(sdfp, "const_winds", &(params->const_winds), 0);
+        SDFgetintOrDefault(sdfp, "nonconst_winds", &(params->nonconst_winds), 0);
+        SDFgetintOrDefault(sdfp, "accreting_winds", &(params->accreting_winds), 0);
+        if ( (params->const_winds && params->nonconst_winds) || 
+                (params->const_winds && params->accreting_winds) || 
+                (params->nonconst_winds && params->accreting_winds) )
+            Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
+	
+	    if (params->const_winds || params->nonconst_winds || params->accreting_winds) {
+	        SDFgetfloatOrDie(sdfp, "r_wind", &(params->r_wind));
+	        SDFgetfloatOrDefault(sdfp, "t_wind", &(params->t_wind), 0.0);
+	        if (params->const_winds || params->nonconst_winds)
+	            SDFgetfloatOrDefault(sdfp, "openangle_wind", 
+	                    &(params->openangle_wind), 180.0);
+	        if (params->accreting_winds)
+	            SDFgetfloatOrDie(sdfp, "omega_wind", &(params->omega_wind));
+	        SDFgetstring(sdfp, "template_name", params->template_name,
+	                sizeof(params->template_name));
+	    }
+	    
+	    if (params->const_winds || params->accreting_winds) {
+	        SDFgetfloatOrDie(sdfp, "v_wind", &(params->v_wind));
+	        SDFgetfloatOrDie(sdfp, "mdot_wind", &(params->mdot_wind));
+	        SDFgetfloatOrDie(sdfp, "u_wind", &(params->u_wind));
+	    }
+	    if (params->nonconst_winds) {
+	        SDFgetstring (sdfp, "winddata_name", params->winddata_name, sizeof(params->winddata_name));
+	        SDFgetfloatOrDefault (sdfp, "r_outer", &(params->r_outer), 1e30);
+	    }
+	}
 }
 
 void print_initial_ctl(setup_params_t params) {
@@ -106,42 +140,42 @@ void print_absorb_bndry(bndry_t bndry) {
 		/* print position */
 		singlPrintf("float bndry[] = [ %g", bndry.pos[0]);
 #if NDIM>=2
-		singlPrintf(",%g ", bndry.pos[1]);
+		singlPrintf(" ,%g", bndry.pos[1]);
 #if NDIM>=3
-		singlPrintf(",%g ", bndry.pos[2]);
+		singlPrintf(" ,%g", bndry.pos[2]);
 #endif
 #endif
-		singlPrintf("];\n");
+		singlPrintf(" ];\n");
 
 		/* print velocity */
 		singlPrintf("float bndry_vel[] = [ %g", bndry.vel[0]);
 #if NDIM>=2
-		singlPrintf(",%g ", bndry.vel[1]);
+		singlPrintf(" ,%g", bndry.vel[1]);
 #if NDIM>=3
-		singlPrintf(",%g ", bndry.vel[2]);
+		singlPrintf(" ,%g", bndry.vel[2]);
 #endif
 #endif
-		singlPrintf("];\n");
+		singlPrintf(" ];\n");
 
 		/* print linear momentum */
 		singlPrintf("float bndry_p[] = [ %g", bndry.p[0]);
 #if NDIM>=2
-		singlPrintf(",%g ", bndry.p[1]);
+		singlPrintf(" ,%g", bndry.p[1]);
 #if NDIM>=3
-		singlPrintf(",%g ", bndry.p[2]);
+		singlPrintf(" ,%g", bndry.p[2]);
 #endif
 #endif
-		singlPrintf("];\n");
+		singlPrintf(" ];\n");
 
 		/* print angular momentum */
 		singlPrintf("float bndry_l[] = [ %g", bndry.l[0]);
 #if NDIM>=2
-		singlPrintf(",%g ", bndry.l[1]);
+		singlPrintf(" ,%g", bndry.l[1]);
 #if NDIM>=3
-		singlPrintf(",%g ", bndry.l[2]);
+		singlPrintf(" ,%g", bndry.l[2]);
 #endif
 #endif
-		singlPrintf("];\n");
+		singlPrintf(" ];\n");
 
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);

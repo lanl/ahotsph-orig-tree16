@@ -4,6 +4,8 @@
 typedef struct {
     char name[256]; /* "datafile" */
     char SPHdatafile[256]; /* "SPHdatafile" */
+	char template_name[256]; /* wind template */
+	char winddata_name[256]; /* "winddata_name" */
     int timeout;
     int fail_if_slow;
     int do_restart;
@@ -23,11 +25,23 @@ typedef struct {
     int do_absorbing_bndry;
     int do_drag;
     int has_grav_data;
+    int windpartpershell;
+    int old_winds;
+    int const_winds;
+    int nonconst_winds;
+    int accreting_winds;
     float new_h;
     float new_u;
     float r_inner;
     float r_outer;
     float centmass;
+    float openangle_wind;
+    float omega_wind;
+    float r_wind;
+    float t_wind;
+    float v_wind;
+    float mdot_wind;
+    float u_wind;
 } setup_params_t;
 
 typedef struct{
