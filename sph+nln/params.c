@@ -40,6 +40,26 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "do_absorbing_bndry", &(params->do_absorbing_bndry), 0);
     SDFgetintOrDefault(sdfp, "do_drag", &(params->do_drag), 0);
     SDFgetintOrDefault(sdfp, "has_grav_data", &(params->has_grav_data), params->do_grav);
+
+    if (SDFhasname("SPHdatafile", sdfp))
+        SDFgetstring(sdfp, "SPHdatafile", params->SPHdatafile, sizeof(params->SPHdatafile));
+
+    SDFgetfloatOrDefault(sdfp, "new_h", &(params->new_h), 0.0);
+    SDFgetfloatOrDefault(sdfp, "new_u", &(params->new_u), 0.0);
+
+    if (params->do_point_mass) 
+        SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
+
+    if (params->do_point_mass2) {
+        SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
+        SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
+	}
+
+	if (params->do_boundary) {
+	    SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
+	    SDFgetfloatOrDie(sdfp, "r_outer", &(params->r_outer));
+	    SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
+	}
 }
 
 void print_initial_ctl(setup_params_t params) {
@@ -64,6 +84,18 @@ void print_initial_ctl(setup_params_t params) {
 	singlPrintf("int do_absorbing_bndry = %d;\n", params.do_absorbing_bndry);
     singlPrintf("int do_drag = %d;\n", params.do_drag);
 	singlPrintf("int has_grav_data = %d;\n", params.has_grav_data);
+
+	singlPrintf("string SPHdatafile[] = %s;\n", params.SPHdatafile);
+    if (params.do_point_mass || params.do_point_mass2) {
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
+        singlPrintf("float centmass = %e;\n", params.centmass);
+    }
+
+    if (params.do_boundary) {
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
+        singlPrintf("float r_outer = %f;\n", params.r_outer);
+        singlPrintf("float centmass = %e;\n", params.centmass);
+    }
 
     singlPrintf("end printing params structure\n");
 }

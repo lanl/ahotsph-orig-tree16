@@ -147,7 +147,7 @@ static float this_tol, this_eps;
 static float frac_tol;
 static float Gamma;		/* lowercase is a math.h function */
 static int default_nterms;
-static float centmass;
+//static float centmass;
 
 static double gnterms;
 /* static double ggravnterms; */
@@ -226,7 +226,7 @@ main(int argc, char *argv[])
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
     int windgnobj, windnobj, windpartpershell;
-    float r_inner;
+    //float r_inner;
     int PMgnobj, PMnobj;
     int SPHsinkgnobj, SPHsinknobj;
     body *btab, *p;
@@ -279,7 +279,7 @@ main(int argc, char *argv[])
     //int timeout;
     //int set_id;
     float dt_last;
-    float new_h, new_u;
+    //float new_h, new_u;
     //int do_sph, do_grav, do_winds;
     int old_winds, const_winds, nonconst_winds, accreting_winds;
     float r_wind, r_outer, v_wind, mdot_wind, u_wind, openangle_wind;
@@ -343,7 +343,7 @@ main(int argc, char *argv[])
 
 	read_initial_ctl(csdfp, &params);
     if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
-	/*
+	/*c
     SDFgetintOrDefault(csdfp, "timeout", &timeout, 600);
     if (timeout > 0) MPMY_TimeoutSet(timeout);
 #ifdef __PARAGON__
@@ -389,18 +389,20 @@ main(int argc, char *argv[])
     make_spec_names(&nnames, 'n', NISO);
     if (params.do_sph || params.do_grav) {
 	if (!((strncmp(params.name, "test", 4) == 0))) {
-	    if (SDFhasname("SPHdatafile", csdfp) || params.do_restart) {
+	//c    if (SDFhasname("SPHdatafile", csdfp) || params.do_restart) {
+		if (strlen(params.SPHdatafile) > 0 || params.do_restart) {
 		char iname[256];
 
 		if (params.do_sph) {
-		    SDFgetfloatOrDefault(csdfp, "new_h", &new_h, 0.0);
-		    SDFgetfloatOrDefault(csdfp, "new_u", &new_u, 0.0);
+		    //cSDFgetfloatOrDefault(csdfp, "new_h", &new_h, 0.0);
+		    //cSDFgetfloatOrDefault(csdfp, "new_u", &new_u, 0.0);
 		    if (params.do_restart) sprintf(iname, "%s_sph.restart", params.name);
-		    else SDFgetstring(csdfp, "SPHdatafile", iname, 
-				      sizeof(iname));
+		    /*celse SDFgetstring(csdfp, "SPHdatafile", iname, 
+				      sizeof(iname));*/
+			else sprintf(iname, "%s", params.SPHdatafile);
 /* this is where the SDF file is read in -CIE */
 		    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
-				   params.set_id, params.setpvel, new_h, new_u);
+				   params.set_id, params.setpvel, params.new_h, params.new_u);
             for ( i=0; i<NISO; i++ ) {
             /* need to create the 'p1/n1' specifiers */
                 SDFgetintOrDie(sdfp, pnames[i], &nparr[i]);
@@ -410,7 +412,8 @@ main(int argc, char *argv[])
 
 		if (params.has_grav_data) {
 		    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
-		    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
+		//c    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
+			else sprintf(iname, "%s", params.name);
 		    sdfp = DarkRead(iname, csdfp, (void **)&btab, &gnobj, 
 				    &nobj, params.set_id, params.setpvel);
 		} else {
@@ -419,33 +422,35 @@ main(int argc, char *argv[])
 		}
 
 		if (params.do_point_mass) {
-		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
+		    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
 		    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
-		    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
+		    //celse SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
+			else sprintf(iname, "%s", params.name);
 		    sdfp = DarkRead(iname, csdfp, (void **)&pmtab, &PMgnobj, 
 				    &PMnobj, params.set_id, params.setpvel);
 		    Msgf(("lx = %e; ly = %e; lz = %e; accmass = %e\n", 
 			  pmtab->l[0], pmtab->l[1], pmtab->l[2], 
 			  pmtab->accmass));
 		} else if (params.do_point_mass2) {
-		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-		    SDFgetfloatOrDie(sdfp, "centmass", &centmass);
+		    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
+		    //cSDFgetfloatOrDie(sdfp, "centmass", &centmass);
 		    PMgnobj = PMnobj = 0;
 		    pmtab = Malloc(sizeof(body)); /* realloced later */
 /*  		    SDFgetstring(csdfp, "windfile", iname, sizeof(iname)); */
 /*   		    sdfp = SPHRead(iname, csdfp, &SPHwind, &windnobj, */
-/* 				   &windnobj, params.set_id, params.setpvel, new_h,new_u); */
-    if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
+/* 				   &windnobj, params.set_id, params.setpvel, params.new_h,params.new_u); */
+			if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
 		} else {
 		    PMgnobj = PMnobj = 0;
 		    pmtab = Malloc(sizeof(body)); /* realloced later */
 		}
 
+		/*c
 		if (params.do_boundary) {
 		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
 		    SDFgetfloatOrDie(csdfp, "r_outer", &r_outer);
 		    SDFgetfloatOrDie(csdfp, "centmass", &centmass);
-		}
+		}*/
 
         /* get bndry quantities from sdf file or ctl file?
          * if from sdf file: corresponds to how it is done in snevolbrna, but then 
@@ -532,7 +537,7 @@ main(int argc, char *argv[])
         } else {
             sdfp = InitRead(params.name, csdfp, (void **)&btab, &gnobj, &nobj, 
                     &SPHbtab, &SPHgnobj, &SPHnobj, 
-                    params.set_id, params.setpvel, new_h, new_u);
+                    params.set_id, params.setpvel, params.new_h, params.new_u);
         }
         FixNterms(btab, nobj);
         SPHFixNterms(SPHbtab, SPHnobj);
@@ -772,15 +777,15 @@ main(int argc, char *argv[])
         }
     }
     if (params.do_point_mass || params.do_point_mass2) {
-        singlPrintf("float r_inner = %f;\n", r_inner);
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
-        singlPrintf("float centmass = %e;\n", centmass);
+        singlPrintf("float centmass = %e;\n", params.centmass);
     }
     if (params.do_boundary) {
-        singlPrintf("float r_inner = %f;\n", r_inner);
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
         singlPrintf("float r_outer = %f;\n", r_outer);
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
-        singlPrintf("float centmass = %e;\n", centmass);
+        singlPrintf("float centmass = %e;\n", params.centmass);
     }
     if (params.do_absorbing_bndry) {
         /* this just prints to stdout, can print as arrays! ~CIE*/
@@ -965,20 +970,20 @@ bndry.l[0], bndry.l[1]);
 
         if (params.do_point_mass || params.do_point_mass2) {
             SPHoldnobj = SPHnobj;
-            /*  	  ShrinkBtab((SPHbody **)&SPHbtab, pmtab, &SPHnobj, r_inner); */
-            /*   	  ShrinkBtab2((SPHbody **)&SPHbtab, &SPHnobj, r_inner);  */
+            /*  	  ShrinkBtab((SPHbody **)&SPHbtab, pmtab, &SPHnobj, params.r_inner); */
+            /*   	  ShrinkBtab2((SPHbody **)&SPHbtab, &SPHnobj, params.r_inner);  */
             AdjustBtab((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, windbtab, 
-                    windnobj, windpartpershell, r_inner, dt_last, iter, tpos, 
+                    windnobj, windpartpershell, params.r_inner, dt_last, iter, tpos, 
                     &added_particles);
             /*  	  AdjustBtab2((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, windbtab,  */
-            /* 		      windnobj, r_inner, dt_last, iter, tpos,  */
+            /* 		      windnobj, params.r_inner, dt_last, iter, tpos,  */
             /* 		      &added_particles, &newmass); */
 
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
             /* 	  MPMY_Combine(&newmass, &totnewmass, 1, MPMY_FLOAT, MPMY_SUM); */
-            /* 	  centmass += totnewmass; */
+            /* 	  params.centmass += totnewmass; */
             Msgf(("Iter: %d: Added %d bodies to SPHbtab\nBH mass = %f\n", iter, 
-                        SPHnobj-SPHoldnobj, centmass));
+                        SPHnobj-SPHoldnobj, params.centmass));
             /* SPHFixId(SPHbtab, SPHnobj, SPHgnobj); */
         }
 
@@ -1029,7 +1034,7 @@ bndry.l[0], bndry.l[1]);
 
         if (params.do_boundary) {
             SPHoldnobj = SPHnobj;
-            AdjustBtab3((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, r_inner, 
+            AdjustBtab3((SPHbody **)&SPHbtab, &SPHnobj, SPHgnobj, params.r_inner, 
                     r_outer);
             MPMY_Combine(&SPHnobj, &SPHgnobj, 1, MPMY_INT, MPMY_SUM);
             Msgf(("Iter: %d: Removed %d bodies from SPHbtab\n", iter, 
@@ -1392,7 +1397,7 @@ bndry.l[0], bndry.l[1]);
 
         if (params.do_point_mass2 || params.do_boundary) {
             update_point_SPHmass2(SPHbtab, SPHnobj, eps*eps, cosmo.GNewt, 
-                    centmass);
+                    params.centmass);
         }
 
         if (params.do_absorbing_bndry) {
@@ -2248,7 +2253,7 @@ static void WindOutput(SPHbody *btab, int nobj, windbody *windbtab,
             "hubble", SDF_FLOAT, output_h,
             "redshift", SDF_FLOAT, output_z,
             "gamma", SDF_FLOAT, Gamma,
-            "centmass", SDF_FLOAT, centmass, 
+            "centmass", SDF_FLOAT, params.centmass, 
             "ke", SDF_DOUBLE, ke,
             "pe", SDF_DOUBLE, pe,
             "te", SDF_DOUBLE, te,
@@ -2330,7 +2335,7 @@ static void ShortWindOutput(SPHbody *btab, int nobj, windbody *windbtab,
             "tvel", SDF_FLOAT, tvel_out,
             "R0", SDF_FLOAT, output_R0,
             "gamma", SDF_FLOAT, Gamma,
-            "centmass", SDF_FLOAT, centmass, 
+            "centmass", SDF_FLOAT, params.centmass, 
             NULL);
     Free(output_btab);
     singlPrintf("\nOutput done.\n");
@@ -2453,7 +2458,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
             "massCF", SDF_FLOAT, massCF,
             "lenCF", SDF_FLOAT, lenCF,
             "timeCF", SDF_FLOAT, timeCF,
-            "centmass", SDF_FLOAT, centmass, 
+            "centmass", SDF_FLOAT, params.centmass, 
             "bndry_x", SDF_FLOAT, bndry.pos[0],
             "bndry_y", SDF_FLOAT, bndry.pos[1],
             "bndry_z", SDF_FLOAT, bndry.pos[2],
