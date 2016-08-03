@@ -1,7 +1,7 @@
 defaultCC:=gcc
 defaultFC:=gfortran
 
-CC_SPECIFIC:=-g -DLONG_LONG_KEYS -std=c90 -Wno-deprecated -Wno-deprecated-declarations -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-int-conversion
+CC_SPECIFIC:=-g -DLONG_LONG_KEYS -fgnu89-inline -Wno-deprecated -Wno-deprecated-declarations -Wno-incompatible-pointer-types -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-int-conversion
 FC_SPECIFIC:=-g -ff2c 
 ARCH_SPECIFIC:=-march=native -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=64 -DYY_SKIP_YYWRAP -fno-common
 override OPTIMIZE:=-O3 -static
