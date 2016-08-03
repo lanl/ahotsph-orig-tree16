@@ -5,12 +5,14 @@
 #include "tree.h"
 #include "key.h"
 #include "timers.h"
+#include "ndim.h"
+#include "params.h"
 
 #ifndef NISO
 #define NISO 20 	/* number of isotopes tracked */
 #endif
 
-#define NDIM 3
+/*#define NDIM 3*/ /* now in ndim.h; cie */
 #define SPH_SAVE_ACC
 #define POS_IS_DOUBLE
 #define SPH_GRAV
@@ -286,15 +288,6 @@ typedef struct{
     int interactions;
     float min_nbr_dt;
 } SinkSPH;
-
-typedef struct{
-    float pos[NDIM];
-    float vel[NDIM];
-    float p[NDIM];
-    float l[NDIM];
-    float mass;
-    float r;
-} bndry_t;
 
 typedef struct {
     double pos[3];

@@ -5,6 +5,7 @@
 #include "singlio.h"
 #include "error.h"
 #include "params.h"
+#include "ndim.h"
 
 void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 
@@ -98,4 +99,73 @@ void print_initial_ctl(setup_params_t params) {
     }
 
     singlPrintf("end printing params structure\n");
+}
+
+void print_absorb_bndry(bndry_t bndry) {
+    if (params.do_absorbing_bndry) {
+		/* print position */
+		singlPrintf("float bndry[] = [ %g", bndry.pos[0]);
+#if NDIM>=2
+		singlPrintf(",%g ", bndry.pos[1]);
+#if NDIM>=3
+		singlPrintf(",%g ", bndry.pos[2]);
+#endif
+#endif
+		singlPrintf("];\n");
+
+		/* print velocity */
+		singlPrintf("float bndry_vel[] = [ %g", bndry.vel[0]);
+#if NDIM>=2
+		singlPrintf(",%g ", bndry.vel[1]);
+#if NDIM>=3
+		singlPrintf(",%g ", bndry.vel[2]);
+#endif
+#endif
+		singlPrintf("];\n");
+
+		/* print linear momentum */
+		singlPrintf("float bndry_p[] = [ %g", bndry.p[0]);
+#if NDIM>=2
+		singlPrintf(",%g ", bndry.p[1]);
+#if NDIM>=3
+		singlPrintf(",%g ", bndry.p[2]);
+#endif
+#endif
+		singlPrintf("];\n");
+
+		/* print angular momentum */
+		singlPrintf("float bndry_l[] = [ %g", bndry.l[0]);
+#if NDIM>=2
+		singlPrintf(",%g ", bndry.l[1]);
+#if NDIM>=3
+		singlPrintf(",%g ", bndry.l[2]);
+#endif
+#endif
+		singlPrintf("];\n");
+
+        singlPrintf("float bndry_mass = %g;\n", bndry.mass);
+        singlPrintf("float bndry_r = %g;\n", bndry.r);
+    }
+}
+
+void read_absorb_bndry(SDF *sdfp, bndry_t *bndry) {
+    SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry->pos[0]));
+    SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry->vel[0]));
+    SDFgetfloatOrDefault(sdfp, "bndry_lx", &(bndry->l[0]), 0.0);
+    SDFgetfloatOrDefault(sdfp, "bndry_px", &(bndry->p[0]), 0.0);
+#if NDIM>=2        
+    SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry->pos[1]));
+    SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry->vel[1]));
+    SDFgetfloatOrDefault(sdfp, "bndry_ly", &(bndry->l[1]), 0.0);
+    SDFgetfloatOrDefault(sdfp, "bndry_py", &(bndry->p[1]), 0.0);
+#if NDIM>=3
+    SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry->pos[2]));
+    SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry->vel[2]));
+    SDFgetfloatOrDefault(sdfp, "bndry_lz", &(bndry->l[2]), 0.0);
+    SDFgetfloatOrDefault(sdfp, "bndry_pz", &(bndry->p[2]), 0.0);
+#endif
+#endif
+    SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry->mass));
+    SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry->r));
+
 }

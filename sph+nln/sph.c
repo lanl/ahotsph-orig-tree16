@@ -10,7 +10,6 @@
 #include "nrutil.h"
 #include "units.h"
 #include "cool.h"
-#include "params.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154

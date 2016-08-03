@@ -42,7 +42,6 @@
 #include "nrutil.h"
 #include "units.h"
 #include "cool.h"
-#include "params.h"
 
 #define MAXCOEF 16
 
@@ -461,6 +460,8 @@ main(int argc, char *argv[])
          */
         /* first iteration, get central particle data from ctl file */
         if (params.do_absorbing_bndry) {
+			read_absorb_bndry(csdfp, &bndry);
+			/*c
             SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
             SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
             SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
@@ -479,6 +480,7 @@ main(int argc, char *argv[])
 #endif
             SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
             SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
+			*/
         }
 
         if (params.do_winds) {
@@ -548,6 +550,8 @@ main(int argc, char *argv[])
 
         /* not first iteration, get central data particle from sdf file */
         if (params.do_absorbing_bndry && (iter > 0)) {
+			read_absorb_bndry(sdfp, &bndry);
+			/*c
             SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
             SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
             SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
@@ -567,6 +571,7 @@ main(int argc, char *argv[])
 
             SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
             SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
+			*/
         }
         if (params.cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
         if(sdfp) SDFclose(sdfp);
@@ -788,6 +793,7 @@ main(int argc, char *argv[])
         singlPrintf("float centmass = %e;\n", params.centmass);
     }
     if (params.do_absorbing_bndry) {
+		print_absorb_bndry (bndry);
         /* this just prints to stdout, can print as arrays! ~CIE*/
         /*
            singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);
@@ -818,6 +824,7 @@ bndry.l[0], bndry.l[1]);
 */
         /*#elif NDIM=3*//*let's assume we're never going to run this in 1D ~CIE*/
         /*#else*/
+		/*c
         singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
                 bndry.pos[0], bndry.pos[1], bndry.pos[2]);
         singlPrintf("float bndry_vel[3] = [ %g, %g, %g ];\n", 
@@ -826,9 +833,12 @@ bndry.l[0], bndry.l[1]);
                 bndry.p[0], bndry.p[1], bndry.p[2]);
         singlPrintf("float bndry_l[3] = [ %g, %g, %g ];\n", 
                 bndry.l[0], bndry.l[1], bndry.l[2]);
+		*/
         /*#endif*/
+		/*c
         singlPrintf("float bndry_mass = %g;\n", bndry.mass);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
+		*/
     }
     if (params.do_drag) {
         singlPrintf("int do_drag = %d;\n", params.do_drag);
