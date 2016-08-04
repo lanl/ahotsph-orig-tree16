@@ -387,210 +387,214 @@ main(int argc, char *argv[])
     make_spec_names(&pnames, 'p', NISO);
     make_spec_names(&nnames, 'n', NISO);
     if (params.do_sph || params.do_grav) {
-	if (!((strncmp(params.name, "test", 4) == 0))) {
-	/*c    if (SDFhasname("SPHdatafile", csdfp) || params.do_restart) { */
-		if (strlen(params.SPHdatafile) > 0 || params.do_restart) {
-		char iname[256];
-
-		if (params.do_sph) {
-		    //cSDFgetfloatOrDefault(csdfp, "new_h", &new_h, 0.0);
-		    //cSDFgetfloatOrDefault(csdfp, "new_u", &new_u, 0.0);
-		    if (params.do_restart) sprintf(iname, "%s_sph.restart", params.name);
-		    /*celse SDFgetstring(csdfp, "SPHdatafile", iname, 
-				      sizeof(iname));*/
-			else sprintf(iname, "%s", params.SPHdatafile);
-/* this is where the SDF file is read in -CIE */
-		    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
-				   params.set_id, params.setpvel, params.new_h, params.new_u);
-            for ( i=0; i<NISO; i++ ) {
-            /* need to create the 'p1/n1' specifiers */
-                SDFgetintOrDie(sdfp, pnames[i], &nparr[i]);
-                SDFgetintOrDie(sdfp, nnames[i], &nnarr[i]);
-            }
-		} else SPHgnobj = SPHnobj = 0;
-
-		if (params.has_grav_data) {
-		    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
-		//c    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
-			else sprintf(iname, "%s", params.name);
-		    sdfp = DarkRead(iname, csdfp, (void **)&btab, &gnobj, 
-				    &nobj, params.set_id, params.setpvel);
-		} else {
-		    gnobj = nobj = 0;
-		    btab = Malloc(sizeof(body)); /* realloced later */
-		}
-
-		if (params.do_point_mass) {
-		    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-		    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
-		    //celse SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
-			else sprintf(iname, "%s", params.name);
-		    sdfp = DarkRead(iname, csdfp, (void **)&pmtab, &PMgnobj, 
-				    &PMnobj, params.set_id, params.setpvel);
-		    Msgf(("lx = %e; ly = %e; lz = %e; accmass = %e\n", 
-			  pmtab->l[0], pmtab->l[1], pmtab->l[2], 
-			  pmtab->accmass));
-		} else if (params.do_point_mass2) {
-		    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-		    //cSDFgetfloatOrDie(sdfp, "centmass", &centmass);
-		    PMgnobj = PMnobj = 0;
-		    pmtab = Malloc(sizeof(body)); /* realloced later */
-/*  		    SDFgetstring(csdfp, "windfile", iname, sizeof(iname)); */
-/*   		    sdfp = SPHRead(iname, csdfp, &SPHwind, &windnobj, */
-/* 				   &windnobj, params.set_id, params.setpvel, params.new_h,params.new_u); */
-			if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
-		} else {
-		    PMgnobj = PMnobj = 0;
-		    pmtab = Malloc(sizeof(body)); /* realloced later */
-		}
-
-		/*c
-		if (params.do_boundary) {
-		    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-		    SDFgetfloatOrDie(csdfp, "r_outer", &r_outer);
-		    SDFgetfloatOrDie(csdfp, "centmass", &centmass);
-		}*/
-
-        /* get bndry quantities from sdf file or ctl file?
-         * if from sdf file: corresponds to how it is done in snevolbrna, but then 
-         * I need to modifiy the sdf files again - or not, get initial quantities 
-         * from ctl file, and later quantities from sdf file on restart
-         * if from ctl file: much easier to add to current set up, but then on 
-         * restarts would use the wrong quantities? (how is time step/ iter done?)
-         */
-        /* first iteration, get central particle data from ctl file */
-        if (params.do_absorbing_bndry) {
-			read_absorb_bndry(csdfp, &bndry);
-			/*c
-            SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
-            SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
-            SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
-            SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[0]), 0.0);
-#if NDIM>=2        
-            SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
-            SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
-            SDFgetfloatOrDefault(csdfp, "bndry_ly", &(bndry.l[1]), 0.0);
-            SDFgetfloatOrDefault(csdfp, "bndry_py", &(bndry.p[1]), 0.0);
-#if NDIM>=3
-            SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
-            SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
-            SDFgetfloatOrDefault(csdfp, "bndry_lz", &(bndry.l[2]), 0.0);
-            SDFgetfloatOrDefault(csdfp, "bndry_pz", &(bndry.p[2]), 0.0);
-#endif
-#endif
-            SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
-            SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
-			*/
-        }
-
-        if (params.do_winds) {
-			/*c
-            SDFgetintOrDie(csdfp, "windpart_per_shell", 
-                    &windpartpershell);
-            SDFgetintOrDefault(csdfp, "old_winds", &old_winds, 1);
-            SDFgetintOrDefault(csdfp, "const_winds", &const_winds, 0);
-            SDFgetintOrDefault(csdfp, "nonconst_winds",
-                    &nonconst_winds, 0);
-            SDFgetintOrDefault(csdfp, "accreting_winds",
-                    &accreting_winds, 0);
-            if ( (const_winds && nonconst_winds) || 
-                    (const_winds && accreting_winds) || 
-                    (nonconst_winds && accreting_winds) )
-                Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
-
-				*/
-            if (params.old_winds) {
-                sdfp = WindRead(iname, csdfp, &windbtab, &windgnobj, 
-                        &windnobj);
-            } else windgnobj = windnobj = 0;
-
-            if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
-				/*
-                SDFgetfloatOrDie(csdfp, "r_wind", &r_wind);
-                SDFgetfloatOrDefault(sdfp, "t_wind", &t_wind, 0.0);
-                if (const_winds || nonconst_winds)
-                    SDFgetfloatOrDefault(csdfp, "openangle_wind", 
-                            &openangle_wind, 180.0);
-                if (accreting_winds)
-                    SDFgetfloatOrDie(csdfp, "omega_wind", &omega_wind);
-                SDFgetstring(csdfp, "template_name", template_name,
-                        sizeof(template_name));
-						*/
-                if (MPMY_Procnum() == 0) {
-                    ReadTemplate(params.template_name, 
-                            (template_t **)&tempbtab, &tempnobj);
-                    if (tempnobj != params.windpartpershell) 
-                        Error("tempnobj != windpartpershell");
-                }
-            }
-			/*c
-            if (params.const_winds || params.accreting_winds) {
-                SDFgetfloatOrDie(csdfp, "v_wind", &v_wind);
-                SDFgetfloatOrDie(csdfp, "mdot_wind", &mdot_wind);
-                SDFgetfloatOrDie(csdfp, "u_wind", &u_wind);
-            }
-			*/
-            if (params.nonconst_winds) {
+		if (!((strncmp(params.name, "test", 4) == 0))) {
+			if (strlen(params.SPHdatafile) > 0 || params.do_restart) {
+				char iname[256];
+	
+				if (params.do_sph) {
+				    //cSDFgetfloatOrDefault(csdfp, "new_h", &new_h, 0.0);
+				    //cSDFgetfloatOrDefault(csdfp, "new_u", &new_u, 0.0);
+				    if (params.do_restart) sprintf(iname, "%s_sph.restart", params.name);
+				    /*celse SDFgetstring(csdfp, "SPHdatafile", iname, 
+						      sizeof(iname));*/
+					else sprintf(iname, "%s", params.SPHdatafile);
+	/* this is where the SDF file is read in -CIE */
+				    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
+						   params.set_id, params.setpvel, params.new_h, params.new_u);
+		            for ( i=0; i<NISO; i++ ) {
+		            /* need to create the 'p1/n1' specifiers */
+		                SDFgetintOrDie(sdfp, pnames[i], &nparr[i]);
+		                SDFgetintOrDie(sdfp, nnames[i], &nnarr[i]);
+		            }
+				} else SPHgnobj = SPHnobj = 0;
+	
+				if (params.has_grav_data) {
+				    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
+				//c    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
+					else sprintf(iname, "%s", params.name);
+				    sdfp = DarkRead(iname, csdfp, (void **)&btab, &gnobj, 
+						    &nobj, params.set_id, params.setpvel);
+				} else {
+				    gnobj = nobj = 0;
+				    btab = Malloc(sizeof(body)); /* realloced later */
+				}
+	
+				if (params.do_point_mass) {
+				    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
+				    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
+				    //celse SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
+					else sprintf(iname, "%s", params.name);
+				    sdfp = DarkRead(iname, csdfp, (void **)&pmtab, &PMgnobj, 
+						    &PMnobj, params.set_id, params.setpvel);
+				    Msgf(("lx = %e; ly = %e; lz = %e; accmass = %e\n", 
+					  pmtab->l[0], pmtab->l[1], pmtab->l[2], 
+					  pmtab->accmass));
+				} else if (params.do_point_mass2) {
+				    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
+				    //cSDFgetfloatOrDie(sdfp, "centmass", &centmass);
+				    PMgnobj = PMnobj = 0;
+				    pmtab = Malloc(sizeof(body)); /* realloced later */
+		/*  		    SDFgetstring(csdfp, "windfile", iname, sizeof(iname)); */
+		/*   		    sdfp = SPHRead(iname, csdfp, &SPHwind, &windnobj, */
+		/* 				   &windnobj, params.set_id, params.setpvel, params.new_h,params.new_u); */
+					if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
+				} else {
+				    PMgnobj = PMnobj = 0;
+				    pmtab = Malloc(sizeof(body)); /* realloced later */
+				}
+	
 				/*c
-                SDFgetstring(csdfp, "winddata_name", winddata_name,
-                        sizeof(winddata_name));
-                SDFgetfloatOrDefault(csdfp, "r_outer", &r_outer, 1e30);
-				*/
-                if (MPMY_Procnum() == 0)
-                    ReadWindData(params.winddata_name,
-                            (winddata_t **)&wdata, &wnobj);
-            }
-        } 
-
-        SDFgetfloatOrDefault(sdfp, "dt", &dt, 0.0);
-        SDFgetfloatOrDefault(sdfp, "dark_dt", &dark_dt, dt);
-        } else {
-            sdfp = InitRead(params.name, csdfp, (void **)&btab, &gnobj, &nobj, 
-                    &SPHbtab, &SPHgnobj, &SPHnobj, 
-                    params.set_id, params.setpvel, params.new_h, params.new_u);
-        }
-        FixNterms(btab, nobj);
-        SPHFixNterms(SPHbtab, SPHnobj);
-        /*SDFgetfloatOrDie(csdfp, "Gnewt", &cosmo.GNewt);*/
-        SDFgetfloatOrDefault(sdfp, "tpos",  &tpos, (float)0.0);
-        tvel = tpos;
-        SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
-
-        /* not first iteration, get central data particle from sdf file */
-        if (params.do_absorbing_bndry && (iter > 0)) {
-			read_absorb_bndry(sdfp, &bndry);
-			/*c
-            SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
-            SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
-            SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
-            SDFgetfloatOrDie(sdfp, "bndry_lx", &(bndry.l[0]));
+				if (params.do_boundary) {
+				    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
+				    SDFgetfloatOrDie(csdfp, "r_outer", &r_outer);
+				    SDFgetfloatOrDie(csdfp, "centmass", &centmass);
+				}*/
+		
+		        /* get bndry quantities from sdf file or ctl file?
+		         * if from sdf file: corresponds to how it is done in snevolbrna, but then 
+		         * I need to modifiy the sdf files again - or not, get initial quantities 
+		         * from ctl file, and later quantities from sdf file on restart
+		         * if from ctl file: much easier to add to current set up, but then on 
+		         * restarts would use the wrong quantities? (how is time step/ iter done?)
+		         */
+		        /* first iteration, get central particle data from ctl file */
+		        if (params.do_absorbing_bndry) {
+		 			read_absorb_bndry(csdfp, &bndry);
+		 			/*c
+		            SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
+		            SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
+		            SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
+		            SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[0]), 0.0);
 #if NDIM>=2        
-            SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
-            SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
-            SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
-            SDFgetfloatOrDie(sdfp, "bndry_ly", &(bndry.l[1]));
+		            SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
+		            SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
+		            SDFgetfloatOrDefault(csdfp, "bndry_ly", &(bndry.l[1]), 0.0);
+		            SDFgetfloatOrDefault(csdfp, "bndry_py", &(bndry.p[1]), 0.0);
 #if NDIM>=3
-            SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
-            SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
-            SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
-            SDFgetfloatOrDie(sdfp, "bndry_lz", &(bndry.l[2]));
+		            SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
+		            SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
+		            SDFgetfloatOrDefault(csdfp, "bndry_lz", &(bndry.l[2]), 0.0);
+		            SDFgetfloatOrDefault(csdfp, "bndry_pz", &(bndry.p[2]), 0.0);
 #endif
 #endif
+		            SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
+		            SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
+		 			*/
+		        }
+	
+		        if (params.do_winds) {
+					/*c
+		            SDFgetintOrDie(csdfp, "windpart_per_shell", 
+		                    &windpartpershell);
+		            SDFgetintOrDefault(csdfp, "old_winds", &old_winds, 1);
+		            SDFgetintOrDefault(csdfp, "const_winds", &const_winds, 0);
+		            SDFgetintOrDefault(csdfp, "nonconst_winds",
+		                    &nonconst_winds, 0);
+		            SDFgetintOrDefault(csdfp, "accreting_winds",
+		                    &accreting_winds, 0);
+		            if ( (const_winds && nonconst_winds) || 
+		                    (const_winds && accreting_winds) || 
+		                    (nonconst_winds && accreting_winds) )
+		                Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
+		
+						*/
+		            if (params.old_winds) {
+		                sdfp = WindRead(iname, csdfp, &windbtab, &windgnobj, 
+		                        &windnobj);
+		            } else windgnobj = windnobj = 0;
+		
+		            if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
+						/*
+		                SDFgetfloatOrDie(csdfp, "r_wind", &r_wind);
+		                SDFgetfloatOrDefault(sdfp, "t_wind", &t_wind, 0.0);
+		                if (const_winds || nonconst_winds)
+		                    SDFgetfloatOrDefault(csdfp, "openangle_wind", 
+		                            &openangle_wind, 180.0);
+		                if (accreting_winds)
+		                    SDFgetfloatOrDie(csdfp, "omega_wind", &omega_wind);
+		                SDFgetstring(csdfp, "template_name", template_name,
+		                        sizeof(template_name));
+								*/
+		                if (MPMY_Procnum() == 0) {
+		                    ReadTemplate(params.template_name, 
+		                            (template_t **)&tempbtab, &tempnobj);
+		                    if (tempnobj != params.windpartpershell) 
+		                        Error("tempnobj != windpartpershell");
+		                }
+		            }
+					/*c
+		            if (params.const_winds || params.accreting_winds) {
+		                SDFgetfloatOrDie(csdfp, "v_wind", &v_wind);
+		                SDFgetfloatOrDie(csdfp, "mdot_wind", &mdot_wind);
+		                SDFgetfloatOrDie(csdfp, "u_wind", &u_wind);
+		            }
+					*/
+		            if (params.nonconst_winds) {
+						/*c
+		                SDFgetstring(csdfp, "winddata_name", winddata_name,
+		                        sizeof(winddata_name));
+		                SDFgetfloatOrDefault(csdfp, "r_outer", &r_outer, 1e30);
+						*/
+		                if (MPMY_Procnum() == 0)
+		                    ReadWindData(params.winddata_name,
+		                            (winddata_t **)&wdata, &wnobj);
+		            }
+		        } 
+	
+		        SDFgetfloatOrDefault(sdfp, "dt", &dt, 0.0);
+		        SDFgetfloatOrDefault(sdfp, "dark_dt", &dark_dt, dt);
+				/* just for the record */
+				singlPrintf("restart || SPHdatafile, dt = %g\n", dt);
+				if (params.do_restart) 
+					params.dt = dt;
+				//params.dark_dt = dark_dt;
+	        } else {
+	            sdfp = InitRead(params.name, csdfp, (void **)&btab, &gnobj, &nobj, 
+	                    &SPHbtab, &SPHgnobj, &SPHnobj, 
+	                    params.set_id, params.setpvel, params.new_h, params.new_u);
+	        }
+	        FixNterms(btab, nobj);
+	        SPHFixNterms(SPHbtab, SPHnobj);
+	        /*SDFgetfloatOrDie(csdfp, "Gnewt", &cosmo.GNewt);*/
+	        SDFgetfloatOrDefault(sdfp, "tpos",  &tpos, (float)0.0);
+	        tvel = tpos;
+	        SDFgetintOrDefault  (sdfp, "iter",  &iter, 0);
 
-            SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
-            SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
-			*/
-        }
-        if (params.cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
-        if(sdfp) SDFclose(sdfp);
-    } else {
-        SPHTestData(csdfp, &SPHbtab, &SPHgnobj, &SPHnobj, params.do_periodic);
-        nobj = gnobj = 0;
-        cosmo.GNewt = (float)1.0;
-        tvel = tpos = (float)0.0;
-        iter = 0;
-        if (params.do_periodic) R0 = 1.0;
-    }
+	        /* not first iteration, get central data particle from sdf file */
+	        if (params.do_absorbing_bndry && (iter > 0)) {
+				read_absorb_bndry(sdfp, &bndry);
+				/*c
+	            SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
+	            SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
+	            SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
+	            SDFgetfloatOrDie(sdfp, "bndry_lx", &(bndry.l[0]));
+#if NDIM>=2        
+	            SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
+	            SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
+	            SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
+	            SDFgetfloatOrDie(sdfp, "bndry_ly", &(bndry.l[1]));
+#if NDIM>=3
+	            SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
+	            SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
+	            SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
+	            SDFgetfloatOrDie(sdfp, "bndry_lz", &(bndry.l[2]));
+#endif
+#endif
+	
+	            SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
+	            SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
+				*/
+	        }
+	        if (params.cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
+	        if(sdfp) SDFclose(sdfp);
+	    } else {
+	        SPHTestData(csdfp, &SPHbtab, &SPHgnobj, &SPHnobj, params.do_periodic);
+	        nobj = gnobj = 0;
+	        cosmo.GNewt = (float)1.0;
+	        tvel = tpos = (float)0.0;
+	        iter = 0;
+	        if (params.do_periodic) R0 = 1.0;
+	    }
     }
     singlPrintf("Maxmem after data read is %d (%d)\n", maxmem(), maxheap());
     if( Msg_test("memleak") ){
@@ -615,7 +619,9 @@ main(int argc, char *argv[])
     SDFgetfloatOrDefault(csdfp, "SPHCWfac", &SPHCWfac, 0.0);
 	*/
     if (!params.do_restart) {
-        SDFgetfloatOrDie(csdfp, "dt", &dt);
+		dt = params.dt;
+		singlPrintf("not restart, dt = %g\n", dt);
+        //SDFgetfloatOrDie(csdfp, "dt", &dt);
         /*  SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30); */
     }
     SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30);
@@ -730,6 +736,7 @@ main(int argc, char *argv[])
 
     singlPrintf("float errtol = %g;\n", params.tol);
     singlPrintf("float dt = %g;\n", dt);
+    singlPrintf("float params.dt = %g;\n", params.dt);
     singlPrintf("float dark_dt = %g;\n", dark_dt);
     singlPrintf("float epsilon = %g;\n", params.eps);
     singlPrintf("int iter = %d;\n", iter);

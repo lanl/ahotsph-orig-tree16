@@ -118,6 +118,11 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 
     SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);
     SDFgetfloatOrDefault(sdfp, "SPHCWfac", &(params->SPHCWfac), 0.0);
+
+	/* get time step from ctl file on new starts */
+    if (!params->do_restart) 
+        SDFgetfloatOrDie(sdfp, "dt", &(params->dt));
+
 }
 
 void print_initial_ctl(setup_params_t params) {

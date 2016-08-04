@@ -51,6 +51,7 @@ typedef struct {
     float frac_tol;
     float CWfac;
     float SPHCWfac;
+	float dt;
 } setup_params_t;
 
 typedef struct{
