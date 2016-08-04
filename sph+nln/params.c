@@ -149,11 +149,67 @@ void print_initial_ctl(setup_params_t params) {
         singlPrintf("float centmass = %e;\n", params.centmass);
     }
 
+    if (params.do_point_mass || params.do_point_mass2) {
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
+        singlPrintf("float centmass = %e;\n", params.centmass);
+    }
+
     if (params.do_boundary) {
         singlPrintf("float r_inner = %f;\n", params.r_inner);
         singlPrintf("float r_outer = %f;\n", params.r_outer);
         singlPrintf("float centmass = %e;\n", params.centmass);
     }
+
+    if (params.do_boundary) {
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
+        singlPrintf("float r_outer = %f;\n", params.r_outer);
+        singlPrintf("float centmass = %e;\n", params.centmass);
+    }
+
+    if (params.do_winds) {
+        singlPrintf("int do_winds = %d;\n", params.do_winds);
+        singlPrintf("int windpartpershell = %d;\n", params.windpartpershell);
+        singlPrintf("int old_winds = %d;\n", params.old_winds);
+        if (params.old_winds) {
+            //singlPrintf("int windgnobj = %d;\n", windgnobj);
+        }
+        singlPrintf("int const_winds = %d;\n", params.const_winds);
+        singlPrintf("int nonconst_winds = %d;\n", params.nonconst_winds);
+        singlPrintf("int accreting_winds = %d;\n", params.accreting_winds);
+        if (params.const_winds || params.accreting_winds) {
+            singlPrintf("float v_wind = %g;\n", params.v_wind);
+            singlPrintf("float mdot_wind = %g;\n", params.mdot_wind);
+            singlPrintf("float u_wind = %g;\n", params.u_wind);
+        }
+        if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
+            singlPrintf("float r_wind = %g;\n", params.r_wind);
+            singlPrintf("float t_wind = %g;\n", params.t_wind);
+            if (params.const_winds || params.nonconst_winds)
+                singlPrintf("float openangle_wind = %g;\n", params.openangle_wind);
+            singlPrintf("char template_name[] = \"%s\"\n", params.template_name);
+            srand48(192837465);
+        }
+        if (params.accreting_winds)
+            singlPrintf("float omega_wind = %g;\n", params.omega_wind);
+        if (params.nonconst_winds) {
+            singlPrintf("char winddata_name[] = \"%s\"\n", params.winddata_name);
+            singlPrintf("float r_outer = %g;\n", params.r_outer);
+        }
+    }
+
+	singlPrintf("float eps = %g;\n", params.eps);
+
+	if (params.do_grav) {
+	    singlPrintf("int do_DL = %d;\n", params.do_DL);
+	    singlPrintf("int do_BH = %d;\n", params.do_BH);
+	    singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
+	    singlPrintf("int do_Arel = %d;\n", params.do_Arel);
+	    singlPrintf("float errtol = %g;\n", params.tol);
+		singlPrintf("float frac_tol = %g;\n", params.frac_tol);
+	}
+
+	singlPrintf("float CWfac = %g;\n", params.CWfac);
+	singlPrintf("float SPHCWfac = %g;\n", params.SPHCWfac);
 
     singlPrintf("end printing params structure\n");
 }
