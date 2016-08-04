@@ -143,7 +143,7 @@ static float dt_wind;
 //static int cosmology; only used here
 static float R0;
 static float this_tol, this_eps;
-static float frac_tol;
+//static float frac_tol;
 static float Gamma;		/* lowercase is a math.h function */
 static int default_nterms;
 //static float centmass;
@@ -232,8 +232,8 @@ main(int argc, char *argv[])
     body *pmtab;
     SPHbody *SPHbtab, *SPHsinkbtab = NULL, *q;
     windbody *windbtab;
-    float eps;			/* Plummer smoothing length */
-    float tol;			/* MAC tolerance */
+    //float eps;			/* Plummer smoothing length */
+    //float tol;			/* MAC tolerance */
 		/* for big MAC, this is multiplied by M/(rsize*rsize) */
     int i;
     float rmin[NDIM], rmax[NDIM];
@@ -250,8 +250,8 @@ main(int argc, char *argv[])
     int timer_freq;
     float sort_tol;
     int iter;
-    float CWfac;
-    float SPHCWfac;
+    //float CWfac;
+    //float SPHCWfac;
     int ntimer_detail;
     int log_time = 0;		/* if true, use dt \propto t */
     int comov_eps = 0;		/* if true, use comoving epsilon*/
@@ -269,7 +269,7 @@ main(int argc, char *argv[])
     sortresult_t sortedbtab, SPHsortedbtab, sortedatab;
     tree_t thetree, SPHtree, SPHsinktree, *sinkptr = NULL;
     //char name[256];
-    int do_BH, do_DL, do_Bmax, do_Arel;
+    //int do_BH, do_DL, do_Bmax, do_Arel;
     int MACtype = BMAX_MAC;
     int image_freq, x_pixels, y_pixels, log_image;
     //int do_periodic;
@@ -388,7 +388,7 @@ main(int argc, char *argv[])
     make_spec_names(&nnames, 'n', NISO);
     if (params.do_sph || params.do_grav) {
 	if (!((strncmp(params.name, "test", 4) == 0))) {
-	//c    if (SDFhasname("SPHdatafile", csdfp) || params.do_restart) {
+	/*c    if (SDFhasname("SPHdatafile", csdfp) || params.do_restart) { */
 		if (strlen(params.SPHdatafile) > 0 || params.do_restart) {
 		char iname[256];
 
@@ -598,6 +598,7 @@ main(int argc, char *argv[])
         malloc_print();
     }
 
+	/*c
     SDFgetfloatOrDefault(csdfp, "epsilon", &eps, 0.0);
     if (params.do_grav) {
         SDFgetintOrDefault(csdfp, "do_DL", &do_DL, 0);
@@ -612,6 +613,7 @@ main(int argc, char *argv[])
     }
     SDFgetfloatOrDefault(csdfp, "CWfac", &CWfac, 0.0);
     SDFgetfloatOrDefault(csdfp, "SPHCWfac", &SPHCWfac, 0.0);
+	*/
     if (!params.do_restart) {
         SDFgetfloatOrDie(csdfp, "dt", &dt);
         /*  SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30); */
@@ -652,9 +654,9 @@ main(int argc, char *argv[])
         SDFgetfloatOrDefault(csdfp, "dt_max", &dt_max, 1e30);
     }
 
-    if (do_Bmax) MACtype = BMAX_MAC;
-    else if (do_BH) MACtype = BH_MAC;
-    else if (do_Arel) MACtype = AREL_MAC;
+    if (params.do_Bmax) MACtype = BMAX_MAC;
+    else if (params.do_BH) MACtype = BH_MAC;
+    else if (params.do_Arel) MACtype = AREL_MAC;
     else if (params.do_grav) Error("No MAC specified\n");
 
     if( SDFgetstring(csdfp, "outfile", outnamebase, sizeof(outnamebase)) == 0){
@@ -726,17 +728,17 @@ main(int argc, char *argv[])
 
 	print_initial_ctl(params);
 
-    singlPrintf("float errtol = %g;\n", tol);
+    singlPrintf("float errtol = %g;\n", params.tol);
     singlPrintf("float dt = %g;\n", dt);
     singlPrintf("float dark_dt = %g;\n", dark_dt);
-    singlPrintf("float epsilon = %g;\n", eps);
+    singlPrintf("float epsilon = %g;\n", params.eps);
     singlPrintf("int iter = %d;\n", iter);
     singlPrintf("int nsteps = %d;\n", nsteps);
     singlPrintf("int nproc = %d;\n", MPMY_Nproc());
-    singlPrintf("int do_Bmax = %d;\n", do_Bmax);
-    singlPrintf("int do_BH = %d;\n", do_BH);
-    singlPrintf("int do_Arel = %d;\n", do_Arel);
-    singlPrintf("int do_DL = %d;\n", do_DL);
+    singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
+    singlPrintf("int do_BH = %d;\n", params.do_BH);
+    singlPrintf("int do_Arel = %d;\n", params.do_Arel);
+    singlPrintf("int do_DL = %d;\n", params.do_DL);
     singlPrintf("int exact_rho = %d;\n", exact_rho);
     singlPrintf("float courant_number = %g;\n", courant_number);
     singlPrintf("float gamma = %f;\n", Gamma);
@@ -934,7 +936,7 @@ bndry.l[0], bndry.l[1]);
     SPH_setup(NDIM, kernel_ncoef1, kernel_coef1, kernel_ncoef2, kernel_coef2);
     inherit = (inherit_t)InheritSinkNlogN;
 
-    if (do_DL)
+    if (params.do_DL)
         mac = (macv_t)DLRcritMAC;
     else
         mac = (macv_t)RcritMAC;
@@ -943,8 +945,8 @@ bndry.l[0], bndry.l[1]);
     mac = (macv_t)SPHDLRcritMAC;
 #endif
 
-    this_eps = eps;
-    this_tol = tol;
+    this_eps = params.eps;
+    this_tol = params.tol;
 
     /* Testing initialization */
     for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
@@ -1089,8 +1091,8 @@ bndry.l[0], bndry.l[1]);
         /* comoving smoothing */
         /* Note: behavior changed Jan. 25, 1996. Beware of old ctl files */
         if (comov_eps && (Znow(tpos)+1.0 >= comov_eps_epoch)) 
-            this_eps = eps*comov_eps_epoch/(Znow(tpos)+(float)1.0);
-        else this_eps = eps;
+            this_eps = params.eps*comov_eps_epoch/(Znow(tpos)+(float)1.0);
+        else this_eps = params.eps;
 
         /* Add sph particles to btab for gravity */
         if (params.do_grav) {
@@ -1122,9 +1124,9 @@ bndry.l[0], bndry.l[1]);
             SetTol(0, 0, cosmo.GNewt, this_eps, gnobj+SPHgnobj);
             FixKeys(btab, nobj, GETKEY);
 
-            if (MACtype == AREL_MAC) this_tol = tol*mtot/(sysradius*sysradius);
-            SetupCofm(MACtype, this_tol, frac_tol);
-            singlPrintf("BuildTree, tol=%g, frac_tol=%g, sysrad.=%.3g\n", this_tol, frac_tol,sysradius);
+            if (MACtype == AREL_MAC) this_tol = params.tol*mtot/(sysradius*sysradius);
+            SetupCofm(MACtype, this_tol, params.frac_tol);
+            singlPrintf("BuildTree, tol=%g, frac_tol=%g, sysrad.=%.3g\n", this_tol, params.frac_tol,sysradius);
 
             StartTimer(&BuildTot);
             pqsortsetup(&sortedbtab, btab, nobj, sizeof(body), sort_tol, Realloc_f);
@@ -1405,16 +1407,16 @@ bndry.l[0], bndry.l[1]);
                 p->phi = 0.0;
             }
             for (p = pmtab; p < pmtab+PMgnobj; p++) {
-                update_point_mass(pmtab, PMnobj, p, eps*eps, cosmo.GNewt);
+                update_point_mass(pmtab, PMnobj, p, params.eps*params.eps, cosmo.GNewt);
             }
             for (p = pmtab; p < pmtab+PMgnobj; p++) {
-                update_point_SPHmass(SPHbtab, SPHnobj, p, eps*eps, cosmo.GNewt);
+                update_point_SPHmass(SPHbtab, SPHnobj, p, params.eps*params.eps, cosmo.GNewt);
             }
             singlPrintf("Updated %d point-mass accs\n", PMgnobj);
         }
 
         if (params.do_point_mass2 || params.do_boundary) {
-            update_point_SPHmass2(SPHbtab, SPHnobj, eps*eps, cosmo.GNewt, 
+            update_point_SPHmass2(SPHbtab, SPHnobj, params.eps*params.eps, cosmo.GNewt, 
                     params.centmass);
         }
 
@@ -1667,28 +1669,28 @@ bndry.l[0], bndry.l[1]);
         singlFflush();
 
         /* This can greatly improve the load balance */
-        if (CWfac != 0.0) {	/* CWfac = 1 seems to work well for do_periodic */
+        if (params.CWfac != 0.0) {	/* CWfac = 1 seems to work well for do_periodic */
             gnterms /= gnobj;
-            singlPrintf("Avg nterms = %.0f, CWfac is %.2f\n", gnterms, CWfac);
-            gnterms *= CWfac;
+            singlPrintf("Avg nterms = %.0f, CWfac is %.2f\n", gnterms, params.CWfac);
+            gnterms *= params.CWfac;
             /* Account for 'constant' work associated with each particle */
             for (p = btab; p < btab+nobj; p++) 
                 p->nterms += gnterms;
         }
 
-        if (SPHCWfac != 0.0) {
+        if (params.SPHCWfac != 0.0) {
             gnterms /= SPHgnobj;
             singlPrintf("Avg nterms = %.0f, SPHCWfac is %.2f\n", gnterms,
-                    SPHCWfac);
-            gnterms *= SPHCWfac;
+                    params.SPHCWfac);
+            gnterms *= params.SPHCWfac;
             for (q = SPHbtab; q < SPHbtab + SPHnobj; ++q)
                 q->nterms += gnterms;
 
             /* 	    if (params.do_grav) { */
             /* 		ggravnterms /= SPHgnobj; */
             /* 		singlPrintf("Avg grav_nterms = %.0f, SPHCWfac is %.2f\n", ggravnterms, */
-            /* 			    SPHCWfac); */
-            /* 		ggravnterms *= SPHCWfac; */
+            /* 			    params.SPHCWfac); */
+            /* 		ggravnterms *= params.SPHCWfac; */
             /* 		for (q = SPHbtab; q < SPHbtab + SPHnobj; ++q) */
             /* 		    q->grav_nterms += ggravnterms; */
             /* 	    } */
@@ -2260,7 +2262,7 @@ static void WindOutput(SPHbody *btab, int nobj, windbody *windbtab,
             "eps", SDF_FLOAT, this_eps,
             "Gnewt", SDF_FLOAT, cosmo.GNewt,
             "tolerance", SDF_FLOAT, this_tol,
-            "frac_tolerance", SDF_FLOAT, frac_tol,
+            "frac_tolerance", SDF_FLOAT, params.frac_tol,
             "ndim", SDF_INT, NDIM,
             "tpos", SDF_FLOAT, tpos_out,
             "tvel", SDF_FLOAT, tvel_out,
@@ -2347,7 +2349,7 @@ static void ShortWindOutput(SPHbody *btab, int nobj, windbody *windbtab,
             "eps", SDF_FLOAT, this_eps,
             "Gnewt", SDF_FLOAT, cosmo.GNewt,
             "tolerance", SDF_FLOAT, this_tol,
-            "frac_tolerance", SDF_FLOAT, frac_tol,
+            "frac_tolerance", SDF_FLOAT, params.frac_tol,
             "ndim", SDF_INT, NDIM,
             "tpos", SDF_FLOAT, tpos_out,
             "tvel", SDF_FLOAT, tvel_out,
@@ -2461,7 +2463,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
             "eps", SDF_FLOAT, this_eps,
             "Gnewt", SDF_FLOAT, cosmo.GNewt,
             "tolerance", SDF_FLOAT, this_tol,
-            "frac_tolerance", SDF_FLOAT, frac_tol,
+            "frac_tolerance", SDF_FLOAT, params.frac_tol,
             "ndim", SDF_INT, NDIM,
             "tpos", SDF_FLOAT, tpos_out,
             "tvel", SDF_FLOAT, tvel_out,
@@ -2623,7 +2625,7 @@ static void Output(body *btab, int nobj, const char *outnamebase, int iter)
             "eps", SDF_FLOAT, this_eps,
             "Gnewt", SDF_FLOAT, cosmo.GNewt,
             "tolerance", SDF_FLOAT, this_tol,
-            "frac_tolerance", SDF_FLOAT, frac_tol,
+            "frac_tolerance", SDF_FLOAT, params.frac_tol,
             "iter", SDF_INT, iter,
             "ndim", SDF_INT, NDIM,
             "tpos", SDF_FLOAT, tpos_out,

@@ -30,6 +30,10 @@ typedef struct {
     int const_winds;
     int nonconst_winds;
     int accreting_winds;
+    int do_DL;
+    int do_BH;
+    int do_Bmax;
+    int do_Arel;
     float new_h;
     float new_u;
     float r_inner;
@@ -42,6 +46,11 @@ typedef struct {
     float v_wind;
     float mdot_wind;
     float u_wind;
+    float eps;
+    float tol;
+    float frac_tol;
+    float CWfac;
+    float SPHCWfac;
 } setup_params_t;
 
 typedef struct{

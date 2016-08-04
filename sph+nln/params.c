@@ -42,59 +42,82 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "do_drag", &(params->do_drag), 0);
     SDFgetintOrDefault(sdfp, "has_grav_data", &(params->has_grav_data), params->do_grav);
 
-    if (SDFhasname("SPHdatafile", sdfp))
-        SDFgetstring(sdfp, "SPHdatafile", params->SPHdatafile, sizeof(params->SPHdatafile));
-
-    SDFgetfloatOrDefault(sdfp, "new_h", &(params->new_h), 0.0);
-    SDFgetfloatOrDefault(sdfp, "new_u", &(params->new_u), 0.0);
-
-    if (params->do_point_mass) 
-        SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
-
-    if (params->do_point_mass2) {
-        SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
-        SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
+	if (params->do_sph || params->do_grav) {
+	    if (SDFhasname("SPHdatafile", sdfp))
+	        SDFgetstring(sdfp, "SPHdatafile", params->SPHdatafile, sizeof(params->SPHdatafile));
+		/* read in parameters if not doing a test case or not a restart */
+		if (strlen (params->SPHdatafile) > 0 || params->do_restart) {
+		
+			if (params->do_sph) {
+				SDFgetfloatOrDefault(sdfp, "new_h", &(params->new_h), 0.0);
+				SDFgetfloatOrDefault(sdfp, "new_u", &(params->new_u), 0.0);
+			}
+		
+		    if (params->do_point_mass) 
+		        SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
+		
+		    if (params->do_point_mass2) {
+		        SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
+		        SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
+			}
+		
+			if (params->do_boundary) {
+			    SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
+			    SDFgetfloatOrDie(sdfp, "r_outer", &(params->r_outer));
+			    SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
+			}
+		
+		    if (params->do_winds) {
+		        SDFgetintOrDie(sdfp, "windpart_per_shell", &(params->windpartpershell));
+		        SDFgetintOrDefault(sdfp, "old_winds", &(params->old_winds), 1);
+		        SDFgetintOrDefault(sdfp, "const_winds", &(params->const_winds), 0);
+		        SDFgetintOrDefault(sdfp, "nonconst_winds", &(params->nonconst_winds), 0);
+		        SDFgetintOrDefault(sdfp, "accreting_winds", &(params->accreting_winds), 0);
+		        if ( (params->const_winds && params->nonconst_winds) || 
+		                (params->const_winds && params->accreting_winds) || 
+		                (params->nonconst_winds && params->accreting_winds) )
+		            Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
+			
+			    if (params->const_winds || params->nonconst_winds || params->accreting_winds) {
+			        SDFgetfloatOrDie(sdfp, "r_wind", &(params->r_wind));
+			        SDFgetfloatOrDefault(sdfp, "t_wind", &(params->t_wind), 0.0);
+			        if (params->const_winds || params->nonconst_winds)
+			            SDFgetfloatOrDefault(sdfp, "openangle_wind", 
+			                    &(params->openangle_wind), 180.0);
+			        if (params->accreting_winds)
+			            SDFgetfloatOrDie(sdfp, "omega_wind", &(params->omega_wind));
+			        SDFgetstring(sdfp, "template_name", params->template_name,
+			                sizeof(params->template_name));
+			    }
+			    
+			    if (params->const_winds || params->accreting_winds) {
+			        SDFgetfloatOrDie(sdfp, "v_wind", &(params->v_wind));
+			        SDFgetfloatOrDie(sdfp, "mdot_wind", &(params->mdot_wind));
+			        SDFgetfloatOrDie(sdfp, "u_wind", &(params->u_wind));
+			    }
+			    if (params->nonconst_winds) {
+			        SDFgetstring (sdfp, "winddata_name", params->winddata_name, sizeof(params->winddata_name));
+			        SDFgetfloatOrDefault (sdfp, "r_outer", &(params->r_outer), 1e30);
+			    }
+			}
+		}
 	}
+    
+    SDFgetfloatOrDefault(sdfp, "epsilon", &(params->eps), 0.0);
+    if (params->do_grav) {
+        SDFgetintOrDefault(sdfp, "do_DL", &(params->do_DL), 0);
+        SDFgetintOrDefault(sdfp, "do_BH", &(params->do_BH), 0);
+        SDFgetintOrDefault(sdfp, "do_Bmax", &(params->do_Bmax), 0);
+        SDFgetintOrDefault(sdfp, "do_Arel", &(params->do_Arel), 0);
+        if (params->do_BH || params->do_Bmax) 
+            SDFgetfloatOrDie(sdfp, "theta", &(params->tol));
+        else
+            SDFgetfloatOrDie(sdfp, "errtol", &(params->tol));
+        SDFgetfloatOrDefault(sdfp, "frac_tol", &(params->frac_tol), 0.0);
+    }
 
-	if (params->do_boundary) {
-	    SDFgetfloatOrDie(sdfp, "r_inner", &(params->r_inner));
-	    SDFgetfloatOrDie(sdfp, "r_outer", &(params->r_outer));
-	    SDFgetfloatOrDie(sdfp, "centmass", &(params->centmass));
-	}
-
-    if (params->do_winds) {
-        SDFgetintOrDie(sdfp, "windpart_per_shell", &(params->windpartpershell));
-        SDFgetintOrDefault(sdfp, "old_winds", &(params->old_winds), 1);
-        SDFgetintOrDefault(sdfp, "const_winds", &(params->const_winds), 0);
-        SDFgetintOrDefault(sdfp, "nonconst_winds", &(params->nonconst_winds), 0);
-        SDFgetintOrDefault(sdfp, "accreting_winds", &(params->accreting_winds), 0);
-        if ( (params->const_winds && params->nonconst_winds) || 
-                (params->const_winds && params->accreting_winds) || 
-                (params->nonconst_winds && params->accreting_winds) )
-            Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
-	
-	    if (params->const_winds || params->nonconst_winds || params->accreting_winds) {
-	        SDFgetfloatOrDie(sdfp, "r_wind", &(params->r_wind));
-	        SDFgetfloatOrDefault(sdfp, "t_wind", &(params->t_wind), 0.0);
-	        if (params->const_winds || params->nonconst_winds)
-	            SDFgetfloatOrDefault(sdfp, "openangle_wind", 
-	                    &(params->openangle_wind), 180.0);
-	        if (params->accreting_winds)
-	            SDFgetfloatOrDie(sdfp, "omega_wind", &(params->omega_wind));
-	        SDFgetstring(sdfp, "template_name", params->template_name,
-	                sizeof(params->template_name));
-	    }
-	    
-	    if (params->const_winds || params->accreting_winds) {
-	        SDFgetfloatOrDie(sdfp, "v_wind", &(params->v_wind));
-	        SDFgetfloatOrDie(sdfp, "mdot_wind", &(params->mdot_wind));
-	        SDFgetfloatOrDie(sdfp, "u_wind", &(params->u_wind));
-	    }
-	    if (params->nonconst_winds) {
-	        SDFgetstring (sdfp, "winddata_name", params->winddata_name, sizeof(params->winddata_name));
-	        SDFgetfloatOrDefault (sdfp, "r_outer", &(params->r_outer), 1e30);
-	    }
-	}
+    SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);
+    SDFgetfloatOrDefault(sdfp, "SPHCWfac", &(params->SPHCWfac), 0.0);
 }
 
 void print_initial_ctl(setup_params_t params) {
