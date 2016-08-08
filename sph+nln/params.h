@@ -6,6 +6,7 @@ typedef struct {
     char SPHdatafile[256]; /* "SPHdatafile" */
 	char template_name[256]; /* wind template */
 	char winddata_name[256]; /* "winddata_name" */
+	char outnamebase[256];
     int timeout;
     int fail_if_slow;
     int do_restart;
@@ -34,7 +35,6 @@ typedef struct {
     int do_BH;
     int do_Bmax;
     int do_Arel;
-    int do_output;
     int nsteps;
     int log_time;
     int comov_eps;
@@ -47,6 +47,17 @@ typedef struct {
     int independent_dt;
     int dark_independent_dt;
     int default_nterms;
+	int tlow_cut;
+	int dt_short;
+	int dt_long;
+	int do_output;
+	int output_freq;
+	int short_output;
+	int timer_freq;
+	int image_freq;
+	int x_pixels;
+	int y_pixels;
+	int log_image;
     float new_h;
     float new_u;
     float r_inner;
@@ -79,6 +90,8 @@ typedef struct {
     float fmassCF;
     float flenCF;
     float ftimeCF;
+	float dt_max;
+	float sort_tol;
 } setup_params_t;
 
 typedef struct{

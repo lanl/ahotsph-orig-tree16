@@ -151,6 +151,37 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetfloatOrDefault(sdfp, "lengthCF", &(params->flenCF), 1.0);/*length conversion factor; CE*/
     SDFgetfloatOrDefault(sdfp, "timeCF", &(params->ftimeCF), 1.0);/*time conversion factor; CE*/
 
+    if (params->adaptive_dt) {
+        SDFgetintOrDefault(sdfp, "tlow_cut", &(params->tlow_cut), 40);
+        SDFgetintOrDefault(sdfp, "dt_short", &(params->dt_short), 0);
+        SDFgetintOrDefault(sdfp, "dt_long", &(params->dt_long), 10);
+        SDFgetfloatOrDefault(sdfp, "dt_max", &(params->dt_max), 1e30);
+    }
+
+	SDFgetstringOrDefault(sdfp, "outfile", params->outnamebase, sizeof (params->outnamebase), "");
+	/*
+    if (SDFhasname ("outfile", sdfp)) 
+        SDFgetstring (sdfp, "outfile", params->outnamebase, sizeof (params->outnamebase));
+    else
+        sprintf(params->outnamebase,"%s", "");
+		*/
+	if (strlen (params->outnamebase) > 0) {
+		params->do_output = 1;
+	}
+
+	if (params->do_output) {
+        SDFgetintOrDefault (sdfp, "output_freq", &(params->output_freq), params->nsteps);
+        SDFgetintOrDefault (sdfp, "short_output", &(params->short_output), 0);
+    } else {
+        params->output_freq = 1;
+	}
+
+    SDFgetintOrDefault(sdfp, "timer_freq", &(params->timer_freq), params->output_freq);
+    SDFgetfloatOrDefault(sdfp, "sort_tol", &(params->sort_tol), 0.01);
+    SDFgetintOrDefault(sdfp, "image_freq", &(params->image_freq), 0);
+    SDFgetintOrDefault(sdfp, "x_pixels", &(params->x_pixels), 512);
+    SDFgetintOrDefault(sdfp, "y_pixels", &(params->y_pixels), 512);
+    SDFgetintOrDefault(sdfp, "log_image", &(params->log_image), 0);
 
 }
 
@@ -273,7 +304,21 @@ void print_initial_ctl(setup_params_t params) {
     singlPrintf("float massCF = %g;\n", params.fmassCF);/*added by CE*/
     singlPrintf("float lenCF = %g;\n", params.flenCF);/*added by CE*/
     singlPrintf("float timeCF = %g;\n", params.ftimeCF);/*added by CE*/
-	
+
+	singlPrintf("int tlow_cut = %d;\n", params.tlow_cut);
+	singlPrintf("int dt_short = %d;\n", params.dt_short);
+	singlPrintf("int dt_long = %d;\n", params.dt_long);
+	singlPrintf("string outnamebase[] = %s;\n", params.outnamebase);
+	singlPrintf("int do_output = %d;\n", params.do_output);
+	singlPrintf("int output_freq = %d;\n", params.output_freq);
+	singlPrintf("int short_output = %d;\n", params.short_output);
+	singlPrintf("int timer_freq = %d;\n", params.timer_freq);
+	singlPrintf("float sort_tol = %g;", params.sort_tol);
+	singlPrintf("int image_freq = %d;\n", params.image_freq);
+	singlPrintf("int x_pixels = %d;\n", params.x_pixels);
+	singlPrintf("int y_pixels = %d;\n", params.y_pixels);
+	singlPrintf("int log_image = %d;\n", params.log_image);
+
     singlPrintf("end printing params structure\n");
 }
 

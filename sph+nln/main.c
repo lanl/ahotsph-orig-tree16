@@ -244,11 +244,11 @@ main(int argc, char *argv[])
     int SPHstride = sizeof(SPHbody)/sizeof(float);
     int SPHstride2 = sizeof(SPHbody)/sizeof(double);
     int SPHstride3 = sizeof(SPHbody)/sizeof(unsigned int);
-    int do_output;
-    int output_freq;
-    int short_output;
-    int timer_freq;
-    float sort_tol;
+    //int do_output;
+    //int output_freq;
+    //int short_output;
+    //int timer_freq;
+    //float sort_tol;
     int iter;
     //float CWfac;
     //float SPHCWfac;
@@ -257,7 +257,7 @@ main(int argc, char *argv[])
     //int comov_eps = 0;		/* if true, use comoving epsilon*/
     //float comov_eps_epoch;
     //int setpvel = 0;
-    char outnamebase[256];
+    //char outnamebase[256];
     SDF *csdfp;			/* SDF pointer to control file */
     SDF *sdfp = NULL;
     float tposlast;
@@ -271,7 +271,7 @@ main(int argc, char *argv[])
     //char name[256];
     //int do_BH, do_DL, do_Bmax, do_Arel;
     int MACtype = BMAX_MAC;
-    int image_freq, x_pixels, y_pixels, log_image;
+    //int image_freq, x_pixels, y_pixels, log_image;
     //int do_periodic;
     inherit_t inherit;
     macv_t mac;
@@ -307,7 +307,7 @@ main(int argc, char *argv[])
     float vsz;
     float tmin;
     int tbad;
-    int tlow_cut, dt_short, dt_long;
+    //int tlow_cut, dt_short, dt_long;
     accbody *SPHatab, *pa;
     int SPHanobj;
     void *decomp_info = NULL;
@@ -655,18 +655,21 @@ main(int argc, char *argv[])
     massCF= (double)params.fmassCF;
     lenCF= (double)params.flenCF;
     timeCF= (double)params.ftimeCF;
+	/*
     if (params.adaptive_dt) {
         SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
         SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
         SDFgetintOrDefault(csdfp, "dt_long", &dt_long, 10);
         SDFgetfloatOrDefault(csdfp, "dt_max", &dt_max, 1e30);
     }
+	*/
 
     if (params.do_Bmax) MACtype = BMAX_MAC;
     else if (params.do_BH) MACtype = BH_MAC;
     else if (params.do_Arel) MACtype = AREL_MAC;
     else if (params.do_grav) Error("No MAC specified\n");
 
+	/*c
     if( SDFgetstring(csdfp, "outfile", outnamebase, sizeof(outnamebase)) == 0){
         do_output = ( strlen(outnamebase) > 0 );
     }else{
@@ -678,12 +681,13 @@ main(int argc, char *argv[])
     }else{
         output_freq = 1;
     }
-    SDFgetintOrDefault(csdfp, "timer_freq", &timer_freq, output_freq);
+    SDFgetintOrDefault(csdfp, "timer_freq", &timer_freq, params.output_freq);
     SDFgetfloatOrDefault(csdfp, "sort_tol", &sort_tol, 0.01);
     SDFgetintOrDefault(csdfp, "image_freq", &image_freq, 0);
     SDFgetintOrDefault(csdfp, "x_pixels", &x_pixels, 512);
     SDFgetintOrDefault(csdfp, "y_pixels", &y_pixels, 512);
     SDFgetintOrDefault(csdfp, "log_image", &log_image, 0);
+	*/
     if (SDFhasname("kernel_ncoef1", csdfp)) {
         SDFgetintOrDie(csdfp, "kernel_ncoef1", &kernel_ncoef1);
         if (kernel_ncoef1 >= MAXCOEF) Error("Increase MAXCOEF\n");
@@ -765,9 +769,9 @@ main(int argc, char *argv[])
     singlPrintf("int independent_dt = %d;\n", params.independent_dt);
     singlPrintf("int dark_independent_dt = %d;\n", params.dark_independent_dt);
     if (params.adaptive_dt) {
-        singlPrintf("int tlow_cut = %d;\n", tlow_cut);
-        singlPrintf("int dt_long = %d;\n", dt_long);
-        singlPrintf("int dt_short = %d;\n", dt_short);
+        singlPrintf("int tlow_cut = %d;\n", params.tlow_cut);
+        singlPrintf("int dt_long = %d;\n", params.dt_long);
+        singlPrintf("int dt_short = %d;\n", params.dt_short);
         singlPrintf("float dt_max = %g;\n", dt_max);
     }
     if (params.do_winds) {
@@ -867,15 +871,15 @@ bndry.l[0], bndry.l[1]);
         singlPrintf("int do_cooling = %d;\n", params.do_cooling);
     singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
     singlPrintf("int do_burning = %d;\n", params.do_burning);
-    if( do_output ){
-        if (short_output) singlPrintf("Short ");
+    if( params.do_output ){
+        if (params.short_output) singlPrintf("Short ");
         singlPrintf("Output to %s.nnnn, every %d steps\n", 
-                outnamebase, output_freq);
+                params.outnamebase, params.output_freq);
     }else{
         singlPrintf("No output.\n");
     }
-    singlPrintf("int timer_freq = %d;\n", timer_freq);
-    singlPrintf("float sort_tol = %.4f;\n", sort_tol);
+    singlPrintf("int timer_freq = %d;\n", params.timer_freq);
+    singlPrintf("float sort_tol = %.4f;\n", params.sort_tol);
     singlPrintf("int do_periodic = %d;\n", params.do_periodic);
     singlPrintf("kernel coefficients:\n\t");
     for (i = 0; i < kernel_ncoef1; i++)
@@ -1138,7 +1142,7 @@ bndry.l[0], bndry.l[1]);
             singlPrintf("BuildTree, tol=%g, frac_tol=%g, sysrad.=%.3g\n", this_tol, params.frac_tol,sysradius);
 
             StartTimer(&BuildTot);
-            pqsortsetup(&sortedbtab, btab, nobj, sizeof(body), sort_tol, Realloc_f);
+            pqsortsetup(&sortedbtab, btab, nobj, sizeof(body), params.sort_tol, Realloc_f);
             BuildTree(&thetree, &sortedbtab);
             /* PrintTree(&thetree, PrintBodyContents, PrintCellContents); */
             btab = sortedbtab.data;
@@ -1195,7 +1199,7 @@ bndry.l[0], bndry.l[1]);
         }
 
         /* Do image before GravMinusSPH if you want to image all particles */
-        if (image_freq && iter%image_freq == 0) {
+        if (params.image_freq && iter%params.image_freq == 0) {
             char name[256];
             float sysr, image_rmin[3], image_rmax[3];
 
@@ -1207,10 +1211,10 @@ bndry.l[0], bndry.l[1]);
             VS(image_rmax, = sysr);
             FixRsizeExact(image_rmin, image_rmax);
 
-            sprintf(name, "%s_img.%04d", outnamebase, iter);
+            sprintf(name, "%s_img.%04d", params.outnamebase, iter);
             Image(btab[0].pos, btab[0].pos+1, &(btab[0].mass),
                     sizeof(body), nobj, image_rmin, image_rmax, 
-                    x_pixels, y_pixels, 10, 250, log_image, name);
+                    params.x_pixels, params.y_pixels, 10, 250, params.log_image, name);
         }
 
         if (params.do_grav) GravMinusSPH((void **)&btab, &nobj, &SPHatab, &SPHanobj);
@@ -1221,7 +1225,7 @@ bndry.l[0], bndry.l[1]);
         if (params.do_sph && (first_step || params.exact_rho)) {
             singlPrintf("BuildTree\n");
             StartTimer(&BuildTot);
-            pqsortsetup(&SPHsortedbtab, SPHbtab, SPHnobj, sizeof(SPHbody), sort_tol, Realloc_f);
+            pqsortsetup(&SPHsortedbtab, SPHbtab, SPHnobj, sizeof(SPHbody), params.sort_tol, Realloc_f);
             SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
             BuildTree(&SPHtree, &SPHsortedbtab);
             SPHbtab = SPHsortedbtab.data;
@@ -1286,7 +1290,7 @@ bndry.l[0], bndry.l[1]);
                 }
                 singlPrintf("Build Sink Tree\n");
                 StartTimer(&BuildTot);
-                pqsortsetup(&SPHsortedbtab, SPHsinkbtab, SPHsinknobj, sizeof(SPHbody), sort_tol, Realloc_f);
+                pqsortsetup(&SPHsortedbtab, SPHsinkbtab, SPHsinknobj, sizeof(SPHbody), params.sort_tol, Realloc_f);
                 Msgf(("Build Sink Tree, nobj = %d\n", SPHsinknobj));
                 BuildTree(&SPHsinktree, &SPHsortedbtab);
                 SPHsinkbtab = SPHsortedbtab.data;
@@ -1298,7 +1302,7 @@ bndry.l[0], bndry.l[1]);
             singlPrintf("BuildTree\n");
             StartTimer(&BuildTot);
             if (did_dark_update || make_sink_tree) decomp_info = SaveDecomp();
-            pqsortsetup(&SPHsortedbtab, SPHbtab, SPHnobj, sizeof(SPHbody), sort_tol, Realloc_f);
+            pqsortsetup(&SPHsortedbtab, SPHbtab, SPHnobj, sizeof(SPHbody), params.sort_tol, Realloc_f);
             Msgf(("Build Tree, nobj = %d\n", SPHnobj));
             BuildTree(&SPHtree, &SPHsortedbtab);
             SPHbtab = SPHsortedbtab.data;
@@ -1311,7 +1315,7 @@ bndry.l[0], bndry.l[1]);
                 /* Make accs computed above congruent to SPH particle decomp */
                 SetDecomp(decomp_info);
                 singlPrintf("Re-arrange acctab\n");
-                pqsortsetup(&sortedatab, SPHatab, SPHanobj, sizeof(accbody), sort_tol, Realloc_f);
+                pqsortsetup(&sortedatab, SPHatab, SPHanobj, sizeof(accbody), params.sort_tol, Realloc_f);
                 SPHatab = pqsort(&sortedatab, UnityCost, accbodyGetKey);
                 SPHanobj = sortedatab.nobj;
                 if (!make_sink_tree) ClearDecomp(decomp_info);
@@ -1381,7 +1385,7 @@ bndry.l[0], bndry.l[1]);
                 FreeTree(&SPHsinktree);
                 /* Make sinkbtab congruent with SPHbtab */
                 SetDecomp(decomp_info);
-                pqsortsetup(&SPHsortedbtab, SPHsinkbtab, SPHsinknobj, sizeof(SPHbody), sort_tol, Realloc_f);
+                pqsortsetup(&SPHsortedbtab, SPHsinkbtab, SPHsinknobj, sizeof(SPHbody), params.sort_tol, Realloc_f);
                 singlPrintf("Re-arrange sinks\n");
                 Msgf(("Re-arrange sinks, nobj = %d\n", SPHsinknobj));
                 SPHsinkbtab = pqsort(&SPHsortedbtab, UnityCost, SPHGetKey);
@@ -1444,27 +1448,27 @@ bndry.l[0], bndry.l[1]);
         MPMY_Sync();
 
         if (ForceOutput()
-                || (do_output && !first_step
-                    && ((iter+output_freq) % output_freq == 0))
+                || (params.do_output && !first_step
+                    && ((iter+params.output_freq) % params.output_freq == 0))
                 || (params.save_first && first_step)) {
             if (params.do_sph) {
                 if (params.do_winds) { 
                     if (params.old_winds) {
-                        if (short_output) 
+                        if (params.short_output) 
                             ShortWindOutput(SPHbtab, SPHnobj, windbtab, 
-                                    windnobj, outnamebase, iter);
+                                    windnobj, params.outnamebase, iter);
                         else
                             WindOutput(SPHbtab, SPHnobj, windbtab, 
-                                    windnobj, outnamebase, iter);
+                                    windnobj, params.outnamebase, iter);
                     } 
                     else
-                        SPHOutput(SPHbtab, SPHnobj, outnamebase, iter);
+                        SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
                 }
                 else
-                    SPHOutput(SPHbtab, SPHnobj, outnamebase, iter);
+                    SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
             }
-            if (params.has_grav_data) Output(btab, nobj, outnamebase, iter);
-            if (params.do_point_mass) Output(pmtab, PMnobj, outnamebase, iter);
+            if (params.has_grav_data) Output(btab, nobj, params.outnamebase, iter);
+            if (params.do_point_mass) Output(pmtab, PMnobj, params.outnamebase, iter);
         }
 
 
@@ -1612,7 +1616,7 @@ bndry.l[0], bndry.l[1]);
         if (params.adaptive_dt) Fix_dt(&dt, 
                 (((params.dark_dt<dt_max) ? params.dark_dt:dt_max) < dt_wind)
                 ? ((params.dark_dt<dt_max) ? params.dark_dt:dt_max):dt_wind,
-                tlow_cut, tmin, tbad, dt_short, dt_long,
+                params.tlow_cut, tmin, tbad, params.dt_short, params.dt_long,
                 udot_limit[0], udot_limit[1]);
 
         singlPrintf("udot_limit high: %d low: %d\n", udot_limit[0], 
@@ -1626,7 +1630,7 @@ bndry.l[0], bndry.l[1]);
 
         AddCounter(&HeapCnt_, malloc_heapsz()/1024);
 
-        if( timer_freq && iter%timer_freq == 0 ){
+        if( params.timer_freq && iter%params.timer_freq == 0 ){
             OutputTimers(singlPrintf);
             OutputCounters(singlPrintf);
             if( Msg_test("timers") ){
