@@ -138,32 +138,15 @@ static float dt;
 static float dt_max;
 static float sysradius;
 static float tpos, tvel;
-//static float t_wind;
 static float dt_wind;
-//static int cosmology; only used here
 static float R0;
 static float this_tol, this_eps;
-//static float frac_tol;
-//static float Gamma;		/* lowercase is a math.h function */
-//static int default_nterms;
-//static float centmass;
 
 static double gnterms;
 /* static double ggravnterms; */
-//static float courant_number;
-//static int adaptive_dt;
-//static int independent_dt;
-//static int dark_independent_dt;
 
 static bndry_t bndry;
 setup_params_t params;
-
-/*conversion factors from user-units to cgs*/
-/* need to read in as floats, then convert to double */
-/* SDFgetfloat* won't do that by itself */
-//float fmassCF;
-//float flenCF;
-//float ftimeCF;
 
 double massCF;
 double lenCF;
@@ -175,10 +158,6 @@ double lenCF2, ivlenCF2,  ivlenCF3;
 double ldivtCF, tdivlCF;
 
 double grav_c, c_light;
-
-//int do_diffusion;  /* used in main and in sph.c */
-//int do_cooling;
-//int do_burning;    /* used in sph.c, turns network on */
 
 int NNW;	/* number of isotopes in network */
 int **inNW;
@@ -224,102 +203,55 @@ main(int argc, char *argv[])
     FILE *fp = NULL;
     int gnobj, nobj;
     int SPHgnobj, SPHnobj, SPHoldnobj;
-    int windgnobj, windnobj;// windpartpershell;
-    //float r_inner;
+    int windgnobj, windnobj;
     int PMgnobj, PMnobj;
     int SPHsinkgnobj, SPHsinknobj;
     body *btab, *p;
     body *pmtab;
     SPHbody *SPHbtab, *SPHsinkbtab = NULL, *q;
     windbody *windbtab;
-    //float eps;			/* Plummer smoothing length */
-    //float tol;			/* MAC tolerance */
-		/* for big MAC, this is multiplied by M/(rsize*rsize) */
     int i;
     float rmin[NDIM], rmax[NDIM];
-    //int nsteps;
     int first_step = 1;
     int added_particles = 0;
     int stride = sizeof(body)/sizeof(float);
     int SPHstride = sizeof(SPHbody)/sizeof(float);
     int SPHstride2 = sizeof(SPHbody)/sizeof(double);
     int SPHstride3 = sizeof(SPHbody)/sizeof(unsigned int);
-    //int do_output;
-    //int output_freq;
-    //int short_output;
-    //int timer_freq;
-    //float sort_tol;
     int iter;
-    //float CWfac;
-    //float SPHCWfac;
-    //int ntimer_detail;
-    //int log_time = 0;		/* if true, use dt \propto t */
-    //int comov_eps = 0;		/* if true, use comoving epsilon*/
-    //float comov_eps_epoch;
-    //int setpvel = 0;
-    //char outnamebase[256];
     SDF *csdfp;			/* SDF pointer to control file */
     SDF *sdfp = NULL;
     float tposlast;
-    //int save_first;		/* save first step (for acc testing) */
     double pe, ke, te;
     double dark_ke, dark_pe;
     double etot;
     double mtot, SPHmtot;
     sortresult_t sortedbtab, SPHsortedbtab, sortedatab;
     tree_t thetree, SPHtree, SPHsinktree, *sinkptr = NULL;
-    //char name[256];
-    //int do_BH, do_DL, do_Bmax, do_Arel;
     int MACtype = BMAX_MAC;
-    //int image_freq, x_pixels, y_pixels, log_image;
-    //int do_periodic;
     inherit_t inherit;
     macv_t mac;
-    //int timeout;
-    //int set_id;
     float dt_last;
-    //float new_h, new_u;
-    //int do_sph, do_grav, do_winds;
-    //int old_winds, const_winds, nonconst_winds, accreting_winds;
-    //float r_wind, r_outer, v_wind, mdot_wind, u_wind, openangle_wind;
-    //float omega_wind;
-    //char template_name[256];
-    //char winddata_name[256];
     template_t *tempbtab;
     winddata_t *wdata;
     int tempnobj;
     int wnobj;
-    //int do_point_mass, do_point_mass2;
-    //int do_boundary;
-    //int do_absorbing_bndry;
     float newp[NDIM], newl[NDIM];
     float newr = 0.0;
     float newmass = 0.0, totnewmass = 0.0, invmass = 0.0;
-    //int do_drag;
     float drag_coeff;
 /*     float newmass = 0.0, totnewmass = 0.0; */
-    //int exact_rho;
-    //float visc_alpha, visc_beta, visc_epsilon, heat_f1;
-    //int nbrcut_max, nbrcut_min;
-    //float nbrcut_fac;
-    //float min_h, max_h;
     int udot_limit[2];
     float vsz;
     float tmin;
     int tbad;
-    //int tlow_cut, dt_short, dt_long;
     accbody *SPHatab, *pa;
     int SPHanobj;
     void *decomp_info = NULL;
-    //int do_restart;
     float dark_tacc = -1e30;	/* initialize so dark_need_update is true */
-    //float dark_dt;
     int did_dark_update;
     int SPHnupdate;
     int make_sink_tree;
-    //int has_grav_data;
-    //int kernel_ncoef1, kernel_ncoef2;
-    //double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts = 0, Nel = 0; 	/* for cooling tables */
     int status, done,rank,idbug;
     char *netrcfn, tmpchr[20];
@@ -342,35 +274,6 @@ main(int argc, char *argv[])
 
 	read_initial_ctl(csdfp, &params);
     if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
-	/*c
-    SDFgetintOrDefault(csdfp, "timeout", &timeout, 600);
-    if (timeout > 0) MPMY_TimeoutSet(timeout);
-#ifdef __PARAGON__
-    {
-	int fail_if_slow;
-	SDFgetintOrDefault(csdfp, "fail_if_slow", &fail_if_slow, 0);
-	chk_slow(fail_if_slow);
-    }
-#endif
-    SDFgetstring(csdfp, "datafile", name, sizeof(name));
-    SDFgetintOrDefault(csdfp, "do_restart", &do_restart, 0);
-    SDFgetintOrDefault(csdfp, "do_periodic", &do_periodic, 0);
-    SDFgetintOrDefault(csdfp, "cosmology", &cosmology, 0);
-    SDFgetintOrDefault(csdfp, "set_id", &set_id, 0);
-    SDFgetintOrDefault(csdfp, "setpvel", &setpvel, 0);
-    SDFgetintOrDefault(csdfp, "do_sph", &do_sph, 1);
-    SDFgetintOrDefault(csdfp, "do_diffusion", &do_diffusion, 0);
-    SDFgetintOrDefault(csdfp, "do_cooling", &do_cooling, 0);
-    SDFgetintOrDefault(csdfp, "do_burning", &do_burning, 0);
-    SDFgetintOrDefault(csdfp, "do_grav", &do_grav, 0);
-    SDFgetintOrDefault(csdfp, "do_winds", &do_winds, 0);
-    SDFgetintOrDefault(csdfp, "do_point_mass", &do_point_mass, 0);
-    SDFgetintOrDefault(csdfp, "do_point_mass2", &do_point_mass2, 0);
-    SDFgetintOrDefault(csdfp, "do_boundary", &do_boundary, 0);
-    SDFgetintOrDefault(csdfp, "do_absorbing_bndry", &do_absorbing_bndry, 0);
-    SDFgetintOrDefault(csdfp, "do_drag", &do_drag, 0);
-    SDFgetintOrDefault(csdfp, "has_grav_data", &has_grav_data, do_grav);
-	*/
 
 /* read in Z and N for abundances. at some later point, populate nparr/nnarr ~CIE*/
     if( (fp = fopen("networklist","r"))==NULL ) printf("error opening networklist\n");
@@ -392,11 +295,7 @@ main(int argc, char *argv[])
 				char iname[256];
 	
 				if (params.do_sph) {
-				    //cSDFgetfloatOrDefault(csdfp, "new_h", &new_h, 0.0);
-				    //cSDFgetfloatOrDefault(csdfp, "new_u", &new_u, 0.0);
 				    if (params.do_restart) sprintf(iname, "%s_sph.restart", params.name);
-				    /*celse SDFgetstring(csdfp, "SPHdatafile", iname, 
-						      sizeof(iname));*/
 					else sprintf(iname, "%s", params.SPHdatafile);
 	/* this is where the SDF file is read in -CIE */
 				    sdfp = SPHReadA(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
@@ -410,7 +309,6 @@ main(int argc, char *argv[])
 	
 				if (params.has_grav_data) {
 				    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
-				//c    else SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
 					else sprintf(iname, "%s", params.name);
 				    sdfp = DarkRead(iname, csdfp, (void **)&btab, &gnobj, 
 						    &nobj, params.set_id, params.setpvel);
@@ -420,9 +318,7 @@ main(int argc, char *argv[])
 				}
 	
 				if (params.do_point_mass) {
-				    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
 				    if (params.do_restart) sprintf(iname, "%s.restart", params.name);
-				    //celse SDFgetstring(csdfp, "datafile", iname, sizeof(iname));
 					else sprintf(iname, "%s", params.name);
 				    sdfp = DarkRead(iname, csdfp, (void **)&pmtab, &PMgnobj, 
 						    &PMnobj, params.set_id, params.setpvel);
@@ -430,91 +326,26 @@ main(int argc, char *argv[])
 					  pmtab->l[0], pmtab->l[1], pmtab->l[2], 
 					  pmtab->accmass));
 				} else if (params.do_point_mass2) {
-				    //cSDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-				    //cSDFgetfloatOrDie(sdfp, "centmass", &centmass);
 				    PMgnobj = PMnobj = 0;
 				    pmtab = Malloc(sizeof(body)); /* realloced later */
-		/*  		    SDFgetstring(csdfp, "windfile", iname, sizeof(iname)); */
-		/*   		    sdfp = SPHRead(iname, csdfp, &SPHwind, &windnobj, */
-		/* 				   &windnobj, params.set_id, params.setpvel, params.new_h,params.new_u); */
 					if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
 				} else {
 				    PMgnobj = PMnobj = 0;
 				    pmtab = Malloc(sizeof(body)); /* realloced later */
 				}
 	
-				/*c
-				if (params.do_boundary) {
-				    SDFgetfloatOrDie(csdfp, "r_inner", &r_inner);
-				    SDFgetfloatOrDie(csdfp, "r_outer", &r_outer);
-				    SDFgetfloatOrDie(csdfp, "centmass", &centmass);
-				}*/
-		
-		        /* get bndry quantities from sdf file or ctl file?
-		         * if from sdf file: corresponds to how it is done in snevolbrna, but then 
-		         * I need to modifiy the sdf files again - or not, get initial quantities 
-		         * from ctl file, and later quantities from sdf file on restart
-		         * if from ctl file: much easier to add to current set up, but then on 
-		         * restarts would use the wrong quantities? (how is time step/ iter done?)
-		         */
 		        /* first iteration, get central particle data from ctl file */
 		        if (params.do_absorbing_bndry) {
 		 			read_absorb_bndry(csdfp, &bndry);
-		 			/*c
-		            SDFgetfloatOrDie(csdfp, "bndry_x", &(bndry.pos[0]));
-		            SDFgetfloatOrDie(csdfp, "bndry_vx", &(bndry.vel[0]));
-		            SDFgetfloatOrDefault(csdfp, "bndry_lx", &(bndry.l[0]), 0.0);
-		            SDFgetfloatOrDefault(csdfp, "bndry_px", &(bndry.p[0]), 0.0);
-#if NDIM>=2        
-		            SDFgetfloatOrDie(csdfp, "bndry_y", &(bndry.pos[1]));
-		            SDFgetfloatOrDie(csdfp, "bndry_vy", &(bndry.vel[1]));
-		            SDFgetfloatOrDefault(csdfp, "bndry_ly", &(bndry.l[1]), 0.0);
-		            SDFgetfloatOrDefault(csdfp, "bndry_py", &(bndry.p[1]), 0.0);
-#if NDIM>=3
-		            SDFgetfloatOrDie(csdfp, "bndry_z", &(bndry.pos[2]));
-		            SDFgetfloatOrDie(csdfp, "bndry_vz", &(bndry.vel[2]));
-		            SDFgetfloatOrDefault(csdfp, "bndry_lz", &(bndry.l[2]), 0.0);
-		            SDFgetfloatOrDefault(csdfp, "bndry_pz", &(bndry.p[2]), 0.0);
-#endif
-#endif
-		            SDFgetfloatOrDie(csdfp, "bndry_mass", &(bndry.mass));
-		            SDFgetfloatOrDie(csdfp, "bndry_r", &(bndry.r));
-		 			*/
 		        }
 	
 		        if (params.do_winds) {
-					/*c
-		            SDFgetintOrDie(csdfp, "windpart_per_shell", 
-		                    &windpartpershell);
-		            SDFgetintOrDefault(csdfp, "old_winds", &old_winds, 1);
-		            SDFgetintOrDefault(csdfp, "const_winds", &const_winds, 0);
-		            SDFgetintOrDefault(csdfp, "nonconst_winds",
-		                    &nonconst_winds, 0);
-		            SDFgetintOrDefault(csdfp, "accreting_winds",
-		                    &accreting_winds, 0);
-		            if ( (const_winds && nonconst_winds) || 
-		                    (const_winds && accreting_winds) || 
-		                    (nonconst_winds && accreting_winds) )
-		                Error("const_winds && nonconst_winds && accreting_winds; pick one\n");
-		
-						*/
 		            if (params.old_winds) {
 		                sdfp = WindRead(iname, csdfp, &windbtab, &windgnobj, 
 		                        &windnobj);
 		            } else windgnobj = windnobj = 0;
 		
 		            if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
-						/*
-		                SDFgetfloatOrDie(csdfp, "r_wind", &r_wind);
-		                SDFgetfloatOrDefault(sdfp, "t_wind", &t_wind, 0.0);
-		                if (const_winds || nonconst_winds)
-		                    SDFgetfloatOrDefault(csdfp, "openangle_wind", 
-		                            &openangle_wind, 180.0);
-		                if (accreting_winds)
-		                    SDFgetfloatOrDie(csdfp, "omega_wind", &omega_wind);
-		                SDFgetstring(csdfp, "template_name", template_name,
-		                        sizeof(template_name));
-								*/
 		                if (MPMY_Procnum() == 0) {
 		                    ReadTemplate(params.template_name, 
 		                            (template_t **)&tempbtab, &tempnobj);
@@ -522,19 +353,7 @@ main(int argc, char *argv[])
 		                        Error("tempnobj != windpartpershell");
 		                }
 		            }
-					/*c
-		            if (params.const_winds || params.accreting_winds) {
-		                SDFgetfloatOrDie(csdfp, "v_wind", &v_wind);
-		                SDFgetfloatOrDie(csdfp, "mdot_wind", &mdot_wind);
-		                SDFgetfloatOrDie(csdfp, "u_wind", &u_wind);
-		            }
-					*/
 		            if (params.nonconst_winds) {
-						/*c
-		                SDFgetstring(csdfp, "winddata_name", winddata_name,
-		                        sizeof(winddata_name));
-		                SDFgetfloatOrDefault(csdfp, "r_outer", &r_outer, 1e30);
-						*/
 		                if (MPMY_Procnum() == 0)
 		                    ReadWindData(params.winddata_name,
 		                            (winddata_t **)&wdata, &wnobj);
@@ -543,11 +362,8 @@ main(int argc, char *argv[])
 	
 		        SDFgetfloatOrDefault(sdfp, "dt", &dt, 0.0);
 		        SDFgetfloatOrDefault(sdfp, "dark_dt", &(params.dark_dt), dt);
-				/* just for the record */
-				singlPrintf("restart || SPHdatafile, dt = %g\n", dt);
 				if (params.do_restart) 
 					params.dt = dt;
-				//params.dark_dt = dark_dt;
 	        } else {
 	            sdfp = InitRead(params.name, csdfp, (void **)&btab, &gnobj, &nobj, 
 	                    &SPHbtab, &SPHgnobj, &SPHnobj, 
@@ -563,27 +379,6 @@ main(int argc, char *argv[])
 	        /* not first iteration, get central data particle from sdf file */
 	        if (params.do_absorbing_bndry && (iter > 0)) {
 				read_absorb_bndry(sdfp, &bndry);
-				/*c
-	            SDFgetfloatOrDie(sdfp, "bndry_x", &(bndry.pos[0]));
-	            SDFgetfloatOrDie(sdfp, "bndry_vx", &(bndry.vel[0]));
-	            SDFgetfloatOrDie(sdfp, "bndry_px", &(bndry.p[0]));
-	            SDFgetfloatOrDie(sdfp, "bndry_lx", &(bndry.l[0]));
-#if NDIM>=2        
-	            SDFgetfloatOrDie(sdfp, "bndry_y", &(bndry.pos[1]));
-	            SDFgetfloatOrDie(sdfp, "bndry_vy", &(bndry.vel[1]));
-	            SDFgetfloatOrDie(sdfp, "bndry_py", &(bndry.p[1]));
-	            SDFgetfloatOrDie(sdfp, "bndry_ly", &(bndry.l[1]));
-#if NDIM>=3
-	            SDFgetfloatOrDie(sdfp, "bndry_z", &(bndry.pos[2]));
-	            SDFgetfloatOrDie(sdfp, "bndry_vz", &(bndry.vel[2]));
-	            SDFgetfloatOrDie(sdfp, "bndry_pz", &(bndry.p[2]));
-	            SDFgetfloatOrDie(sdfp, "bndry_lz", &(bndry.l[2]));
-#endif
-#endif
-	
-	            SDFgetfloatOrDie(sdfp, "bndry_mass", &(bndry.mass));
-	            SDFgetfloatOrDie(sdfp, "bndry_r", &(bndry.r));
-				*/
 	        }
 	        if (params.cosmology) ReadCosmo(sdfp, &cosmo, tpos, &R0);
 	        if(sdfp) SDFclose(sdfp);
@@ -602,116 +397,18 @@ main(int argc, char *argv[])
         malloc_print();
     }
 
-	/*c
-    SDFgetfloatOrDefault(csdfp, "epsilon", &eps, 0.0);
-    if (params.do_grav) {
-        SDFgetintOrDefault(csdfp, "do_DL", &do_DL, 0);
-        SDFgetintOrDefault(csdfp, "do_BH", &do_BH, 0);
-        SDFgetintOrDefault(csdfp, "do_Bmax", &do_Bmax, 0);
-        SDFgetintOrDefault(csdfp, "do_Arel", &do_Arel, 0);
-        if (do_BH || do_Bmax) 
-            SDFgetfloatOrDie(csdfp, "theta", &tol);
-        else
-            SDFgetfloatOrDie(csdfp, "errtol", &tol);
-        SDFgetfloatOrDefault(csdfp, "frac_tol", &frac_tol, 0.0);
-    }
-    SDFgetfloatOrDefault(csdfp, "CWfac", &CWfac, 0.0);
-    SDFgetfloatOrDefault(csdfp, "SPHCWfac", &SPHCWfac, 0.0);
-	*/
     if (!params.do_restart) {
 		dt = params.dt;
-		singlPrintf("not restart, dt = %g\n", dt);
-        //SDFgetfloatOrDie(csdfp, "dt", &dt);
         /*  SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30); */
     }
-	/*c
-    SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30);
-    SDFgetintOrDie(csdfp, "nsteps", &nsteps);
-    SDFgetintOrDefault(csdfp, "log_time", &log_time, 0);
-    SDFgetintOrDefault(csdfp, "comov_eps", &comov_eps, 0);
-    SDFgetfloatOrDefault(csdfp, "comov_eps_epoch", &comov_eps_epoch, 10.0);
-    SDFgetintOrDefault(csdfp, "save_first", &save_first, 0);
-    SDFgetintOrDefault(csdfp, "ntimer_detail", &ntimer_detail, 0);
-    SDFgetintOrDefault(csdfp, "exact_rho", &exact_rho, 0);
-    SDFgetfloatOrDefault(csdfp, "visc_alpha", &visc_alpha, (float)1.0);
-    SDFgetfloatOrDefault(csdfp, "visc_beta", &visc_beta, (float)2.0);
-    SDFgetfloatOrDefault(csdfp, "visc_epsilon", &visc_epsilon, (float)1e-2);
-    SDFgetfloatOrDefault(csdfp, "heat_f1", &heat_f1, (float)0.0);
-    SDFgetfloatOrDie(csdfp, "gamma", &Gamma);
-    SDFgetfloatOrDefault(csdfp, "courant_number", &courant_number, (float)0.4);
-    SDFgetfloatOrDefault(csdfp, "min_h", &min_h, (float)0.0);
-    SDFgetfloatOrDefault(csdfp, "max_h", &max_h, (float)1e30);
-    SDFgetintOrDefault(csdfp, "nbrcut_max", &nbrcut_max, 500);
-    SDFgetintOrDefault(csdfp, "nbrcut_min", &nbrcut_min, 10);
-    SDFgetfloatOrDefault(csdfp, "nbrcut_fac", &nbrcut_fac, (float)0.1);
-    SDFgetintOrDefault(csdfp, "adaptive_dt", &adaptive_dt, 1);
-    SDFgetintOrDefault(csdfp, "independent_dt", &independent_dt, 0);
-    SDFgetintOrDefault(csdfp, "dark_independent_dt", &dark_independent_dt, 0);
-    SDFgetintOrDefault(csdfp, "default_nterms", &default_nterms, 100);
-    SDFgetfloatOrDefault(csdfp, "massCF", &fmassCF, 1.0);
-    SDFgetfloatOrDefault(csdfp, "lengthCF", &flenCF, 1.0);
-    SDFgetfloatOrDefault(csdfp, "timeCF", &ftimeCF, 1.0);
-	*/
     massCF= (double)params.fmassCF;
     lenCF= (double)params.flenCF;
     timeCF= (double)params.ftimeCF;
-	/*
-    if (params.adaptive_dt) {
-        SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
-        SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
-        SDFgetintOrDefault(csdfp, "dt_long", &dt_long, 10);
-        SDFgetfloatOrDefault(csdfp, "dt_max", &dt_max, 1e30);
-    }
-	*/
 
     if (params.do_Bmax) MACtype = BMAX_MAC;
     else if (params.do_BH) MACtype = BH_MAC;
     else if (params.do_Arel) MACtype = AREL_MAC;
     else if (params.do_grav) Error("No MAC specified\n");
-
-	/*c
-    if( SDFgetstring(csdfp, "outfile", outnamebase, sizeof(outnamebase)) == 0){
-        do_output = ( strlen(outnamebase) > 0 );
-    }else{
-        do_output = 0;
-    }
-    if( do_output ){
-        SDFgetintOrDefault(csdfp, "output_freq", &output_freq, params.nsteps);
-        SDFgetintOrDefault(csdfp, "short_output", &short_output, 0);
-    }else{
-        output_freq = 1;
-    }
-    SDFgetintOrDefault(csdfp, "timer_freq", &timer_freq, params.output_freq);
-    SDFgetfloatOrDefault(csdfp, "sort_tol", &sort_tol, 0.01);
-    SDFgetintOrDefault(csdfp, "image_freq", &image_freq, 0);
-    SDFgetintOrDefault(csdfp, "x_pixels", &x_pixels, 512);
-    SDFgetintOrDefault(csdfp, "y_pixels", &y_pixels, 512);
-    SDFgetintOrDefault(csdfp, "log_image", &log_image, 0);
-    if (SDFhasname("kernel_ncoef1", csdfp)) {
-        SDFgetintOrDie(csdfp, "kernel_ncoef1", &kernel_ncoef1);
-        if (kernel_ncoef1 >= MAXCOEF) Error("Increase MAXCOEF\n");
-        SDFgetintOrDie(csdfp, "kernel_ncoef2", &kernel_ncoef2);
-        if (kernel_ncoef2 >= MAXCOEF) Error("Increase MAXCOEF\n");
-        if (SDFseekrdvecs(csdfp, "kernel_coef1", 0, kernel_ncoef1, 
-                    kernel_coef1, 0, NULL))
-            Error("SDFread kernel_coef1 failed\n");
-        if (SDFseekrdvecs(csdfp, "kernel_coef2", 0, kernel_ncoef2, 
-                    kernel_coef2, 0, NULL))
-            Error("SDFread kernel_coef2 failed\n");
-    } else {
-	*/
-        /* Monaghan spline kernel is default */
-	/*c
-        kernel_ncoef1 = kernel_ncoef2 = 4;
-        kernel_coef1[0] = 1.0;		kernel_coef2[0] = 2.0;
-        kernel_coef1[1] = 0.0;		kernel_coef2[1] = -3.0;
-        kernel_coef1[2] = -3.0/2.0;	kernel_coef2[2] = 3.0/2.0;
-        kernel_coef1[3] = 3.0/4.0;	kernel_coef2[3] = -1.0/4.0;
-    }
-    if (params.do_drag) {
-        SDFgetfloatOrDie(csdfp, "drag_coeff", &drag_coeff);
-    }
-	*/
 
     if(csdfp) 
         SDFclose(csdfp);
@@ -740,183 +437,22 @@ main(int argc, char *argv[])
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
 
-	/*c
-    singlPrintf("float errtol = %g;\n", params.tol);
-    singlPrintf("float dt = %g;\n", dt);
-	*/
     singlPrintf("float params.dt = %g;\n", params.dt);
-	/*c
-    singlPrintf("float dark_dt = %g;\n", params.dark_dt);
-    singlPrintf("float epsilon = %g;\n", params.eps);
-	*/
     singlPrintf("int iter = %d;\n", iter);
-	/*c
-    singlPrintf("int nsteps = %d;\n", params.nsteps);
-	*/
     singlPrintf("int nproc = %d;\n", MPMY_Nproc());
-	/*c
-    singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
-    singlPrintf("int do_BH = %d;\n", params.do_BH);
-    singlPrintf("int do_Arel = %d;\n", params.do_Arel);
-    singlPrintf("int do_DL = %d;\n", params.do_DL);
-    singlPrintf("int exact_rho = %d;\n", params.exact_rho);
-    singlPrintf("float courant_number = %g;\n", params.courant_number);
-    singlPrintf("float gamma = %f;\n", params.Gamma);
-	*/
     singlPrintf("float Gnewt = %g;\n", cosmo.GNewt);
-	/*c
-    singlPrintf("float massCF = %g;\n", massCF);
-    singlPrintf("float lenCF = %g;\n", lenCF);
-    singlPrintf("float timeCF = %g;\n", timeCF);
-    singlPrintf("float visc_alpha = %g;\n", params.visc_alpha);
-    singlPrintf("float visc_beta = %g;\n", params.visc_beta);
-    singlPrintf("float visc_epsilon = %g;\n", params.visc_epsilon);
-    singlPrintf("float heat_f1 = %g;\n", params.heat_f1);
-    singlPrintf("float min_h = %g;\n", params.min_h);
-    singlPrintf("float max_h = %g;\n", params.max_h);
-    singlPrintf("int adaptive_dt = %d;\n", params.adaptive_dt);
-    singlPrintf("int independent_dt = %d;\n", params.independent_dt);
-    singlPrintf("int dark_independent_dt = %d;\n", params.dark_independent_dt);
-    if (params.adaptive_dt) {
-        singlPrintf("int tlow_cut = %d;\n", params.tlow_cut);
-        singlPrintf("int dt_long = %d;\n", params.dt_long);
-        singlPrintf("int dt_short = %d;\n", params.dt_short);
-        singlPrintf("float dt_max = %g;\n", dt_max);
-    }
-	*/
 
 	print_initial_ctl(params);
 
     if (params.do_winds) {
-		/*c
-        singlPrintf("int do_winds = %d;\n", params.do_winds);
-        singlPrintf("int windpartpershell = %d;\n", params.windpartpershell);
-        singlPrintf("int old_winds = %d;\n", params.old_winds);
-		*/
         if (params.old_winds) {
             singlPrintf("int windgnobj = %d;\n", windgnobj);
         }
-		/*c
-        singlPrintf("int const_winds = %d;\n", params.const_winds);
-        singlPrintf("int nonconst_winds = %d;\n", params.nonconst_winds);
-        singlPrintf("int accreting_winds = %d;\n", params.accreting_winds);
-        if (params.const_winds || params.accreting_winds) {
-            singlPrintf("float v_wind = %g;\n", params.v_wind);
-            singlPrintf("float mdot_wind = %g;\n", params.mdot_wind);
-            singlPrintf("float u_wind = %g;\n", params.u_wind);
-        }
-        if (params.const_winds || params.nonconst_winds || params.accreting_winds) {
-            singlPrintf("float r_wind = %g;\n", params.r_wind);
-            singlPrintf("float t_wind = %g;\n", params.t_wind);
-            if (params.const_winds || params.nonconst_winds)
-                singlPrintf("float openangle_wind = %g;\n", params.openangle_wind);
-            singlPrintf("char template_name[] = \"%s\"\n", params.template_name);
-            srand48(192837465);
-        }
-        if (params.accreting_winds)
-            singlPrintf("float omega_wind = %g;\n", params.omega_wind);
-        if (params.nonconst_winds) {
-            singlPrintf("char winddata_name[] = \"%s\"\n", params.winddata_name);
-            singlPrintf("float r_outer = %g;\n", params.r_outer);
-        }
-		*/
     }
-	/*c
-    if (params.do_point_mass || params.do_point_mass2) {
-        singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
-        singlPrintf("float centmass = %e;\n", params.centmass);
-    }
-    if (params.do_boundary) {
-        singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float r_outer = %f;\n", params.r_outer);
-        singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
-        singlPrintf("float centmass = %e;\n", params.centmass);
-    }
-	*/
     if (params.do_absorbing_bndry) {
 		print_absorb_bndry (bndry);
-        /* this just prints to stdout, can print as arrays! ~CIE*/
-        /*
-           singlPrintf("float bndry_x = %g;\n", bndry.pos[0]);
-#if NDIM>=2
-singlPrintf("float bndry_y = %g;\n", bndry.pos[1]);
-#if NDIM>=3
-singlPrintf("float bndry_z = %g;\n", bndry.pos[2]);
-#endif
-#endif
-singlPrintf("float bndry_vx = %g;\n", bndry.vel[0]);
-#if NDIM>=2
-singlPrintf("float bndry_vy = %g;\n", bndry.vel[1]);
-#if NDIM>=3
-singlPrintf("float bndry_vz = %g;\n", bndry.vel[2]);
-#endif
-#endif
-*/
-        /* or 2D for now, to get it compiled
-#if NDIM=2
-singlPrintf("float bndry_pos[2] = [ %g, %g ];\n", 
-bndry.pos[0], bndry.pos[1]);
-singlPrintf("float bndry_vel[2] = [ %g, %g ];\n", 
-bndry.vel[0], bndry.vel[1]);
-singlPrintf("float bndry_p[2] = [ %g, %g ];\n", 
-bndry.p[0], bndry.p[1]);
-singlPrintf("float bndry_l[2] = [ %g, %g ];\n",
-bndry.l[0], bndry.l[1]);
-*/
-        /*#elif NDIM=3*//*let's assume we're never going to run this in 1D ~CIE*/
-        /*#else*/
-		/*c
-        singlPrintf("float bndry_pos[3] = [ %g, %g, %g ];\n", 
-                bndry.pos[0], bndry.pos[1], bndry.pos[2]);
-        singlPrintf("float bndry_vel[3] = [ %g, %g, %g ];\n", 
-                bndry.vel[0], bndry.vel[1], bndry.vel[2]);
-        singlPrintf("float bndry_p[3] = [ %g, %g, %g ];\n", 
-                bndry.p[0], bndry.p[1], bndry.p[2]);
-        singlPrintf("float bndry_l[3] = [ %g, %g, %g ];\n", 
-                bndry.l[0], bndry.l[1], bndry.l[2]);
-		*/
-        /*#endif*/
-		/*c
-        singlPrintf("float bndry_mass = %g;\n", bndry.mass);
-        singlPrintf("float bndry_r = %g;\n", bndry.r);
-		*/
     }
-	/*c
-    if (params.do_drag) {
-        singlPrintf("int do_drag = %d;\n", params.do_drag);
-        singlPrintf("float drag_coeff = %g;\n", drag_coeff);
-    }
-    if (params.do_cooling)
-        singlPrintf("int do_cooling = %d;\n", params.do_cooling);
-    singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
-    singlPrintf("int do_burning = %d;\n", params.do_burning);
-    if( params.do_output ){
-        if (params.short_output) singlPrintf("Short ");
-        singlPrintf("Output to %s.nnnn, every %d steps\n", 
-                params.outnamebase, params.output_freq);
-    }else{
-        singlPrintf("No output.\n");
-    }
-    singlPrintf("int timer_freq = %d;\n", params.timer_freq);
-    singlPrintf("float sort_tol = %.4f;\n", params.sort_tol);
-    singlPrintf("int do_periodic = %d;\n", params.do_periodic);
-    singlPrintf("kernel coefficients:\n\t");
-    for (i = 0; i < params.kernel_ncoef1; i++)
-        singlPrintf("%12.9f ", params.kernel_coef1[i]);
-    singlPrintf("\n\t");
-    for (i = 0; i < params.kernel_ncoef2; i++)
-        singlPrintf("%12.9f ", params.kernel_coef2[i]);
-    singlPrintf("\n");
-    if (params.log_time) Error("This code does not support log_time\n");
-	*/
     if (params.cosmology) {
-		/*c
-        singlPrintf("int cosmology = %d;\n", params.cosmology);
-        singlPrintf("int comov_eps = %d;\n", params.comov_eps);
-        singlPrintf("float comov_eps_epoch = %f;\n", params.comov_eps_epoch);
-        singlPrintf("int setpvel = %d;\n", params.setpvel);
-		*/
         singlPrintf("float R0 = %f;\n", R0);
     }
 
