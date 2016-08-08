@@ -123,6 +123,35 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     if (!params->do_restart) 
         SDFgetfloatOrDie(sdfp, "dt", &(params->dt));
 
+    SDFgetfloatOrDefault(sdfp, "dark_dt", &(params->dark_dt), 1e30);
+    SDFgetintOrDie(sdfp, "nsteps", &(params->nsteps));
+    SDFgetintOrDefault(sdfp, "log_time", &(params->log_time), 0);
+    SDFgetintOrDefault(sdfp, "comov_eps", &(params->comov_eps), 0);
+    SDFgetfloatOrDefault(sdfp, "comov_eps_epoch", &(params->comov_eps_epoch), 10.0);
+    SDFgetintOrDefault(sdfp, "save_first", &(params->save_first), 0);
+    SDFgetintOrDefault(sdfp, "ntimer_detail", &(params->ntimer_detail), 0);
+    SDFgetintOrDefault(sdfp, "exact_rho", &(params->exact_rho), 0);
+    SDFgetfloatOrDefault(sdfp, "visc_alpha", &(params->visc_alpha), (float)1.0);
+    SDFgetfloatOrDefault(sdfp, "visc_beta", &(params->visc_beta), (float)2.0);
+    SDFgetfloatOrDefault(sdfp, "visc_epsilon", &(params->visc_epsilon), (float)1e-2);
+    SDFgetfloatOrDefault(sdfp, "heat_f1", &(params->heat_f1), (float)0.0);
+    SDFgetfloatOrDie(sdfp, "gamma", &(params->Gamma));
+    SDFgetfloatOrDefault(sdfp, "courant_number", &(params->courant_number), (float)0.4);
+    SDFgetfloatOrDefault(sdfp, "min_h", &(params->min_h), (float)0.0);
+    SDFgetfloatOrDefault(sdfp, "max_h", &(params->max_h), (float)1e30);
+    SDFgetintOrDefault(sdfp, "nbrcut_max", &(params->nbrcut_max), 500);
+    SDFgetintOrDefault(sdfp, "nbrcut_min", &(params->nbrcut_min), 10);
+    SDFgetfloatOrDefault(sdfp, "nbrcut_fac", &(params->nbrcut_fac), (float)0.1);
+    SDFgetintOrDefault(sdfp, "adaptive_dt", &(params->adaptive_dt), 1);
+    SDFgetintOrDefault(sdfp, "independent_dt", &(params->independent_dt), 0);
+    SDFgetintOrDefault(sdfp, "dark_independent_dt", &(params->dark_independent_dt), 0);
+    SDFgetintOrDefault(sdfp, "default_nterms", &(params->default_nterms), 100);
+
+    SDFgetfloatOrDefault(sdfp, "massCF", &(params->fmassCF), 1.0);/*mass conversion factor; CE*/
+    SDFgetfloatOrDefault(sdfp, "lengthCF", &(params->flenCF), 1.0);/*length conversion factor; CE*/
+    SDFgetfloatOrDefault(sdfp, "timeCF", &(params->ftimeCF), 1.0);/*time conversion factor; CE*/
+
+
 }
 
 void print_initial_ctl(setup_params_t params) {
@@ -216,6 +245,35 @@ void print_initial_ctl(setup_params_t params) {
 	singlPrintf("float CWfac = %g;\n", params.CWfac);
 	singlPrintf("float SPHCWfac = %g;\n", params.SPHCWfac);
 
+    singlPrintf("float epsilon = %g;\n", params.eps);
+
+    singlPrintf("float dark_dt = %g;\n", params.dark_dt);
+    singlPrintf("int nsteps = %d;\n", params.nsteps);
+	singlPrintf("int log_time = %d;\n", params.log_time);
+    singlPrintf("int comov_eps = %d;\n", params.comov_eps);
+    singlPrintf("float comov_eps_epoch = %f;\n", params.comov_eps_epoch);
+    singlPrintf("int save_first = %d;\n", params.save_first);
+    singlPrintf("int ntimer_detail = %d;\n", params.ntimer_detail);
+    singlPrintf("int exact_rho = %d;\n", params.exact_rho);
+    singlPrintf("float visc_alpha = %g;\n", params.visc_alpha);
+    singlPrintf("float visc_beta = %g;\n", params.visc_beta);
+    singlPrintf("float visc_epsilon = %g;\n", params.visc_epsilon);
+    singlPrintf("float heat_f1 = %g;\n", params.heat_f1);
+    singlPrintf("float gamma = %f;\n", params.Gamma);
+    singlPrintf("float courant_number = %g;\n", params.courant_number);
+    singlPrintf("float min_h = %g;\n", params.min_h);
+    singlPrintf("float max_h = %g;\n", params.max_h);
+    singlPrintf("int nbrcut_max = %d;\n", params.nbrcut_max);
+    singlPrintf("int nbrcut_min = %d;\n", params.nbrcut_min);
+    singlPrintf("float nbrcut_fac = %g;\n", params.nbrcut_fac);
+    singlPrintf("int adaptive_dt = %d;\n", params.adaptive_dt);
+    singlPrintf("int independent_dt = %d;\n", params.independent_dt);
+    singlPrintf("int dark_independent_dt = %d;\n", params.dark_independent_dt);
+    singlPrintf("int default_nterms = %d;\n", params.default_nterms);
+    singlPrintf("float massCF = %g;\n", params.fmassCF);/*added by CE*/
+    singlPrintf("float lenCF = %g;\n", params.flenCF);/*added by CE*/
+    singlPrintf("float timeCF = %g;\n", params.ftimeCF);/*added by CE*/
+	
     singlPrintf("end printing params structure\n");
 }
 

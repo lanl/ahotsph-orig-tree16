@@ -34,6 +34,19 @@ typedef struct {
     int do_BH;
     int do_Bmax;
     int do_Arel;
+    int do_output;
+    int nsteps;
+    int log_time;
+    int comov_eps;
+    int save_first;
+    int ntimer_detail;
+    int exact_rho;
+    int nbrcut_max;
+    int nbrcut_min;
+    int adaptive_dt;
+    int independent_dt;
+    int dark_independent_dt;
+    int default_nterms;
     float new_h;
     float new_u;
     float r_inner;
@@ -52,6 +65,20 @@ typedef struct {
     float CWfac;
     float SPHCWfac;
 	float dt;
+    float dark_dt;
+    float comov_eps_epoch;
+    float visc_alpha;
+    float visc_beta;
+    float visc_epsilon;
+    float heat_f1;
+    float min_h;
+    float max_h;
+    float nbrcut_fac;
+    float Gamma;
+    float courant_number;
+    float fmassCF;
+    float flenCF;
+    float ftimeCF;
 } setup_params_t;
 
 typedef struct{

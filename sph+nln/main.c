@@ -144,16 +144,16 @@ static float dt_wind;
 static float R0;
 static float this_tol, this_eps;
 //static float frac_tol;
-static float Gamma;		/* lowercase is a math.h function */
-static int default_nterms;
+//static float Gamma;		/* lowercase is a math.h function */
+//static int default_nterms;
 //static float centmass;
 
 static double gnterms;
 /* static double ggravnterms; */
-static float courant_number;
-static int adaptive_dt;
-static int independent_dt;
-static int dark_independent_dt;
+//static float courant_number;
+//static int adaptive_dt;
+//static int independent_dt;
+//static int dark_independent_dt;
 
 static bndry_t bndry;
 setup_params_t params;
@@ -161,9 +161,9 @@ setup_params_t params;
 /*conversion factors from user-units to cgs*/
 /* need to read in as floats, then convert to double */
 /* SDFgetfloat* won't do that by itself */
-float fmassCF;
-float flenCF;
-float ftimeCF;
+//float fmassCF;
+//float flenCF;
+//float ftimeCF;
 
 double massCF;
 double lenCF;
@@ -237,7 +237,7 @@ main(int argc, char *argv[])
 		/* for big MAC, this is multiplied by M/(rsize*rsize) */
     int i;
     float rmin[NDIM], rmax[NDIM];
-    int nsteps;
+    //int nsteps;
     int first_step = 1;
     int added_particles = 0;
     int stride = sizeof(body)/sizeof(float);
@@ -252,16 +252,16 @@ main(int argc, char *argv[])
     int iter;
     //float CWfac;
     //float SPHCWfac;
-    int ntimer_detail;
-    int log_time = 0;		/* if true, use dt \propto t */
-    int comov_eps = 0;		/* if true, use comoving epsilon*/
-    float comov_eps_epoch;
+    //int ntimer_detail;
+    //int log_time = 0;		/* if true, use dt \propto t */
+    //int comov_eps = 0;		/* if true, use comoving epsilon*/
+    //float comov_eps_epoch;
     //int setpvel = 0;
     char outnamebase[256];
     SDF *csdfp;			/* SDF pointer to control file */
     SDF *sdfp = NULL;
     float tposlast;
-    int save_first;		/* save first step (for acc testing) */
+    //int save_first;		/* save first step (for acc testing) */
     double pe, ke, te;
     double dark_ke, dark_pe;
     double etot;
@@ -298,11 +298,11 @@ main(int argc, char *argv[])
     //int do_drag;
     float drag_coeff;
 /*     float newmass = 0.0, totnewmass = 0.0; */
-    int exact_rho;
-    float visc_alpha, visc_beta, visc_epsilon, heat_f1;
-    int nbrcut_max, nbrcut_min;
-    float nbrcut_fac;
-    float min_h, max_h;
+    //int exact_rho;
+    //float visc_alpha, visc_beta, visc_epsilon, heat_f1;
+    //int nbrcut_max, nbrcut_min;
+    //float nbrcut_fac;
+    //float min_h, max_h;
     int udot_limit[2];
     float vsz;
     float tmin;
@@ -313,7 +313,7 @@ main(int argc, char *argv[])
     void *decomp_info = NULL;
     //int do_restart;
     float dark_tacc = -1e30;	/* initialize so dark_need_update is true */
-    float dark_dt;
+    //float dark_dt;
     int did_dark_update;
     int SPHnupdate;
     int make_sink_tree;
@@ -542,7 +542,7 @@ main(int argc, char *argv[])
 		        } 
 	
 		        SDFgetfloatOrDefault(sdfp, "dt", &dt, 0.0);
-		        SDFgetfloatOrDefault(sdfp, "dark_dt", &dark_dt, dt);
+		        SDFgetfloatOrDefault(sdfp, "dark_dt", &(params.dark_dt), dt);
 				/* just for the record */
 				singlPrintf("restart || SPHdatafile, dt = %g\n", dt);
 				if (params.do_restart) 
@@ -624,6 +624,7 @@ main(int argc, char *argv[])
         //SDFgetfloatOrDie(csdfp, "dt", &dt);
         /*  SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30); */
     }
+	/*c
     SDFgetfloatOrDefault(csdfp, "dark_dt", &dark_dt, params.do_grav ? dt : 1e30);
     SDFgetintOrDie(csdfp, "nsteps", &nsteps);
     SDFgetintOrDefault(csdfp, "log_time", &log_time, 0);
@@ -647,13 +648,14 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "independent_dt", &independent_dt, 0);
     SDFgetintOrDefault(csdfp, "dark_independent_dt", &dark_independent_dt, 0);
     SDFgetintOrDefault(csdfp, "default_nterms", &default_nterms, 100);
-    SDFgetfloatOrDefault(csdfp, "massCF", &fmassCF, 1.0);/*mass conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "lengthCF", &flenCF, 1.0);/*length conversion factor; CE*/
-    SDFgetfloatOrDefault(csdfp, "timeCF", &ftimeCF, 1.0);/*time conversion factor; CE*/
-    massCF= (double)fmassCF;
-    lenCF= (double)flenCF;
-    timeCF= (double)ftimeCF;
-    if (adaptive_dt) {
+    SDFgetfloatOrDefault(csdfp, "massCF", &fmassCF, 1.0);
+    SDFgetfloatOrDefault(csdfp, "lengthCF", &flenCF, 1.0);
+    SDFgetfloatOrDefault(csdfp, "timeCF", &ftimeCF, 1.0);
+	*/
+    massCF= (double)params.fmassCF;
+    lenCF= (double)params.flenCF;
+    timeCF= (double)params.ftimeCF;
+    if (params.adaptive_dt) {
         SDFgetintOrDefault(csdfp, "tlow_cut", &tlow_cut, 40);
         SDFgetintOrDefault(csdfp, "dt_short", &dt_short, 0);
         SDFgetintOrDefault(csdfp, "dt_long", &dt_long, 10);
@@ -671,7 +673,7 @@ main(int argc, char *argv[])
         do_output = 0;
     }
     if( do_output ){
-        SDFgetintOrDefault(csdfp, "output_freq", &output_freq, nsteps);
+        SDFgetintOrDefault(csdfp, "output_freq", &output_freq, params.nsteps);
         SDFgetintOrDefault(csdfp, "short_output", &short_output, 0);
     }else{
         output_freq = 1;
@@ -737,32 +739,32 @@ main(int argc, char *argv[])
     singlPrintf("float errtol = %g;\n", params.tol);
     singlPrintf("float dt = %g;\n", dt);
     singlPrintf("float params.dt = %g;\n", params.dt);
-    singlPrintf("float dark_dt = %g;\n", dark_dt);
+    singlPrintf("float dark_dt = %g;\n", params.dark_dt);
     singlPrintf("float epsilon = %g;\n", params.eps);
     singlPrintf("int iter = %d;\n", iter);
-    singlPrintf("int nsteps = %d;\n", nsteps);
+    singlPrintf("int nsteps = %d;\n", params.nsteps);
     singlPrintf("int nproc = %d;\n", MPMY_Nproc());
     singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
     singlPrintf("int do_BH = %d;\n", params.do_BH);
     singlPrintf("int do_Arel = %d;\n", params.do_Arel);
     singlPrintf("int do_DL = %d;\n", params.do_DL);
-    singlPrintf("int exact_rho = %d;\n", exact_rho);
-    singlPrintf("float courant_number = %g;\n", courant_number);
-    singlPrintf("float gamma = %f;\n", Gamma);
+    singlPrintf("int exact_rho = %d;\n", params.exact_rho);
+    singlPrintf("float courant_number = %g;\n", params.courant_number);
+    singlPrintf("float gamma = %f;\n", params.Gamma);
     singlPrintf("float Gnewt = %g;\n", cosmo.GNewt);
     singlPrintf("float massCF = %g;\n", massCF);/*added by CE*/
     singlPrintf("float lenCF = %g;\n", lenCF);/*added by CE*/
     singlPrintf("float timeCF = %g;\n", timeCF);/*added by CE*/
-    singlPrintf("float visc_alpha = %g;\n", visc_alpha);
-    singlPrintf("float visc_beta = %g;\n", visc_beta);
-    singlPrintf("float visc_epsilon = %g;\n", visc_epsilon);
-    singlPrintf("float heat_f1 = %g;\n", heat_f1);
-    singlPrintf("float min_h = %g;\n", min_h);
-    singlPrintf("float max_h = %g;\n", max_h);
-    singlPrintf("int adaptive_dt = %d;\n", adaptive_dt);
-    singlPrintf("int independent_dt = %d;\n", independent_dt);
-    singlPrintf("int dark_independent_dt = %d;\n", dark_independent_dt);
-    if (adaptive_dt) {
+    singlPrintf("float visc_alpha = %g;\n", params.visc_alpha);
+    singlPrintf("float visc_beta = %g;\n", params.visc_beta);
+    singlPrintf("float visc_epsilon = %g;\n", params.visc_epsilon);
+    singlPrintf("float heat_f1 = %g;\n", params.heat_f1);
+    singlPrintf("float min_h = %g;\n", params.min_h);
+    singlPrintf("float max_h = %g;\n", params.max_h);
+    singlPrintf("int adaptive_dt = %d;\n", params.adaptive_dt);
+    singlPrintf("int independent_dt = %d;\n", params.independent_dt);
+    singlPrintf("int dark_independent_dt = %d;\n", params.dark_independent_dt);
+    if (params.adaptive_dt) {
         singlPrintf("int tlow_cut = %d;\n", tlow_cut);
         singlPrintf("int dt_long = %d;\n", dt_long);
         singlPrintf("int dt_short = %d;\n", dt_short);
@@ -882,11 +884,11 @@ bndry.l[0], bndry.l[1]);
     for (i = 0; i < kernel_ncoef2; i++)
         singlPrintf("%12.9f ", kernel_coef2[i]);
     singlPrintf("\n");
-    if (log_time) Error("This code does not support log_time\n");
+    if (params.log_time) Error("This code does not support log_time\n");
     if (params.cosmology) {
         singlPrintf("int cosmology = %d;\n", params.cosmology);
-        singlPrintf("int comov_eps = %d;\n", comov_eps);
-        singlPrintf("float comov_eps_epoch = %f;\n", comov_eps_epoch);
+        singlPrintf("int comov_eps = %d;\n", params.comov_eps);
+        singlPrintf("float comov_eps_epoch = %f;\n", params.comov_eps_epoch);
         singlPrintf("int setpvel = %d;\n", params.setpvel);
         singlPrintf("float R0 = %f;\n", R0);
     }
@@ -963,7 +965,7 @@ bndry.l[0], bndry.l[1]);
         q->phi = 0.0;
     }
 
-    for (nsteps += iter; iter <= nsteps; iter++) {
+    for (params.nsteps += iter; iter <= params.nsteps; iter++) {
         if (params.timeout > 0) MPMY_TimeoutReset(params.timeout);
         /* Reset timers and counters */
         ClearEnabledTimers();
@@ -1097,8 +1099,8 @@ bndry.l[0], bndry.l[1]);
 
         /* comoving smoothing */
         /* Note: behavior changed Jan. 25, 1996. Beware of old ctl files */
-        if (comov_eps && (Znow(tpos)+1.0 >= comov_eps_epoch)) 
-            this_eps = params.eps*comov_eps_epoch/(Znow(tpos)+(float)1.0);
+        if (params.comov_eps && (Znow(tpos)+1.0 >= params.comov_eps_epoch)) 
+            this_eps = params.eps*params.comov_eps_epoch/(Znow(tpos)+(float)1.0);
         else this_eps = params.eps;
 
         /* Add sph particles to btab for gravity */
@@ -1126,7 +1128,7 @@ bndry.l[0], bndry.l[1]);
                     rmin[0], rmin[1], rmin[2], 
                     rmax[0], rmax[1], rmax[2]));
 
-        if (params.do_grav && dark_need_update(dark_tacc, dark_dt)) {
+        if (params.do_grav && dark_need_update(dark_tacc, params.dark_dt)) {
             /* We aren't using the first two params */
             SetTol(0, 0, cosmo.GNewt, this_eps, gnobj+SPHgnobj);
             FixKeys(btab, nobj, GETKEY);
@@ -1216,7 +1218,7 @@ bndry.l[0], bndry.l[1]);
         /* This should be the high-water mark for memory use */
         AddCounter(&MemCnt, malloc_used()/1024);
 
-        if (params.do_sph && (first_step || exact_rho)) {
+        if (params.do_sph && (first_step || params.exact_rho)) {
             singlPrintf("BuildTree\n");
             StartTimer(&BuildTot);
             pqsortsetup(&SPHsortedbtab, SPHbtab, SPHnobj, sizeof(SPHbody), sort_tol, Realloc_f);
@@ -1226,8 +1228,8 @@ bndry.l[0], bndry.l[1]);
             SPHnobj = SPHsortedbtab.nobj;
             StopTimer(&BuildTot);
             StartTimer(&RhoSPH);
-            SetSPH(visc_alpha, visc_beta, visc_epsilon, heat_f1,
-                    Gamma, SPHgnobj, macRho, nbrMAC);
+            SetSPH(params.visc_alpha, params.visc_beta, params.visc_epsilon, params.heat_f1,
+                    params.Gamma, SPHgnobj, macRho, nbrMAC);
             /* Periodic does multiple calls to Walk, so we must init here */
             /* rather than in inherit */
             for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
@@ -1264,7 +1266,7 @@ bndry.l[0], bndry.l[1]);
             SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
             /* This sets rho_est and pr for communication during BuildTree */
             update_intermediate(SPHbtab, SPHnobj, Gridpts, Nel, dt_last, 
-                    !(first_step || exact_rho), 0, sysradius);
+                    !(first_step || params.exact_rho), 0, sysradius);
 
             SPHsinknobj = 0;
             for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
@@ -1337,7 +1339,7 @@ bndry.l[0], bndry.l[1]);
             }
 
             StartTimer(&ForceSPH);
-            SetSPH(visc_alpha, visc_beta, visc_epsilon, heat_f1, Gamma, SPHgnobj, 
+            SetSPH(params.visc_alpha, params.visc_beta, params.visc_epsilon, params.heat_f1, params.Gamma, SPHgnobj, 
                     macSPH, nbrMAC);
             for (q = SPHsinkbtab; q < SPHsinkbtab+SPHsinknobj; q++) {
                 if (SPH_need_update(q)) {
@@ -1444,7 +1446,7 @@ bndry.l[0], bndry.l[1]);
         if (ForceOutput()
                 || (do_output && !first_step
                     && ((iter+output_freq) % output_freq == 0))
-                || (save_first && first_step)) {
+                || (params.save_first && first_step)) {
             if (params.do_sph) {
                 if (params.do_winds) { 
                     if (params.old_winds) {
@@ -1485,7 +1487,7 @@ bndry.l[0], bndry.l[1]);
                 dark_pe += 0.5 * p->mass * p->phi;
             }
         }
-        Fix_h(SPHbtab, SPHnobj, nbrcut_max, nbrcut_min, nbrcut_fac, max_h, min_h);
+        Fix_h(SPHbtab, SPHnobj, params.nbrcut_max, params.nbrcut_min, params.nbrcut_fac, params.max_h, params.min_h);
         ke = pe = te = 0.0;
         SPHnupdate = 0;
         for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
@@ -1586,9 +1588,9 @@ bndry.l[0], bndry.l[1]);
             VS(rmin, = -sysradius);
             VS(rmax, = sysradius);
             WrapPeriodic(btab, nobj, rmin, rmax, 2.0*sysradius, params.cosmology,
-                    log_time, tpos, dt_last);
+                    params.log_time, tpos, dt_last);
             SPHWrapPeriodic(SPHbtab, SPHnobj, rmin, rmax, 2.0*sysradius, params.cosmology,
-                    log_time, tpos, dt_last);
+                    params.log_time, tpos, dt_last);
         }
 
         if (params.cosmology) 
@@ -1607,9 +1609,9 @@ bndry.l[0], bndry.l[1]);
         MPMY_Combine(udot_limit, udot_limit, 2, MPMY_INT, MPMY_SUM);
 
         /* Fear my nested ternary operators! */
-        if (adaptive_dt) Fix_dt(&dt, 
-                (((dark_dt<dt_max) ? dark_dt:dt_max) < dt_wind)
-                ? ((dark_dt<dt_max) ? dark_dt:dt_max):dt_wind,
+        if (params.adaptive_dt) Fix_dt(&dt, 
+                (((params.dark_dt<dt_max) ? params.dark_dt:dt_max) < dt_wind)
+                ? ((params.dark_dt<dt_max) ? params.dark_dt:dt_max):dt_wind,
                 tlow_cut, tmin, tbad, dt_short, dt_long,
                 udot_limit[0], udot_limit[1]);
 
@@ -1632,7 +1634,7 @@ bndry.l[0], bndry.l[1]);
                 OutputIndividualTimers(Msg_do);
                 OutputIndividualCounters(Msg_do);
             }
-            if (ntimer_detail) {
+            if (params.ntimer_detail) {
                 struct {
                     int node;
                     float grav_tm;
@@ -2279,7 +2281,7 @@ static void WindOutput(SPHbody *btab, int nobj, windbody *windbtab,
             "Lambda_prime", SDF_FLOAT, cosmo.Lambda,
             "hubble", SDF_FLOAT, output_h,
             "redshift", SDF_FLOAT, output_z,
-            "gamma", SDF_FLOAT, Gamma,
+            "gamma", SDF_FLOAT, params.Gamma,
             "centmass", SDF_FLOAT, params.centmass, 
             "ke", SDF_DOUBLE, ke,
             "pe", SDF_DOUBLE, pe,
@@ -2361,7 +2363,7 @@ static void ShortWindOutput(SPHbody *btab, int nobj, windbody *windbtab,
             "tpos", SDF_FLOAT, tpos_out,
             "tvel", SDF_FLOAT, tvel_out,
             "R0", SDF_FLOAT, output_R0,
-            "gamma", SDF_FLOAT, Gamma,
+            "gamma", SDF_FLOAT, params.Gamma,
             "centmass", SDF_FLOAT, params.centmass, 
             NULL);
     Free(output_btab);
@@ -2481,7 +2483,7 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
             "Lambda_prime", SDF_FLOAT, cosmo.Lambda,
             "hubble", SDF_FLOAT, output_h,
             "redshift", SDF_FLOAT, output_z,
-            "gamma", SDF_FLOAT, Gamma,
+            "gamma", SDF_FLOAT, params.Gamma,
             "massCF", SDF_FLOAT, massCF,
             "lenCF", SDF_FLOAT, lenCF,
             "timeCF", SDF_FLOAT, timeCF,
@@ -2822,7 +2824,7 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
             if (tx < dti) dti = tx;
             tx = p->u/fabs(p->udot);
             if (tx < dti) dti = tx;
-            dti *= courant_number;
+            dti *= params.courant_number;
             if (p->min_nbr_dt == 1e30) { 
                 /* This could happen if there are no nbrs. */
                 SeriousWarning("Ignoring min_nbr_dt of %g\n", p->min_nbr_dt);
@@ -3003,7 +3005,7 @@ Key_t SPHGetKey(const void *p)
     static int
 dark_need_update(float dark_tacc, float dark_dt)
 {
-    if (!dark_independent_dt) return 1;
+    if (!params.dark_independent_dt) return 1;
     return (dark_tacc + dark_dt <= tpos + dt * 1.00001);
 }
 
@@ -3013,13 +3015,13 @@ dark_need_update(float dark_tacc, float dark_dt)
 /*      if (SPH_need_update(ptr)) */
 /*        return (float) ptr->nterms; */
 /*      else */
-/*        return (float) default_nterms; */
+/*        return (float) params.default_nterms; */
 /*  } */
 
     int
 SPH_need_update(const SPHbody *p)
 {
-    if (!independent_dt) return 1;
+    if (!params.independent_dt) return 1;
     return (p->tacc + p->dt <= tpos + dt * 1.00001);
 }
 
