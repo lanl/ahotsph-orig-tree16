@@ -183,6 +183,30 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "y_pixels", &(params->y_pixels), 512);
     SDFgetintOrDefault(sdfp, "log_image", &(params->log_image), 0);
 
+    /* read in the kernel coefficients */
+    if (SDFhasname("kernel_ncoef1", sdfp)) {
+        SDFgetintOrDie(sdfp, "kernel_ncoef1", &(params->kernel_ncoef1));
+        if (params->kernel_ncoef1 >= MAXCOEF) Error("Increase MAXCOEF\n");
+        SDFgetintOrDie(sdfp, "kernel_ncoef2", &(params->kernel_ncoef2));
+        if (params->kernel_ncoef2 >= MAXCOEF) Error("Increase MAXCOEF\n");
+        if (SDFseekrdvecs(sdfp, "kernel_coef1", 0, params->kernel_ncoef1, 
+                    &(params->kernel_coef1), 0, NULL))
+            Error("SDFread kernel_coef1 failed\n");
+        if (SDFseekrdvecs(sdfp, "kernel_coef2", 0, params->kernel_ncoef2, 
+                    &(params->kernel_coef2), 0, NULL))
+            Error("SDFread kernel_coef2 failed\n");
+    } else {
+        /* Monaghan spline kernel is default */
+        params->kernel_ncoef1 = params->kernel_ncoef2 = 4;
+        params->kernel_coef1[0] = 1.0;		params->kernel_coef2[0] = 2.0;
+        params->kernel_coef1[1] = 0.0;		params->kernel_coef2[1] = -3.0;
+        params->kernel_coef1[2] = -3.0/2.0;	params->kernel_coef2[2] = 3.0/2.0;
+        params->kernel_coef1[3] = 3.0/4.0;	params->kernel_coef2[3] = -1.0/4.0;
+    }
+
+    if (params->do_drag) {
+        SDFgetfloatOrDie(sdfp, "drag_coeff", &(params->drag_coeff));
+    }
 }
 
 void print_initial_ctl(setup_params_t params) {
@@ -318,6 +342,17 @@ void print_initial_ctl(setup_params_t params) {
 	singlPrintf("int x_pixels = %d;\n", params.x_pixels);
 	singlPrintf("int y_pixels = %d;\n", params.y_pixels);
 	singlPrintf("int log_image = %d;\n", params.log_image);
+    if (params.log_time) Error("This code does not support log_time\n");
+
+    singlPrintf("kernel coefficients:\n\t");
+    for (int i = 0; i < params.kernel_ncoef1; i++)
+        singlPrintf("%12.9f ", params.kernel_coef1[i]);
+    singlPrintf("\n\t");
+    for (int i = 0; i < params.kernel_ncoef2; i++)
+        singlPrintf("%12.9f ", params.kernel_coef2[i]);
+    singlPrintf("\n");
+
+	singlPrintf("int do_drag = %d;\n", params.do_drag);
 
     singlPrintf("end printing params structure\n");
 }

@@ -1,6 +1,10 @@
 #include "SDF.h"
 #include "ndim.h"
 
+#ifndef MAXCOEF
+#define MAXCOEF 16
+#endif
+
 typedef struct {
     char name[256]; /* "datafile" */
     char SPHdatafile[256]; /* "SPHdatafile" */
@@ -58,6 +62,8 @@ typedef struct {
 	int x_pixels;
 	int y_pixels;
 	int log_image;
+    int kernel_ncoef1;
+    int kernel_ncoef2;
     float new_h;
     float new_u;
     float r_inner;
@@ -92,6 +98,9 @@ typedef struct {
     float ftimeCF;
 	float dt_max;
 	float sort_tol;
+    double kernel_coef1[MAXCOEF];
+    double kernel_coef2[MAXCOEF];
+    float drag_coeff;
 } setup_params_t;
 
 typedef struct{

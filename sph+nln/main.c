@@ -318,8 +318,8 @@ main(int argc, char *argv[])
     int SPHnupdate;
     int make_sink_tree;
     //int has_grav_data;
-    int kernel_ncoef1, kernel_ncoef2;
-    double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
+    //int kernel_ncoef1, kernel_ncoef2;
+    //double kernel_coef1[MAXCOEF], kernel_coef2[MAXCOEF];
     int Gridpts = 0, Nel = 0; 	/* for cooling tables */
     int status, done,rank,idbug;
     char *netrcfn, tmpchr[20];
@@ -687,7 +687,6 @@ main(int argc, char *argv[])
     SDFgetintOrDefault(csdfp, "x_pixels", &x_pixels, 512);
     SDFgetintOrDefault(csdfp, "y_pixels", &y_pixels, 512);
     SDFgetintOrDefault(csdfp, "log_image", &log_image, 0);
-	*/
     if (SDFhasname("kernel_ncoef1", csdfp)) {
         SDFgetintOrDie(csdfp, "kernel_ncoef1", &kernel_ncoef1);
         if (kernel_ncoef1 >= MAXCOEF) Error("Increase MAXCOEF\n");
@@ -700,7 +699,9 @@ main(int argc, char *argv[])
                     kernel_coef2, 0, NULL))
             Error("SDFread kernel_coef2 failed\n");
     } else {
+	*/
         /* Monaghan spline kernel is default */
+	/*c
         kernel_ncoef1 = kernel_ncoef2 = 4;
         kernel_coef1[0] = 1.0;		kernel_coef2[0] = 2.0;
         kernel_coef1[1] = 0.0;		kernel_coef2[1] = -3.0;
@@ -710,6 +711,7 @@ main(int argc, char *argv[])
     if (params.do_drag) {
         SDFgetfloatOrDie(csdfp, "drag_coeff", &drag_coeff);
     }
+	*/
 
     if(csdfp) 
         SDFclose(csdfp);
@@ -882,11 +884,11 @@ bndry.l[0], bndry.l[1]);
     singlPrintf("float sort_tol = %.4f;\n", params.sort_tol);
     singlPrintf("int do_periodic = %d;\n", params.do_periodic);
     singlPrintf("kernel coefficients:\n\t");
-    for (i = 0; i < kernel_ncoef1; i++)
-        singlPrintf("%12.9f ", kernel_coef1[i]);
+    for (i = 0; i < params.kernel_ncoef1; i++)
+        singlPrintf("%12.9f ", params.kernel_coef1[i]);
     singlPrintf("\n\t");
-    for (i = 0; i < kernel_ncoef2; i++)
-        singlPrintf("%12.9f ", kernel_coef2[i]);
+    for (i = 0; i < params.kernel_ncoef2; i++)
+        singlPrintf("%12.9f ", params.kernel_coef2[i]);
     singlPrintf("\n");
     if (params.log_time) Error("This code does not support log_time\n");
     if (params.cosmology) {
@@ -946,7 +948,7 @@ bndry.l[0], bndry.l[1]);
     }
 
     dt_last = dt;
-    SPH_setup(NDIM, kernel_ncoef1, kernel_coef1, kernel_ncoef2, kernel_coef2);
+    SPH_setup(NDIM, params.kernel_ncoef1, params.kernel_coef1, params.kernel_ncoef2, params.kernel_coef2);
     inherit = (inherit_t)InheritSinkNlogN;
 
     if (params.do_DL)
