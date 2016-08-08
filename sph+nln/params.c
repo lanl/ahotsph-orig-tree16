@@ -212,49 +212,35 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 void print_initial_ctl(setup_params_t params) {
     singlPrintf("printing params structure\n");
 
-	singlPrintf("int timeout = %d;\n", params.timeout);
-	singlPrintf("string datafile[] = %s;\n", params.name);
-	singlPrintf("int do_restart = %d;\n", params.do_restart);
-    singlPrintf("int do_periodic = %d;\n", params.do_periodic);
-    singlPrintf("int cosmology = %d;\n", params.cosmology);
-	singlPrintf("int set_id = %d;\n", params.set_id);
-    singlPrintf("int setpvel = %d;\n", params.setpvel);
-	singlPrintf("int do_sph = %d;\n", params.do_sph);
-    singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
-    singlPrintf("int do_cooling = %d;\n", params.do_cooling);
-    singlPrintf("int do_burning = %d;\n", params.do_burning);
-	singlPrintf("int do_grav = %d;\n", params.do_grav);
-    singlPrintf("int do_winds = %d;\n", params.do_winds);
-	singlPrintf("int do_point_mass = %d;\n", params.do_point_mass);
-	singlPrintf("int do_point_mass2 = %d;\n", params.do_point_mass2);
-	singlPrintf("int do_boundary = %d;\n", params.do_boundary);
-	singlPrintf("int do_absorbing_bndry = %d;\n", params.do_absorbing_bndry);
-    singlPrintf("int do_drag = %d;\n", params.do_drag);
-	singlPrintf("int has_grav_data = %d;\n", params.has_grav_data);
-
-	singlPrintf("string SPHdatafile[] = %s;\n", params.SPHdatafile);
-    if (params.do_point_mass || params.do_point_mass2) {
-        singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float centmass = %e;\n", params.centmass);
-    }
-
-    if (params.do_point_mass || params.do_point_mass2) {
-        singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float centmass = %e;\n", params.centmass);
-    }
-
-    if (params.do_boundary) {
-        singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float r_outer = %f;\n", params.r_outer);
-        singlPrintf("float centmass = %e;\n", params.centmass);
-    }
-
-    if (params.do_boundary) {
-        singlPrintf("float r_inner = %f;\n", params.r_inner);
-        singlPrintf("float r_outer = %f;\n", params.r_outer);
-        singlPrintf("float centmass = %e;\n", params.centmass);
-    }
-
+	singlPrintf("float errtol = %g;\n", params.tol);
+    singlPrintf("float dark_dt = %g;\n", params.dark_dt);
+	singlPrintf("float eps = %g;\n", params.eps);
+    singlPrintf("int nsteps = %d;\n", params.nsteps);
+	singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
+	singlPrintf("int do_BH = %d;\n", params.do_BH);
+	singlPrintf("int do_Arel = %d;\n", params.do_Arel);
+	singlPrintf("int do_DL = %d;\n", params.do_DL);
+    singlPrintf("int exact_rho = %d;\n", params.exact_rho);
+    singlPrintf("float courant_number = %g;\n", params.courant_number);
+    singlPrintf("float gamma = %f;\n", params.Gamma);
+    singlPrintf("float massCF = %g;\n", params.fmassCF);/*added by CE*/
+    singlPrintf("float lenCF = %g;\n", params.flenCF);/*added by CE*/
+    singlPrintf("float timeCF = %g;\n", params.ftimeCF);/*added by CE*/
+    singlPrintf("float visc_alpha = %g;\n", params.visc_alpha);
+    singlPrintf("float visc_beta = %g;\n", params.visc_beta);
+    singlPrintf("float visc_epsilon = %g;\n", params.visc_epsilon);
+    singlPrintf("float heat_f1 = %g;\n", params.heat_f1);
+    singlPrintf("float min_h = %g;\n", params.min_h);
+    singlPrintf("float max_h = %g;\n", params.max_h);
+    singlPrintf("int adaptive_dt = %d;\n", params.adaptive_dt);
+    singlPrintf("int independent_dt = %d;\n", params.independent_dt);
+    singlPrintf("int dark_independent_dt = %d;\n", params.dark_independent_dt);
+	if (params.adaptive_dt) {
+		singlPrintf("int tlow_cut = %d;\n", params.tlow_cut);
+		singlPrintf("int dt_short = %d;\n", params.dt_short);
+		singlPrintf("int dt_long = %d;\n", params.dt_long);
+		singlPrintf("float dt_max = %f;\n", params.dt_max);
+	}
     if (params.do_winds) {
         singlPrintf("int do_winds = %d;\n", params.do_winds);
         singlPrintf("int windpartpershell = %d;\n", params.windpartpershell);
@@ -285,64 +271,33 @@ void print_initial_ctl(setup_params_t params) {
             singlPrintf("float r_outer = %g;\n", params.r_outer);
         }
     }
-
-	singlPrintf("float eps = %g;\n", params.eps);
-
-	if (params.do_grav) {
-	    singlPrintf("int do_DL = %d;\n", params.do_DL);
-	    singlPrintf("int do_BH = %d;\n", params.do_BH);
-	    singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
-	    singlPrintf("int do_Arel = %d;\n", params.do_Arel);
-	    singlPrintf("float errtol = %g;\n", params.tol);
-		singlPrintf("float frac_tol = %g;\n", params.frac_tol);
+    if (params.do_point_mass || params.do_point_mass2) {
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
+        singlPrintf("float centmass = %e;\n", params.centmass);
+    }
+    if (params.do_boundary) {
+        singlPrintf("float r_inner = %f;\n", params.r_inner);
+        singlPrintf("float r_outer = %f;\n", params.r_outer);
+        singlPrintf("float centmass = %e;\n", params.centmass);
+    }
+	if (params.do_drag) {
+		singlPrintf("int do_drag = %d;\n", params.do_drag);
+		singlPrintf("float drag_coeff = %g;\n", params.drag_coeff);
 	}
+    singlPrintf("int do_cooling = %d;\n", params.do_cooling);
+    singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
+    singlPrintf("int do_burning = %d;\n", params.do_burning);
 
-	singlPrintf("float CWfac = %g;\n", params.CWfac);
-	singlPrintf("float SPHCWfac = %g;\n", params.SPHCWfac);
-
-    singlPrintf("float epsilon = %g;\n", params.eps);
-
-    singlPrintf("float dark_dt = %g;\n", params.dark_dt);
-    singlPrintf("int nsteps = %d;\n", params.nsteps);
-	singlPrintf("int log_time = %d;\n", params.log_time);
-    singlPrintf("int comov_eps = %d;\n", params.comov_eps);
-    singlPrintf("float comov_eps_epoch = %f;\n", params.comov_eps_epoch);
-    singlPrintf("int save_first = %d;\n", params.save_first);
-    singlPrintf("int ntimer_detail = %d;\n", params.ntimer_detail);
-    singlPrintf("int exact_rho = %d;\n", params.exact_rho);
-    singlPrintf("float visc_alpha = %g;\n", params.visc_alpha);
-    singlPrintf("float visc_beta = %g;\n", params.visc_beta);
-    singlPrintf("float visc_epsilon = %g;\n", params.visc_epsilon);
-    singlPrintf("float heat_f1 = %g;\n", params.heat_f1);
-    singlPrintf("float gamma = %f;\n", params.Gamma);
-    singlPrintf("float courant_number = %g;\n", params.courant_number);
-    singlPrintf("float min_h = %g;\n", params.min_h);
-    singlPrintf("float max_h = %g;\n", params.max_h);
-    singlPrintf("int nbrcut_max = %d;\n", params.nbrcut_max);
-    singlPrintf("int nbrcut_min = %d;\n", params.nbrcut_min);
-    singlPrintf("float nbrcut_fac = %g;\n", params.nbrcut_fac);
-    singlPrintf("int adaptive_dt = %d;\n", params.adaptive_dt);
-    singlPrintf("int independent_dt = %d;\n", params.independent_dt);
-    singlPrintf("int dark_independent_dt = %d;\n", params.dark_independent_dt);
-    singlPrintf("int default_nterms = %d;\n", params.default_nterms);
-    singlPrintf("float massCF = %g;\n", params.fmassCF);/*added by CE*/
-    singlPrintf("float lenCF = %g;\n", params.flenCF);/*added by CE*/
-    singlPrintf("float timeCF = %g;\n", params.ftimeCF);/*added by CE*/
-
-	singlPrintf("int tlow_cut = %d;\n", params.tlow_cut);
-	singlPrintf("int dt_short = %d;\n", params.dt_short);
-	singlPrintf("int dt_long = %d;\n", params.dt_long);
-	singlPrintf("string outnamebase[] = %s;\n", params.outnamebase);
-	singlPrintf("int do_output = %d;\n", params.do_output);
-	singlPrintf("int output_freq = %d;\n", params.output_freq);
-	singlPrintf("int short_output = %d;\n", params.short_output);
+	if (params.do_output) {
+		if (params.short_output) 
+			singlPrintf("Output to %s.nnnn, every %d steps\n", 
+					params.outnamebase, params.output_freq);
+	} else {
+		singlPrintf("No output.\n");
+	}
 	singlPrintf("int timer_freq = %d;\n", params.timer_freq);
 	singlPrintf("float sort_tol = %g;", params.sort_tol);
-	singlPrintf("int image_freq = %d;\n", params.image_freq);
-	singlPrintf("int x_pixels = %d;\n", params.x_pixels);
-	singlPrintf("int y_pixels = %d;\n", params.y_pixels);
-	singlPrintf("int log_image = %d;\n", params.log_image);
-    if (params.log_time) Error("This code does not support log_time\n");
+    singlPrintf("int do_periodic = %d;\n", params.do_periodic);
 
     singlPrintf("kernel coefficients:\n\t");
     for (int i = 0; i < params.kernel_ncoef1; i++)
@@ -351,8 +306,52 @@ void print_initial_ctl(setup_params_t params) {
     for (int i = 0; i < params.kernel_ncoef2; i++)
         singlPrintf("%12.9f ", params.kernel_coef2[i]);
     singlPrintf("\n");
+    if (params.log_time) Error("This code does not support log_time\n");
+	if (params.cosmology) {
+		singlPrintf("int cosmology = %d;\n", params.cosmology);
+		singlPrintf("int comov_eps = %d;\n", params.comov_eps);
+		singlPrintf("float comov_eps_epoch = %f;\n", params.comov_eps_epoch);
+		singlPrintf("int setpvel = %d;\n", params.setpvel);
+	}
 
-	singlPrintf("int do_drag = %d;\n", params.do_drag);
+	/* these are not printed
+	singlPrintf("int timeout = %d;\n", params.timeout);
+	singlPrintf("string datafile[] = %s;\n", params.name);
+	singlPrintf("int do_restart = %d;\n", params.do_restart);
+	singlPrintf("int set_id = %d;\n", params.set_id);
+	singlPrintf("int do_sph = %d;\n", params.do_sph);
+	singlPrintf("int do_grav = %d;\n", params.do_grav);
+    singlPrintf("int do_winds = %d;\n", params.do_winds);
+	singlPrintf("int do_point_mass = %d;\n", params.do_point_mass);
+	singlPrintf("int do_point_mass2 = %d;\n", params.do_point_mass2);
+	singlPrintf("int do_boundary = %d;\n", params.do_boundary);
+	singlPrintf("int do_absorbing_bndry = %d;\n", params.do_absorbing_bndry);
+	singlPrintf("int has_grav_data = %d;\n", params.has_grav_data);
+
+	singlPrintf("string SPHdatafile[] = %s;\n", params.SPHdatafile);
+
+	singlPrintf("float CWfac = %g;\n", params.CWfac);
+	singlPrintf("float SPHCWfac = %g;\n", params.SPHCWfac);
+
+    singlPrintf("float epsilon = %g;\n", params.eps);
+
+	singlPrintf("int log_time = %d;\n", params.log_time);
+    singlPrintf("int save_first = %d;\n", params.save_first);
+    singlPrintf("int ntimer_detail = %d;\n", params.ntimer_detail);
+    singlPrintf("int nbrcut_max = %d;\n", params.nbrcut_max);
+    singlPrintf("int nbrcut_min = %d;\n", params.nbrcut_min);
+    singlPrintf("float nbrcut_fac = %g;\n", params.nbrcut_fac);
+    singlPrintf("int default_nterms = %d;\n", params.default_nterms);
+
+	singlPrintf("string outnamebase[] = %s;\n", params.outnamebase);
+	singlPrintf("int do_output = %d;\n", params.do_output);
+	singlPrintf("int output_freq = %d;\n", params.output_freq);
+	singlPrintf("int short_output = %d;\n", params.short_output);
+	singlPrintf("int image_freq = %d;\n", params.image_freq);
+	singlPrintf("int x_pixels = %d;\n", params.x_pixels);
+	singlPrintf("int y_pixels = %d;\n", params.y_pixels);
+	singlPrintf("int log_image = %d;\n", params.log_image);
+	*/
 
     singlPrintf("end printing params structure\n");
 }
@@ -362,9 +361,9 @@ void print_absorb_bndry(bndry_t bndry) {
 		/* print position */
 		singlPrintf("float bndry[] = [ %g", bndry.pos[0]);
 #if NDIM>=2
-		singlPrintf(" ,%g", bndry.pos[1]);
+		singlPrintf(", %g", bndry.pos[1]);
 #if NDIM>=3
-		singlPrintf(" ,%g", bndry.pos[2]);
+		singlPrintf(", %g", bndry.pos[2]);
 #endif
 #endif
 		singlPrintf(" ];\n");
@@ -372,9 +371,9 @@ void print_absorb_bndry(bndry_t bndry) {
 		/* print velocity */
 		singlPrintf("float bndry_vel[] = [ %g", bndry.vel[0]);
 #if NDIM>=2
-		singlPrintf(" ,%g", bndry.vel[1]);
+		singlPrintf(", %g", bndry.vel[1]);
 #if NDIM>=3
-		singlPrintf(" ,%g", bndry.vel[2]);
+		singlPrintf(", %g", bndry.vel[2]);
 #endif
 #endif
 		singlPrintf(" ];\n");
@@ -382,9 +381,9 @@ void print_absorb_bndry(bndry_t bndry) {
 		/* print linear momentum */
 		singlPrintf("float bndry_p[] = [ %g", bndry.p[0]);
 #if NDIM>=2
-		singlPrintf(" ,%g", bndry.p[1]);
+		singlPrintf(", %g", bndry.p[1]);
 #if NDIM>=3
-		singlPrintf(" ,%g", bndry.p[2]);
+		singlPrintf(", %g", bndry.p[2]);
 #endif
 #endif
 		singlPrintf(" ];\n");
@@ -392,9 +391,9 @@ void print_absorb_bndry(bndry_t bndry) {
 		/* print angular momentum */
 		singlPrintf("float bndry_l[] = [ %g", bndry.l[0]);
 #if NDIM>=2
-		singlPrintf(" ,%g", bndry.l[1]);
+		singlPrintf(", %g", bndry.l[1]);
 #if NDIM>=3
-		singlPrintf(" ,%g", bndry.l[2]);
+		singlPrintf(", %g", bndry.l[2]);
 #endif
 #endif
 		singlPrintf(" ];\n");

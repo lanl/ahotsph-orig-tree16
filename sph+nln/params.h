@@ -40,9 +40,9 @@ typedef struct {
     int do_Bmax;
     int do_Arel;
     int nsteps;
-    int log_time;
-    int comov_eps;
-    int save_first;
+    int log_time;	/* if true, use dt \propto t */
+    int comov_eps;	/* if true, use comoving epsilon */
+    int save_first;	/* save first step (for acc testing) */
     int ntimer_detail;
     int exact_rho;
     int nbrcut_max;
@@ -76,8 +76,9 @@ typedef struct {
     float v_wind;
     float mdot_wind;
     float u_wind;
-    float eps;
-    float tol;
+    float eps;	/* Plummer smoothing length */
+    float tol;	/* MAC tolerance */
+		/* for big MAC, this is multiplied by M/(rsize*rsize) */
     float frac_tol;
     float CWfac;
     float SPHCWfac;

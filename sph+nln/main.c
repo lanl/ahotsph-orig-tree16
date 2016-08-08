@@ -740,16 +740,21 @@ main(int argc, char *argv[])
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
 
-	print_initial_ctl(params);
-
+	/*c
     singlPrintf("float errtol = %g;\n", params.tol);
     singlPrintf("float dt = %g;\n", dt);
+	*/
     singlPrintf("float params.dt = %g;\n", params.dt);
+	/*c
     singlPrintf("float dark_dt = %g;\n", params.dark_dt);
     singlPrintf("float epsilon = %g;\n", params.eps);
+	*/
     singlPrintf("int iter = %d;\n", iter);
+	/*c
     singlPrintf("int nsteps = %d;\n", params.nsteps);
+	*/
     singlPrintf("int nproc = %d;\n", MPMY_Nproc());
+	/*c
     singlPrintf("int do_Bmax = %d;\n", params.do_Bmax);
     singlPrintf("int do_BH = %d;\n", params.do_BH);
     singlPrintf("int do_Arel = %d;\n", params.do_Arel);
@@ -757,10 +762,12 @@ main(int argc, char *argv[])
     singlPrintf("int exact_rho = %d;\n", params.exact_rho);
     singlPrintf("float courant_number = %g;\n", params.courant_number);
     singlPrintf("float gamma = %f;\n", params.Gamma);
+	*/
     singlPrintf("float Gnewt = %g;\n", cosmo.GNewt);
-    singlPrintf("float massCF = %g;\n", massCF);/*added by CE*/
-    singlPrintf("float lenCF = %g;\n", lenCF);/*added by CE*/
-    singlPrintf("float timeCF = %g;\n", timeCF);/*added by CE*/
+	/*c
+    singlPrintf("float massCF = %g;\n", massCF);
+    singlPrintf("float lenCF = %g;\n", lenCF);
+    singlPrintf("float timeCF = %g;\n", timeCF);
     singlPrintf("float visc_alpha = %g;\n", params.visc_alpha);
     singlPrintf("float visc_beta = %g;\n", params.visc_beta);
     singlPrintf("float visc_epsilon = %g;\n", params.visc_epsilon);
@@ -776,13 +783,20 @@ main(int argc, char *argv[])
         singlPrintf("int dt_short = %d;\n", params.dt_short);
         singlPrintf("float dt_max = %g;\n", dt_max);
     }
+	*/
+
+	print_initial_ctl(params);
+
     if (params.do_winds) {
+		/*c
         singlPrintf("int do_winds = %d;\n", params.do_winds);
         singlPrintf("int windpartpershell = %d;\n", params.windpartpershell);
         singlPrintf("int old_winds = %d;\n", params.old_winds);
+		*/
         if (params.old_winds) {
             singlPrintf("int windgnobj = %d;\n", windgnobj);
         }
+		/*c
         singlPrintf("int const_winds = %d;\n", params.const_winds);
         singlPrintf("int nonconst_winds = %d;\n", params.nonconst_winds);
         singlPrintf("int accreting_winds = %d;\n", params.accreting_winds);
@@ -805,7 +819,9 @@ main(int argc, char *argv[])
             singlPrintf("char winddata_name[] = \"%s\"\n", params.winddata_name);
             singlPrintf("float r_outer = %g;\n", params.r_outer);
         }
+		*/
     }
+	/*c
     if (params.do_point_mass || params.do_point_mass2) {
         singlPrintf("float r_inner = %f;\n", params.r_inner);
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
@@ -817,6 +833,7 @@ main(int argc, char *argv[])
         singlPrintf("float GNewt = %e;\n", cosmo.GNewt);
         singlPrintf("float centmass = %e;\n", params.centmass);
     }
+	*/
     if (params.do_absorbing_bndry) {
 		print_absorb_bndry (bndry);
         /* this just prints to stdout, can print as arrays! ~CIE*/
@@ -865,6 +882,7 @@ bndry.l[0], bndry.l[1]);
         singlPrintf("float bndry_r = %g;\n", bndry.r);
 		*/
     }
+	/*c
     if (params.do_drag) {
         singlPrintf("int do_drag = %d;\n", params.do_drag);
         singlPrintf("float drag_coeff = %g;\n", drag_coeff);
@@ -891,11 +909,14 @@ bndry.l[0], bndry.l[1]);
         singlPrintf("%12.9f ", params.kernel_coef2[i]);
     singlPrintf("\n");
     if (params.log_time) Error("This code does not support log_time\n");
+	*/
     if (params.cosmology) {
+		/*c
         singlPrintf("int cosmology = %d;\n", params.cosmology);
         singlPrintf("int comov_eps = %d;\n", params.comov_eps);
         singlPrintf("float comov_eps_epoch = %f;\n", params.comov_eps_epoch);
         singlPrintf("int setpvel = %d;\n", params.setpvel);
+		*/
         singlPrintf("float R0 = %f;\n", R0);
     }
 
