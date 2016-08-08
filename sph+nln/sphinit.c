@@ -359,6 +359,98 @@ SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 	return sdfp;
 }
 
+/*read in file with strength data */
+	void *
+SPHReadStrength(char *name, void *csdfp, Strengthbody **btabp, int *gnobjp, int *nobjp,
+		int set_id, int setpvel, float new_h, float new_u)
+{
+	SDF *sdfp;
+	int massconf, xconf, yconf, zconf;
+	int vxconf, vyconf, vzconf;
+	int hconf, uconf;
+	int identconf;
+	int dmgconf, ddmgdtconf, stressconf[9], dstressdtconf[9];
+	Strengthbody *btab, *p; 
+	int nobj, gnobj;
+	int i;
+
+	singlPrintf("SPHReading \"%s\"\n", name);
+	sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(Strengthbody),
+			"mass", offsetof(Strengthbody, mass), &massconf,
+			"x", offsetof(Strengthbody, pos[0]), &xconf,
+			"y", offsetof(Strengthbody, pos[1]), &yconf,
+			"z", offsetof(Strengthbody, pos[2]), &zconf,
+			"vx", offsetof(Strengthbody, vel[0]), &vxconf,
+			"vy", offsetof(Strengthbody, vel[1]), &vyconf,
+			"vz", offsetof(Strengthbody, vel[2]), &vzconf,
+			"u", offsetof(Strengthbody, u), &uconf,
+			"h", offsetof(Strengthbody, h), &hconf,
+			"ident", offsetof(Strengthbody, ident), &identconf,
+			"dmg", offsetof(Strengthbody, dmg), &dmgconf,
+			"ddmgdt", offsetof(Strengthbody, ddmgdt), &ddmgdtconf,
+			"stressxx", offsetof(Strengthbody, stress[0]), &stressconf[0],
+			"stressxy", offsetof(Strengthbody, stress[1]), &stressconf[1],
+			"stressxz", offsetof(Strengthbody, stress[2]), &stressconf[2],
+			"stressyx", offsetof(Strengthbody, stress[3]), &stressconf[3],
+			"stressyy", offsetof(Strengthbody, stress[4]), &stressconf[4],
+			"stressyz", offsetof(Strengthbody, stress[5]), &stressconf[5],
+			"stresszx", offsetof(Strengthbody, stress[6]), &stressconf[6],
+			"stresszy", offsetof(Strengthbody, stress[7]), &stressconf[7],
+			"stresszz", offsetof(Strengthbody, stress[8]), &stressconf[8],
+			"dstressxxdt", offsetof(Strengthbody, dstressdt[0]), &dstressdtconf[0],
+			"dstressxydt", offsetof(Strengthbody, dstressdt[1]), &dstressdtconf[1],
+			"dstressxzdt", offsetof(Strengthbody, dstressdt[2]), &dstressdtconf[2],
+			"dstressyxdt", offsetof(Strengthbody, dstressdt[3]), &dstressdtconf[3],
+			"dstressyydt", offsetof(Strengthbody, dstressdt[4]), &dstressdtconf[4],
+			"dstressyzdt", offsetof(Strengthbody, dstressdt[5]), &dstressdtconf[5],
+			"dstresszxdt", offsetof(Strengthbody, dstressdt[6]), &dstressdtconf[6],
+			"dstresszydt", offsetof(Strengthbody, dstressdt[7]), &dstressdtconf[7],
+			"dstresszzdt", offsetof(Strengthbody, dstressdt[8]), &dstressdtconf[8],
+			NULL);
+	nobj = *nobjp;
+	gnobj = *gnobjp;
+	btab = *btabp;
+	Msgf(("Data read, SPHnobj=%d, SPHgnobj=%d\n", *nobjp, *gnobjp));
+	Msgf(("Nproc:%d, Procnum: %d, Doc: %d\n",
+				MPMY_Nproc(), MPMY_Procnum(), ilog2(MPMY_Nproc())));
+	if (massconf==0 || xconf==0 || yconf==0 || zconf==0) {
+		SinglError("Could not find %s %s %s %s in data file!\n",
+				(massconf==0)? "mass" : "",
+				(xconf==0)? "x" : "",
+				(yconf==0)? "y" : "",
+				(zconf==0)? "z" : "");
+	}
+	if (vxconf != vyconf || vxconf != vzconf){
+		if (setpvel) SinglError("Missing velocity components!\n");
+	}
+	if (identconf == 0 || set_id){
+		SinglWarning("No \"ident\" in file, numbering sequentially\n");
+		SPHFixId(btab, nobj, gnobj);
+	}
+	if (windidconf == 0) {
+		SinglWarning("No \"windid\" in file; are you using wind source?\n");
+	}
+	if (new_h != (float)0.0) {
+		singlPrintf("Setting h to %f\n", new_h);
+		for (p = btab; p < btab+nobj; p++) p->h = new_h;
+	} else if (hconf == 0) {
+		SinglError("No h in data file\n");
+	}
+	if (new_u != (float)0.0) {
+		singlPrintf("Setting u to %f\n", new_u);
+		for (p = btab; p < btab+nobj; p++)  p->u = new_u;
+	} else if (uconf == 0) {
+		SinglError("No u in data file\n");
+	}
+	for (i = 0; i < 9; i++) {
+		if (stressconf[i] == 0)
+			SinglWarning("Missing stress tensor component %d.\n", i);
+		if (dstressdtconf[i] == 0)
+			SinglWarning("Missing stress tensor rate of change component %d.\n", i);
+	}
+	return sdfp;
+}
+
 	void *
 DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp,
 		int set_id, int setpvel)
