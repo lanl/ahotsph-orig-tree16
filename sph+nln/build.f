@@ -1,4 +1,4 @@
-      subroutine build(irank,idbug,filenm)
+      subroutine build(irank,idbug,filenm_orig)
 
 c..reads Thielemann file format
 c..identifies symbol in Z,N
@@ -16,12 +16,13 @@ c..and echo to standard i/o
 
       integer*4 irank,idbug
       integer*4 idebug,n,i,j
+      character*20 filenm_orig
       character*20 filenm
 
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
 c..from reaction rates available
-c      write(*,*) filenm,len(trim(filenm))
+      filenm = trim(filenm_orig)   
       idebug = 0
       call getfkt(idebug,irank)
 

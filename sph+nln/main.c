@@ -254,7 +254,7 @@ main(int argc, char *argv[])
     int make_sink_tree;
     int Gridpts = 0, Nel = 0; 	/* for cooling tables */
     int status, done,rank,idbug;
-    char *netrcfn, tmpchr[20];
+	char netrcfn[20] = "                    "; /* build.f reserves 20 chars for net.rc filename */
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
@@ -475,9 +475,7 @@ main(int argc, char *argv[])
     /*set up network for burn code. do this AFTER do_burning is set!!*/
     if(params.do_burning) {
         /* each processor needs its own 'net.rc' file */
-        sprintf(tmpchr, "%-d\0",rank); 
-        netrcfn = (char *)malloc( ( strlen(tmpchr) + 1) * sizeof(char) );
-        sprintf(netrcfn, "%s%s","net.rc.",tmpchr); 
+		sprintf(netrcfn, "net.rc.%-d",rank);
         singlPrintf("building network library .... ");
         build_(&rank,&idbug,netrcfn);
         singlPrintf("success!\n");
