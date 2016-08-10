@@ -23,7 +23,7 @@ c..   solar system abundance data
       include 'cgen'
       include 'cburn'
 
-      real*8 sum, zhe
+      real*8 summ, zhe
 
       integer*4 izbu(ndim),inbu(ndim),ibu,idummy
       character*5 cbu
@@ -148,12 +148,12 @@ c..   adjust elemental helium to fit
             endif
          enddo
 
-         sum = 0.0d0
+         summ = 0.0d0
          do n = 1, netsize
-            sum = sum + xx(n)
+            summ = summ + xx(n)
          enddo
 c         write(*,'(a30,1pe12.3)')'error after He adjustment:',
-c     1        sum-1.0d0
+c     1        summ-1.0d0
 
 c..   mole fractions
          do n = 1, netsize
