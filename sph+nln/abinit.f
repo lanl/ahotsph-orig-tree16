@@ -156,15 +156,16 @@ c         write(*,'(a30,1pe12.3)')'error after He adjustment:',
 c     1        summ-1.0d0
 
 c..   mole fractions
-         do n = 1, netsize
-            xa(j) = nz(j) + nn(j) + qex(j)/931.487d0
-            y(n) = xx(n)/xa(n)
-         enddo
-         y(netsize+1) = 0.0d0
-         do n = 1, netsize
-            y(netsize+1) =  y(netsize+1) + y(n)*dble(lz(n))
-         enddo
-         if(irank.eq.0) write(*,*)'Ye =',y(netsize+1)
+c.. cie: I think this block is unnecessary?!
+c         do n = 1, netsize
+c            xa(n) = nz(n) + nn(n) + qex(n)/931.487d0
+c            y(n) = xx(n)/xa(n)
+c         enddo
+c         y(netsize+1) = 0.0d0
+c         do n = 1, netsize
+c            y(netsize+1) =  y(netsize+1) + y(n)*dble(lz(n))
+c         enddo
+c         if(irank.eq.0) write(*,*)'Ye =',y(netsize+1)
 
 c..   spead over spatial grid 
 c         do k = 2, kk+1
@@ -222,6 +223,19 @@ c..   different net.rc
          goto 100
  101     continue
 c..   net.rc is consistent
+         do j = 1, netsize
+            cnuc(j) = xid(j)
+            lz(j) = nz(j)
+            ln(j) = nn(j)
+         enddo
+       
+         do j = netsize +2, ndim
+            cnuc(j) = '     '
+            lz(j) = 0
+            ln(j) = 0
+         enddo
+         cnuc(netsize+1) = '   Ye'
+
          read(lun,'(10i5)')nucp
 
 c..   determine nonzero entries
