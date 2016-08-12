@@ -52,8 +52,8 @@ c..     Start reading
 
       i = 1
  1000 continue
-      read (12,2,end=2000) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
-c      write(*,*) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
+      read (12,*,end=2000) nuc(i), a(i), nz(i), n(i), w(i), mxcess(i)
+      write(*,*) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
       read (12,4) (p(j),j=1,24)
     2 format (a5,4x,f9.3,i3,1x,i3,2x,f5.1,2x,f7.3)
     4 format(8f9.2)
