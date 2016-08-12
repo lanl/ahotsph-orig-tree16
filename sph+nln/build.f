@@ -34,7 +34,7 @@ ccccccccccccccccccccccc
 c..actual size of network (number of nuclei)
       netsize = itot
 c      filenm = 'net.rc.1'
-      call abinit(irank,trim(filenm))
+      call abinit(irank,filenm_orig)
       
 c..setup binding energies and 2J+1 factors
       call masses(qq,w,itot,irank)
