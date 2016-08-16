@@ -52,6 +52,7 @@ c..   xxeq = nucleon fraction in nse
       real*8 ualow,uhat0
       real*8 up,un,yheold,ww(nnuc),yeqold(ndim)
       real*8 chemfak, chemcon
+      real*8 dlog_ww_p, dlog_ww_n, dlog_ww_a
       integer*4 ib, in,ip,ia,ni56,nc12,nfe54,nfe56,nucn,nucpr
       integer*4 nuc0, i, n, iitot
 
@@ -186,8 +187,16 @@ c..   compromise value
      1        avagadro*(planck**2*avagadro/(2.0d0*pi*boltz))**1.5d0 )
          u(ia) = ualow*(1.0d0 - xal) + uahi*xal
 c         u(ia) = qq(nnuc) + tk*(etanuc(nnuc,k)-dlog(ww(nnuc)))
+c cie: due to a bug in masses.f (somthing stomping over the memory of 
+c      nz/n when or after those are read in), the last three elements
+c      in 'ww' can be zero, which gives an 'inf' when taking the log
+         if (ww (nnuc-1) .gt. 0.0) then
+             dlog_ww_a = dlog (ww (nnuc))
+         else 
+             dlog_ww_a = 0.0
+         endif
          u(ia) = qq(nnuc) + tk*(dlog(yeq(nnuc))+chemfak+chemcon
-     1   - 1.5d0*dlog(xa(nnuc)) - dlog(ww(nnuc)))
+     1   - 1.5d0*dlog(xa(nnuc)) - dlog_ww_a)
 c..   initial guess for muhat = mu(n) - mu(p)
 c..   high T value = free n have all neutron excess
          omxa  = 1.0d0
@@ -204,11 +213,23 @@ c..   compromise value
 c..   use chemical potential values from state.f
 c         up = qq(nnuc-1) + tk*(etanuc(nnuc-1,k)-dlog(ww(nnuc-1)))
 c         un = qq(nnuc-2) + tk*(etanuc(nnuc-2,k)-dlog(ww(nnuc-2)))
-         
+c cie: due to a bug in masses.f (somthing stomping over the memory of 
+c      nz/n when or after those are read in), the last three elements
+c      in 'ww' can be zero, which gives an 'inf' when taking the log
+         if (ww (nnuc-1) .gt. 0.0) then
+             dlog_ww_p = dlog (ww (nnuc-1))
+         else 
+             dlog_ww_p = 0.0
+         endif
+         if (ww (nnuc-2) .gt. 0.0) then
+             dlog_ww_n = dlog (ww (nnuc-2))
+         else
+             dlog_ww_n = 0.0
+         endif
          up = qq(nnuc-1) + tk*(dlog(yeq(nnuc-1))+chemfak+chemcon
-     1   - dlog(2.0d0) - dlog(ww(nnuc-1)))
+     1   - dlog(2.0d0) - dlog_ww_p)
          un = qq(nnuc-2) + tk*(dlog(yeq(nnuc-2))+chemfak+chemcon
-     1   - dlog(2.0d0) - dlog(ww(nnuc-2)))
+     1   - dlog(2.0d0) - dlog_ww_n)
          uhat = (un - up)/1.0d0
          uaaa = 2.0*(un + up)/1.0d0
 c..   uses u(ia) = u + m here, so it is "mu" not "u"

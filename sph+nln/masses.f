@@ -58,6 +58,13 @@ c..     Start reading
     2 format (a5,4x,f9.3,i3,1x,i3,2x,f5.1,2x,f7.3)
     4 format(8f9.2)
 
+c cie: something seems to be stomping on the memory of some of these
+c      arrays as or some time after they are read in (precise timing
+c      varies). So this is observed in the first couple of elements 
+c      of either 'n' or 'nz'. Don't know what's causing this. But,
+c      this results in a bug in the reordering done below that results
+c      in 'w' containing zeros in its last three elements. 
+
 c..     update count for reading next line
       i = i+1
       goto 1000
