@@ -33,7 +33,8 @@ c..   solar system abundance data
 c..Z and N for special nuclei
       integer*4 nspz(nsp), nspn(nsp)
 c..   nscr=scratch array for index reordering
-      integer*4 nscr(ndim),iscr,itno,jz,ja
+c cie: nscr should have N=nucpg elements?
+      integer*4 nscr(nucpg),iscr,itno,jz,ja
  
       integer*4 lun
 
@@ -326,10 +327,19 @@ c..reorder by charge and atomic number
       do n = 1, j
          nscr(n) = nucp(n)
       enddo
+      do n = j+1, ndim
+         nscr(n) = -1
+      enddo
 
-      do j = 1, nucpg
+c      do j = 1, nucpg !cie: why is this nucpg?? lz/ln are declared in
+cburn to have ndim elements
+      do j = 1, ndim
          itno = 0
-         do n = 1, nucpg-1
+c         do n = 1, nucpg-1
+         do n = 1, ndim-1
+            write(*,*)"n = ", n, " itno = ", itno
+            write(*,'(a7, 21(i3, 1x))')"nscr = ", nscr
+            write(*,'(a7, 21(i3, 1x))')"lz = ", lz
             if( lz(nscr(n)) .gt. lz(nscr(n+1)) )then
 c..switch n and n+1 in nscr (index array)
                iscr = nscr(n)
@@ -347,9 +357,10 @@ c..switch n and n+1 in nscr (index array)
       jz = j-1
       if(irank.eq.0) write(*,*)'reordered in Z in ',jz,' steps'
 
-      do j = 1, nucpg
+c cie: ditto, see ~20l above      
+      do j = 1, ndim
          itno = 0
-         do n = 1, nucpg-1
+         do n = 1, ndim-1
             if(  lz(nscr(n))   + ln(nscr(n)) .gt. 
      1           lz(nscr(n+1)) + ln(nscr(n+1)) .and.
      2           lz(nscr(n)) .eq. lz(nscr(n+1)))then

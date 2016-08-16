@@ -10,7 +10,8 @@ c..from network
 
       integer*4   lz(ndim), ln(ndim), newnet, nucpg
 c..limit of margins in pgplot for nuclei id's
-      parameter( nucpg = 60 )
+c      parameter( nucpg = 60 ) !cie: don't have pgplot in snsph... set equal to ndim?
+      parameter( nucpg = ndim )
       integer*4 nucp(nucpg), mnucpg
       character*5 cnuc(ndim)
       real*8      qex(ndim), solarx(ndim), gspin(ndim)
