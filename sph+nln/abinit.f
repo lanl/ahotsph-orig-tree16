@@ -337,9 +337,6 @@ cburn to have ndim elements
          itno = 0
 c         do n = 1, nucpg-1
          do n = 1, ndim-1
-            write(*,*)"n = ", n, " itno = ", itno
-            write(*,'(a7, 21(i3, 1x))')"nscr = ", nscr
-            write(*,'(a7, 21(i3, 1x))')"lz = ", lz
             if( lz(nscr(n)) .gt. lz(nscr(n+1)) )then
 c..switch n and n+1 in nscr (index array)
                iscr = nscr(n)
