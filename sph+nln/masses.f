@@ -15,7 +15,7 @@ c..searches for n,p,alpha and puts at end of list
 
       integer*4 itot, i, j, inuc, ih1, in1, ia4
       integer*4 nt(24), nz(nnuc), n(nnuc)
-      real*8    p(nnuc), a(nnuc), qq(nnuc+1),w(nnuc+1)
+      real*8    p(24), a(nnuc), qq(nnuc+1),w(nnuc+1)
 
       real*8     dum(nnuc),dumw(nnuc)
       real*8     p1,p2,p3, w1,w2,w3
