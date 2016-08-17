@@ -27,6 +27,12 @@
 #define MH (8.411685e-58)
 */
 
+/* specific physics data does into its own struct */
+typedef struct nuc_network_s {
+    float Y_el;
+    float mfp;
+    float abund[NISO]; 
+} NUC_NETWORK_DATA;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -77,9 +83,7 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
-    float Y_el;
-    float mfp;
-    float abund[NISO]; 
+	NUC_NETWORK_DATA nucnetw;
 } SPHbody;
 
 typedef struct {
@@ -189,9 +193,7 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
     float temp;
-    float Y_el;
-    float mfp;
-    float abund[NISO];
+	NUC_NETWORK_DATA nucnetw;
 } SPHoutbody;
 
 typedef struct {

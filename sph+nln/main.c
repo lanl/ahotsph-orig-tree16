@@ -1989,10 +1989,10 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
         output_btab[i].nbrs = btab[i].nbrs;
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
-        output_btab[i].Y_el = btab[i].Y_el;
-        output_btab[i].mfp = btab[i].mfp;
+        output_btab[i].nucnetw.Y_el = btab[i].nucnetw.Y_el;
+        output_btab[i].nucnetw.mfp = btab[i].nucnetw.mfp;
         for(j=0;j<NISO;j++){ /*will this work? -CIE: so far, it compiled and runs*/
-            output_btab[i].abund[j] = btab[i].abund[j];
+            output_btab[i].nucnetw.abund[j] = btab[i].nucnetw.abund[j];
             /*
                output_btab[i].np[j] = btab[i].np[j];
                output_btab[i].nn[j] = btab[i].nn[j];

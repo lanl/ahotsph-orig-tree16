@@ -637,7 +637,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
            contributions of gas and radiation pressure */
         pgas = prad = 0.d;
         pgas = (double)(eos_n * K_BOLTZ * p->temp);
-        if( 20.*p->h > p->mfp) 
+        if( 20.*p->h > p->nucnetw.mfp) 
             prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
         p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
 
