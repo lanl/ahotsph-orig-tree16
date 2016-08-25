@@ -226,7 +226,7 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 	int massconf, xconf, yconf, zconf;
 	int vxconf, vyconf, vzconf;
 	int hconf, uconf;
-	int identconf, windidconf;
+	int identconf;
 	int f1conf, p1conf, m1conf, Y_elconf;
 	SPHbody *btab, *p; 
 	int nobj, gnobj;
@@ -244,7 +244,7 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 			"u", offsetof(SPHbody, u), &uconf,
 			"h", offsetof(SPHbody, h), &hconf,
 			"ident", offsetof(SPHbody, ident), &identconf,
-			"windid", offsetof(SPHbody, windid), &windidconf,
+
 			/* comment this line out if no Y_el in sdf file */
 			/*"Y_el", offsetof(SPHbody, Y_el), &Y_elconf;*/
 			/*"f1", offsetof(SPHbody, composition[0].abund), &f1conf,*/
@@ -340,9 +340,6 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 	if (identconf == 0 || set_id){
 		SinglWarning("No \"ident\" in file, numbering sequentially\n");
 		SPHFixId(btab, nobj, gnobj);
-	}
-	if (windidconf == 0) {
-		SinglWarning("No \"windid\" in file; are you using wind source?\n");
 	}
 	if (new_h != (float)0.0) {
 		singlPrintf("Setting h to %f\n", new_h);
