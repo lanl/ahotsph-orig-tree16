@@ -219,7 +219,7 @@ SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 
 /*read in file with abundance data */
 	void *
-SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
+SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 		int set_id, int setpvel, float new_h, float new_u)
 {
 	SDF *sdfp;

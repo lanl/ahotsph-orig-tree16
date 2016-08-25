@@ -591,7 +591,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }
 
         /************* update T, eos_n, eos_u *************/
-        temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
+		if (params.do_cooling || params.do_burning)
+			temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
 
         /********** do the burning ***********/
         if(params.do_burning && temp_ok)
@@ -630,24 +631,33 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
         if (p->rho_est <= (float)0.0) 
             Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
 
-        /* keep these in cgs-units */
-        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
-
-        /* calculate the total pressure by calculating the respective 
-           contributions of gas and radiation pressure */
-        pgas = prad = 0.d;
-        pgas = (double)(eos_n * K_BOLTZ * p->temp);
-        if( 20.*p->h > p->data.nucnetw.mfp) 
-            prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
-        p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
-
-        /* this is still using Gamma. Perhaps could calculate gamma 
-           at this point? */
-        P_ratio = (double)pgas / (double)(pgas+prad);
-        /* from D. Clayton's Stellar Evolution book, p.119 */
-        Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
-            (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
-        p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
+		if (params.do_cooling || params.do_burning) {
+	        /* keep these in cgs-units */
+	        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
+	
+	        /* calculate the total pressure by calculating the respective 
+	           contributions of gas and radiation pressure */
+	        pgas = prad = 0.d;
+	        pgas = (double)(eos_n * K_BOLTZ * p->temp);
+			prad = 0.0;
+	        if( 20.*p->h > p->data.nucnetw.mfp) 
+	            prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
+	        p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
+	
+	        /* this is still using Gamma. Perhaps could calculate gamma 
+	           at this point? */
+	        P_ratio = (double)pgas / (double)(pgas+prad);
+	        /* from D. Clayton's Stellar Evolution book, p.119 */
+	        Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
+	            (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
+	        p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
+		} else {
+			p->pr = p->rho_est * p->u * (params.Gamma - 1);
+			eos_u = p->u * p->rho_est * massCF * ivlenCF * ivtimeCF2 ;
+			eos_n = p->rho_est * massCF * ivlenCF3 / MH * 0.25; /* guess that in stars the average particles mass is 4*m_H */
+			p->temp = newtraph (1.e1, 2.5e11, eos_u*1.e-6, uvst, duvst);
+			p->vsound = sqrtf_fast (params.Gamma * p->pr / p->rho_est);
+		}
 
         if (params.do_diffusion) {
             /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */

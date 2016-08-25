@@ -28,6 +28,8 @@
 */
 
 /* specific physics data goes into its own struct */
+/* make sure these contain an even number of 4-byte data types
+ * so all of SPHbody is aligned to an 8-byte boundary */
 typedef struct nuc_network_s {
     float Y_el;
     float mfp;
@@ -203,11 +205,37 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */
     unsigned int windid;
     float temp;
-	union {
-	   nuc_network_data_t nucnetw;
-       strength_data_t strengthbody;
-	} data;
 } SPHoutbody;
+
+typedef struct {
+#ifdef POS_IS_DOUBLE
+    double pos[NDIM];		/* position of body */
+#else
+    float pos[NDIM];		/* position of body */
+#endif
+    float mass;			/* mass of body */
+    float vel[NDIM];		/* velocity of body */
+    float u;
+    float h;
+    float rho;
+    float drho_dt;
+    float udot;
+#ifdef SPH_SAVE_ACC
+    float acc[NDIM];
+    float acc_last[NDIM];
+    float phi;
+    float dt;
+#endif
+    float pr;
+    unsigned int nbrs; 
+    unsigned int ident;		/* unique? identifier */
+    unsigned int windid;
+    float temp;
+    nuc_network_data_t nucnetw;
+/*    float Y_el;
+    float mfp;
+    float abund[NISO]; */
+} SPHoutbody_NW;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -257,6 +285,49 @@ typedef struct {
 /* This is the descriptor that goes into the SDF header. */
 
 #ifdef SPH_SAVE_ACC
+#define SPHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float ax, ay, az;		/* acceleration */\n\
+    float lax, lay, laz;	/* acceleration at tpos-dt */\n\
+    float phi;			/* potential */\n\
+    float idt;			/* timestep */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+}"
+#define NWSPHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float ax, ay, az;		/* acceleration */\n\
+    float lax, lay, laz;	/* acceleration at tpos-dt */\n\
+    float phi;			/* potential */\n\
+    float idt;			/* timestep */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float Y_el;                  /* for alignment */\n\
+    float mfp;			/* mean free path */\n\
+    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
+}"
 #define STRENGTHOUTBODYDESC \
 "struct {\n\
     double x, y, z;		/* position of body */\n\
@@ -296,29 +367,6 @@ typedef struct {
     float dstresszydt      /* rate of change of stress tensor */\n\
     float dstresszzdt      /* rate of change of stress tensor */\n\
 }"
-#define SPHOUTBODYDESC \
-"struct {\n\
-    double x, y, z;		/* position of body */\n\
-    float mass;			/* mass of body */\n\
-    float vx, vy, vz;		/* velocity of body */\n\
-    float u;			/* internal energy */\n\
-    float h;			/* smoothing length */\n\
-    float rho;			/* density */\n\
-    float drho_dt;              /* time derivative of rho */\n\
-    float udot;			/* time derivative of u */\n\
-    float ax, ay, az;		/* acceleration */\n\
-    float lax, lay, laz;	/* acceleration at tpos-dt */\n\
-    float phi;			/* potential */\n\
-    float idt;			/* timestep */\n\
-    float pr;		/* pressure */\n\
-    unsigned int nbrs;          /* number of neighbors */\n\
-    unsigned int ident;		/* unique identifier */\n\
-    unsigned int windid;        /* wind id */\n\
-    float temp;                 /* temperature */\n\
-    float Y_el;                  /* for alignment */\n\
-    float mfp;			/* mean free path */\n\
-    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
-}"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
     double x, y, z;		/* position of body */\n\
@@ -332,6 +380,41 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
 }"
 #else
+#define SPHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+}"
+#define NWSPHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float Y_el;                  /* for alignment */\n\
+    float mfp;			/* mean free path */\n\
+    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
+}"
 #define STRENGTHOUTBODYDESC \
 "struct {\n\
     double x, y, z;		/* position of body */\n\
@@ -367,25 +450,6 @@ typedef struct {
     float dstresszxdt      /* rate of change of stress tensor */\n\
     float dstresszydt      /* rate of change of stress tensor */\n\
     float dstresszzdt      /* rate of change of stress tensor */\n\
-}"
-#define SPHOUTBODYDESC \
-"struct {\n\
-    double x, y, z;		/* position of body */\n\
-    float mass;			/* mass of body */\n\
-    float vx, vy, vz;		/* velocity of body */\n\
-    float u;			/* internal energy */\n\
-    float h;			/* smoothing length */\n\
-    float rho;			/* density */\n\
-    float drho_dt;              /* time derivative of rho */\n\
-    float udot;			/* time derivative of u */\n\
-    float pr;		/* pressure */\n\
-    unsigned int nbrs;          /* number of neighbors */\n\
-    unsigned int ident;		/* unique identifier */\n\
-    unsigned int windid;        /* wind id */\n\
-    float temp;                 /* temperature */\n\
-    float Y_el;                  /* for alignment */\n\
-    float mfp;			/* mean free path */\n\
-    float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -523,7 +587,7 @@ void update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, bndry_t 
 /* In sphinit.c */
 void *DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
 void *SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
-void *SPHReadA(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
+void *SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
 void *InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
 	 SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 
