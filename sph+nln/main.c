@@ -277,7 +277,7 @@ main(int argc, char *argv[])
     if (params.timeout > 0) MPMY_TimeoutSet(params.timeout);
 
 /* read in Z and N for abundances. at some later point, populate nparr/nnarr ~CIE*/
-	if (params.do_burning) {
+	if (params.do_burning || params.do_cooling) {
 	    if( (fp = fopen("networklist","r"))==NULL ) printf("error opening networklist\n");
 	    fscanf(fp, "%d", &NNW);
 	    inNW = (int **)malloc( 2 * sizeof(int *) );
@@ -301,7 +301,7 @@ main(int argc, char *argv[])
 				    if (params.do_restart) sprintf(iname, "%s_sph.restart", params.name);
 					else sprintf(iname, "%s", params.SPHdatafile);
 	/* this is where the SDF file is read in -CIE */
-					if (params.do_burning) {
+					if (params.do_burning || params.do_cooling) {
 					    sdfp = SPHRead_nw(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 							   params.set_id, params.setpvel, params.new_h, params.new_u);
 			            for ( i=0; i<NISO; i++ ) {
@@ -1027,14 +1027,14 @@ main(int argc, char *argv[])
                                     windnobj, params.outnamebase, iter);
                     } 
                     else {
-						if (params.do_burning)
+						if (params.do_burning || params.do_cooling)
 							SPHOutput_nw (SPHbtab, SPHnobj, params.outnamebase, iter);
 						else 
 							SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
 					}
                 }
                 else {
-					if (params.do_burning)
+					if (params.do_burning || params.do_cooling)
 						SPHOutput_nw (SPHbtab, SPHnobj, params.outnamebase, iter);
 					else 
 						SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
