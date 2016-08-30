@@ -313,7 +313,7 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 
 /*read in file with strength data */
 	void *
-SPHReadStrength(char *name, void *csdfp, Strengthbody **btabp, int *gnobjp, int *nobjp,
+SPHRead_strength(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 		int set_id, int setpvel, float new_h, float new_u)
 {
 	SDF *sdfp;
@@ -321,43 +321,48 @@ SPHReadStrength(char *name, void *csdfp, Strengthbody **btabp, int *gnobjp, int 
 	int vxconf, vyconf, vzconf;
 	int hconf, uconf;
 	int identconf;
+	int n_defectsconf, total_defectsconf, is_strengthconf, act_thresholdconf;
 	int dmgconf, ddmgdtconf, stressconf[9], dstressdtconf[9];
-	Strengthbody *btab, *p; 
+	SPHbody *btab, *p; 
 	int nobj, gnobj;
 	int i;
 
 	singlPrintf("SPHReading \"%s\"\n", name);
-	sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(Strengthbody),
-			"mass", offsetof(Strengthbody, mass), &massconf,
-			"x", offsetof(Strengthbody, pos[0]), &xconf,
-			"y", offsetof(Strengthbody, pos[1]), &yconf,
-			"z", offsetof(Strengthbody, pos[2]), &zconf,
-			"vx", offsetof(Strengthbody, vel[0]), &vxconf,
-			"vy", offsetof(Strengthbody, vel[1]), &vyconf,
-			"vz", offsetof(Strengthbody, vel[2]), &vzconf,
-			"u", offsetof(Strengthbody, u), &uconf,
-			"h", offsetof(Strengthbody, h), &hconf,
-			"ident", offsetof(Strengthbody, ident), &identconf,
-			"dmg", offsetof(Strengthbody, dmg), &dmgconf,
-			"ddmgdt", offsetof(Strengthbody, ddmgdt), &ddmgdtconf,
-			"stressxx", offsetof(Strengthbody, stress[0]), &stressconf[0],
-			"stressxy", offsetof(Strengthbody, stress[1]), &stressconf[1],
-			"stressxz", offsetof(Strengthbody, stress[2]), &stressconf[2],
-			"stressyx", offsetof(Strengthbody, stress[3]), &stressconf[3],
-			"stressyy", offsetof(Strengthbody, stress[4]), &stressconf[4],
-			"stressyz", offsetof(Strengthbody, stress[5]), &stressconf[5],
-			"stresszx", offsetof(Strengthbody, stress[6]), &stressconf[6],
-			"stresszy", offsetof(Strengthbody, stress[7]), &stressconf[7],
-			"stresszz", offsetof(Strengthbody, stress[8]), &stressconf[8],
-			"dstressxxdt", offsetof(Strengthbody, dstressdt[0]), &dstressdtconf[0],
-			"dstressxydt", offsetof(Strengthbody, dstressdt[1]), &dstressdtconf[1],
-			"dstressxzdt", offsetof(Strengthbody, dstressdt[2]), &dstressdtconf[2],
-			"dstressyxdt", offsetof(Strengthbody, dstressdt[3]), &dstressdtconf[3],
-			"dstressyydt", offsetof(Strengthbody, dstressdt[4]), &dstressdtconf[4],
-			"dstressyzdt", offsetof(Strengthbody, dstressdt[5]), &dstressdtconf[5],
-			"dstresszxdt", offsetof(Strengthbody, dstressdt[6]), &dstressdtconf[6],
-			"dstresszydt", offsetof(Strengthbody, dstressdt[7]), &dstressdtconf[7],
-			"dstresszzdt", offsetof(Strengthbody, dstressdt[8]), &dstressdtconf[8],
+	sdfp = SDFreadf(name, (void **)btabp, gnobjp, nobjp, sizeof(SPHbody),
+			"mass", offsetof(SPHbody, mass), &massconf,
+			"x", offsetof(SPHbody, pos[0]), &xconf,
+			"y", offsetof(SPHbody, pos[1]), &yconf,
+			"z", offsetof(SPHbody, pos[2]), &zconf,
+			"vx", offsetof(SPHbody, vel[0]), &vxconf,
+			"vy", offsetof(SPHbody, vel[1]), &vyconf,
+			"vz", offsetof(SPHbody, vel[2]), &vzconf,
+			"u", offsetof(SPHbody, u), &uconf,
+			"h", offsetof(SPHbody, h), &hconf,
+			"ident", offsetof(SPHbody, ident), &identconf,
+			"n_defects", offsetof(SPHbody, data.strengthbody.n_defects), &n_defectsconf,
+			"total_defects", offsetof(SPHbody, data.strengthbody.total_defects), &n_defectsconf,
+			"is_strength", offsetof(SPHbody, data.strengthbody.is_strength), &is_strengthconf,
+			"act_threshold", offsetof(SPHbody, data.strengthbody.act_threshold), &act_thresholdconf,
+			"dmg", offsetof(SPHbody, data.strengthbody.dmg), &dmgconf,
+			"ddmgdt", offsetof(SPHbody, data.strengthbody.ddmgdt), &ddmgdtconf,
+			"stressxx", offsetof(SPHbody, data.strengthbody.stress[0]), &stressconf[0],
+			"stressxy", offsetof(SPHbody, data.strengthbody.stress[1]), &stressconf[1],
+			"stressxz", offsetof(SPHbody, data.strengthbody.stress[2]), &stressconf[2],
+			"stressyx", offsetof(SPHbody, data.strengthbody.stress[3]), &stressconf[3],
+			"stressyy", offsetof(SPHbody, data.strengthbody.stress[4]), &stressconf[4],
+			"stressyz", offsetof(SPHbody, data.strengthbody.stress[5]), &stressconf[5],
+			"stresszx", offsetof(SPHbody, data.strengthbody.stress[6]), &stressconf[6],
+			"stresszy", offsetof(SPHbody, data.strengthbody.stress[7]), &stressconf[7],
+			"stresszz", offsetof(SPHbody, data.strengthbody.stress[8]), &stressconf[8],
+			"dstressxxdt", offsetof(SPHbody, data.strengthbody.dstressdt[0]), &dstressdtconf[0],
+			"dstressxydt", offsetof(SPHbody, data.strengthbody.dstressdt[1]), &dstressdtconf[1],
+			"dstressxzdt", offsetof(SPHbody, data.strengthbody.dstressdt[2]), &dstressdtconf[2],
+			"dstressyxdt", offsetof(SPHbody, data.strengthbody.dstressdt[3]), &dstressdtconf[3],
+			"dstressyydt", offsetof(SPHbody, data.strengthbody.dstressdt[4]), &dstressdtconf[4],
+			"dstressyzdt", offsetof(SPHbody, data.strengthbody.dstressdt[5]), &dstressdtconf[5],
+			"dstresszxdt", offsetof(SPHbody, data.strengthbody.dstressdt[6]), &dstressdtconf[6],
+			"dstresszydt", offsetof(SPHbody, data.strengthbody.dstressdt[7]), &dstressdtconf[7],
+			"dstresszzdt", offsetof(SPHbody, data.strengthbody.dstressdt[8]), &dstressdtconf[8],
 			NULL);
 	nobj = *nobjp;
 	gnobj = *gnobjp;

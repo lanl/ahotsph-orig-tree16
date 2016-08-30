@@ -37,10 +37,14 @@ typedef struct nuc_network_s {
 } nuc_network_data_t;
 
 typedef struct strength_s {
-	float damage;
 	int n_defects;
 	int total_defects;
-	float activate;
+	int is_strength;
+	float act_threshold;
+    float dmg;                  /* damage parameter */
+    float ddmgdt;               /* rate of change of damage */
+    float stress[9];         /* stress tensor */
+    float dstressdt[9];      /* rate of change of stress tensor */
 } strength_data_t;
 
 typedef struct {
@@ -97,59 +101,6 @@ typedef struct {
        strength_data_t strengthbody;
 	} data;
 } SPHbody;
-
-typedef struct {
-#ifdef POS_IS_DOUBLE
-  /* double first for alignment */
-    double pos[NDIM];		/* position of body */
-    float mass;			/* mass of body */
-#else
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
-#endif
-    float vel[NDIM];		/* velocity of body */
-    float h;			/* smoothing length */
-    float rho;			/* density */
-    float pr;			/* pressure */
-    float vsound;		/* sound speed */
-    float rho_est;		/* estimated density */
-    float u;			/* internal energy */
-    float temp;                 /* temperature, used to enforce LTE */
-    float du;                   /* change in internal energy this timestep */
-    float dt_next;
-    /* Things declared above this line are communicated between processors */
-    /* so they can be used in in the loop over nbrs in FindRho and ForceSPH */
-    /* Don't add anything above this line unless you fix TBODYSZ */
-    float acc[NDIM];
-    float grav_acc[NDIM];
-    float acc_last[NDIM];
-    /* Do these need to go between nodes?  Can things above come down here? */
-    float u_r;                  /* electron fraction */
-    float du_r;                 /* change in u_r this timestep */
-    float phi;
-    Key_t key;
-    unsigned int ident;
-    float nterms;
-    float grav_nterms;
-    float lvel[NDIM];
-    float drho_dt;
-#ifdef POS_IS_DOUBLE
-    double pos_last[NDIM];
-#else
-    float pos_last[NDIM];
-#endif
-    float hdot;
-    float udot;
-    float udot_last;
-    unsigned int nbrs;
-    float tacc;
-    float dt;
-    float min_nbr_dt;
-    float dmg;                  /* damage parameter */
-    float ddmgdt;               /* rate of change of damage */
-    float stress[9];         /* stress tensor */
-    float dstressdt[9];      /* rate of change of stress tensor */
-} Strengthbody;
 
 /* windbody and WINDOUTBODYDESC need to be padded to a double boundary for
    correct alignment in memory and on disk */
@@ -232,9 +183,6 @@ typedef struct {
     unsigned int windid;
     float temp;
     nuc_network_data_t nucnetw;
-/*    float Y_el;
-    float mfp;
-    float abund[NISO]; */
 } SPHoutbody_NW;
 
 typedef struct {
@@ -257,14 +205,12 @@ typedef struct {
     float dt;
 #endif
     float pr;
+    float temp;
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
-    float temp;
-    float dmg;
-    float ddmgdt;
-    float stress[9];
-    float dstressdt[9];
-} Strengthoutbody;
+	strength_data_t strengthbody;
+	int padding;
+} SPHoutbody_strength;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -346,6 +292,10 @@ typedef struct {
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
     float temp;                 /* temperature */\n\
+	int n_defects;			/* local number of defects */\n\
+	int total_defects;		/* total number of defects */\n\
+	int is_strength;		/* does particle feel strength? */\n\
+	float act_threshold;	/* activation threshold */\n\
     float dmg;                  /* damage parameter */\n\
     float ddmgdt;			/* rate of change of damage */\n\
     float stressxx;        /* stress tensor */\n\
@@ -357,15 +307,16 @@ typedef struct {
     float stresszx;        /* stress tensor */\n\
     float stresszy;        /* stress tensor */\n\
     float stresszz;        /* stress tensor */\n\
-    float dstressxxdt      /* rate of change of stress tensor */\n\
-    float dstressxydt      /* rate of change of stress tensor */\n\
-    float dstressxzdt      /* rate of change of stress tensor */\n\
-    float dstressyxdt      /* rate of change of stress tensor */\n\
-    float dstressyydt      /* rate of change of stress tensor */\n\
-    float dstressyzdt      /* rate of change of stress tensor */\n\
-    float dstresszxdt      /* rate of change of stress tensor */\n\
-    float dstresszydt      /* rate of change of stress tensor */\n\
-    float dstresszzdt      /* rate of change of stress tensor */\n\
+    float dstressxxdt;      /* rate of change of stress tensor */\n\
+    float dstressxydt;      /* rate of change of stress tensor */\n\
+    float dstressxzdt;      /* rate of change of stress tensor */\n\
+    float dstressyxdt;      /* rate of change of stress tensor */\n\
+    float dstressyydt;      /* rate of change of stress tensor */\n\
+    float dstressyzdt;      /* rate of change of stress tensor */\n\
+    float dstresszxdt;      /* rate of change of stress tensor */\n\
+    float dstresszydt;      /* rate of change of stress tensor */\n\
+    float dstresszzdt;      /* rate of change of stress tensor */\n\
+	int padding;			/* for alignment */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -428,8 +379,11 @@ typedef struct {
     float pr;		/* pressure */\n\
     unsigned int nbrs;          /* number of neighbors */\n\
     unsigned int ident;		/* unique identifier */\n\
-    unsigned int windid;        /* wind id */\n\
     float temp;                 /* temperature */\n\
+	int n_defects;			/* local number of defects */\n\
+	int total_defects;		/* total number of defects */\n\
+	int is_strength;		/* does particle feel strength? */\n\
+	float act_threshold;	/* activation threshold */\n\
     float dmg;                  /* damage */\n\
     float ddmgdt;			/* rate of change of damage */\n\
     float stressxx;        /* stress tensor */\n\
@@ -441,15 +395,16 @@ typedef struct {
     float stresszx;        /* stress tensor */\n\
     float stresszy;        /* stress tensor */\n\
     float stresszz;        /* stress tensor */\n\
-    float dstressxxdt      /* rate of change of stress tensor */\n\
-    float dstressxydt      /* rate of change of stress tensor */\n\
-    float dstressxzdt      /* rate of change of stress tensor */\n\
-    float dstressyxdt      /* rate of change of stress tensor */\n\
-    float dstressyydt      /* rate of change of stress tensor */\n\
-    float dstressyzdt      /* rate of change of stress tensor */\n\
-    float dstresszxdt      /* rate of change of stress tensor */\n\
-    float dstresszydt      /* rate of change of stress tensor */\n\
-    float dstresszzdt      /* rate of change of stress tensor */\n\
+    float dstressxxdt;      /* rate of change of stress tensor */\n\
+    float dstressxydt;      /* rate of change of stress tensor */\n\
+    float dstressxzdt;      /* rate of change of stress tensor */\n\
+    float dstressyxdt;      /* rate of change of stress tensor */\n\
+    float dstressyydt;      /* rate of change of stress tensor */\n\
+    float dstressyzdt;      /* rate of change of stress tensor */\n\
+    float dstresszxdt;      /* rate of change of stress tensor */\n\
+    float dstresszydt;      /* rate of change of stress tensor */\n\
+    float dstresszzdt;      /* rate of change of stress tensor */\n\
+	int padding;			/* for alignment */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\
@@ -588,6 +543,7 @@ void update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, bndry_t 
 void *DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
 void *SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
 void *SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
+void *SPHRead_strength(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
 void *InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
 	 SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 

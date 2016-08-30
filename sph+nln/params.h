@@ -30,6 +30,7 @@ typedef struct {
     int do_absorbing_bndry;
     int do_drag;
     int has_grav_data;
+	int do_strength;
     int windpartpershell;
     int old_winds;
     int const_winds;

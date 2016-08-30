@@ -41,6 +41,12 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "do_absorbing_bndry", &(params->do_absorbing_bndry), 0);
     SDFgetintOrDefault(sdfp, "do_drag", &(params->do_drag), 0);
     SDFgetintOrDefault(sdfp, "has_grav_data", &(params->has_grav_data), params->do_grav);
+	SDFgetintOrDefault(sdfp, "do_strength", &(params->do_strength), 0);
+
+	/* make strength and network stuff mutually exclusive for now */
+	if (params->do_strength && (params->do_burning || params->do_cooling)) {
+		Error("Strength stuff and network stuff is currently not allowed together.\n");
+	}
 
 	if (params->do_sph || params->do_grav) {
 	    if (SDFhasname("SPHdatafile", sdfp))
@@ -287,6 +293,7 @@ void print_initial_ctl(setup_params_t params) {
     singlPrintf("int do_cooling = %d;\n", params.do_cooling);
     singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
     singlPrintf("int do_burning = %d;\n", params.do_burning);
+	singlPrintf("int do_strength = %d;\n", params.do_strength);
 
 	if (params.do_output) {
 		if (params.short_output) 
