@@ -226,7 +226,7 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 	int massconf, xconf, yconf, zconf;
 	int vxconf, vyconf, vzconf;
 	int hconf, uconf;
-	int identconf;
+	int identconf, tempconf;
 	int f1conf, p1conf, m1conf, Y_elconf;
 	SPHbody *btab, *p; 
 	int nobj, gnobj;
@@ -244,7 +244,7 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 			"u", offsetof(SPHbody, u), &uconf,
 			"h", offsetof(SPHbody, h), &hconf,
 			"ident", offsetof(SPHbody, ident), &identconf,
-
+			"temp", offsetof(SPHbody, temp), &tempconf,
 			/* comment this line out if no Y_el in sdf file */
 			/*"Y_el", offsetof(SPHbody, Y_el), &Y_elconf;*/
 			/*"f1", offsetof(SPHbody, composition[0].abund), &f1conf,*/
@@ -272,54 +272,6 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 			"f18", offsetof(SPHbody, data.nucnetw.abund[17]), &f1conf,
 			"f19", offsetof(SPHbody, data.nucnetw.abund[18]), &f1conf,
 			"f20", offsetof(SPHbody, data.nucnetw.abund[19]), &f1conf,
-			/*
-			   "f21", offsetof(SPHbody, abund[20]), &f1conf,
-			   "f22", offsetof(SPHbody, abund[21]), &f1conf,
-			   "p1", offsetof(SPHbody, np[0]), &p1conf,
-			   "p2", offsetof(SPHbody, np[1]), &p1conf,
-			   "p3", offsetof(SPHbody, np[2]), &p1conf,
-			   "p4", offsetof(SPHbody, np[3]), &p1conf,
-			   "p5", offsetof(SPHbody, np[4]), &p1conf,
-			   "p6", offsetof(SPHbody, np[5]), &p1conf,
-			   "p7", offsetof(SPHbody, np[6]), &p1conf,
-			   "p8", offsetof(SPHbody, np[7]), &p1conf,
-			   "p9", offsetof(SPHbody, np[8]), &p1conf,
-			   "p10", offsetof(SPHbody, np[9]), &p1conf,
-			   "p11", offsetof(SPHbody, np[10]), &p1conf,
-			   "p12", offsetof(SPHbody, np[11]), &p1conf,
-			   "p13", offsetof(SPHbody, np[12]), &p1conf,
-			   "p14", offsetof(SPHbody, np[13]), &p1conf,
-			   "p15", offsetof(SPHbody, np[14]), &p1conf,
-			   "p16", offsetof(SPHbody, np[15]), &p1conf,
-			   "p17", offsetof(SPHbody, np[16]), &p1conf,
-			   "p18", offsetof(SPHbody, np[17]), &p1conf,
-			   "p19", offsetof(SPHbody, np[18]), &p1conf,
-			   "p20", offsetof(SPHbody, np[19]), &p1conf,
-			   "p21", offsetof(SPHbody, np[20]), &p1conf,
-			   "p22", offsetof(SPHbody, np[21]), &p1conf,
-			   "m1", offsetof(SPHbody, nn[0]), &m1conf,
-			   "m2", offsetof(SPHbody, nn[1]), &m1conf,
-			   "m3", offsetof(SPHbody, nn[2]), &m1conf,
-			   "m4", offsetof(SPHbody, nn[3]), &m1conf,
-			   "m5", offsetof(SPHbody, nn[4]), &m1conf,
-			   "m6", offsetof(SPHbody, nn[5]), &m1conf,
-			   "m7", offsetof(SPHbody, nn[6]), &m1conf,
-			   "m8", offsetof(SPHbody, nn[7]), &m1conf,
-			   "m9", offsetof(SPHbody, nn[8]), &m1conf,
-			   "m10", offsetof(SPHbody, nn[9]), &m1conf,
-			   "m11", offsetof(SPHbody, nn[10]), &m1conf,
-			   "m12", offsetof(SPHbody, nn[11]), &m1conf,
-			   "m13", offsetof(SPHbody, nn[12]), &m1conf,
-			   "m14", offsetof(SPHbody, nn[13]), &m1conf,
-			   "m15", offsetof(SPHbody, nn[14]), &m1conf,
-			   "m16", offsetof(SPHbody, nn[15]), &m1conf,
-			   "m17", offsetof(SPHbody, nn[16]), &m1conf,
-			   "m18", offsetof(SPHbody, nn[17]), &m1conf,
-			   "m19", offsetof(SPHbody, nn[18]), &m1conf,
-			   "m20", offsetof(SPHbody, nn[19]), &m1conf,
-			   "m21", offsetof(SPHbody, nn[20]), &m1conf,
-			   "m22", offsetof(SPHbody, nn[21]), &m1conf,
-			   */
 			NULL);
 	nobj = *nobjp;
 	gnobj = *gnobjp;
@@ -336,6 +288,9 @@ SPHRead_nw(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp,
 	}
 	if (vxconf != vyconf || vxconf != vzconf){
 		if (setpvel) SinglError("Missing velocity components!\n");
+	}
+	if (tempconf == 0) {
+		SinglWarning("Temperature not found in input data file.\n");
 	}
 	if (identconf == 0 || set_id){
 		SinglWarning("No \"ident\" in file, numbering sequentially\n");
