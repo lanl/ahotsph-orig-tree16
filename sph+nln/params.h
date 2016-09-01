@@ -31,6 +31,9 @@ typedef struct {
     int do_drag;
     int has_grav_data;
 	int do_strength;
+	int do_strength_test;
+	int do_plastic; /* include plasticity? 0 = perfectly elastic solid */
+	int frac_model; /* 1=Weibull, 2=Mohr Coulomg, 3=1&2 */
     int windpartpershell;
     int old_winds;
     int const_winds;
@@ -95,6 +98,11 @@ typedef struct {
     float nbrcut_fac;
     float Gamma;
     float courant_number;
+	float G_shear; /* shear modulus for strength module */
+	float E_Young; /* "material dependent yield stress" */
+	float umelt; /* melting temperature, expressed as u */
+	float material_m; /* 'm' for Weibull distribution */
+	float material_k; /* 'k' for Weibull distribution */
     float fmassCF;
     float flenCF;
     float ftimeCF;

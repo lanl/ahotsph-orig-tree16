@@ -42,6 +42,7 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "do_drag", &(params->do_drag), 0);
     SDFgetintOrDefault(sdfp, "has_grav_data", &(params->has_grav_data), params->do_grav);
 	SDFgetintOrDefault(sdfp, "do_strength", &(params->do_strength), 0);
+	SDFgetintOrDefault(sdfp, "do_strength_test", &(params->do_strength_test), 0);
 
 	/* make strength and network stuff mutually exclusive for now */
 	if (params->do_strength && (params->do_burning || params->do_cooling)) {
@@ -121,6 +122,16 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
             SDFgetfloatOrDie(sdfp, "errtol", &(params->tol));
         SDFgetfloatOrDefault(sdfp, "frac_tol", &(params->frac_tol), 0.0);
     }
+
+	if (params->do_strength || params->do_strength_test) {
+		SDFgetintOrDefault(sdfp, "do_plastic", &(params->do_plastic), 0);
+		SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
+		SDFgetfloatOrDie(sdfp, "G_shear", &(params->G_shear));
+		SDFgetfloatOrDie(sdfp, "E_Young", &(params->E_Young));
+		SDFgetfloatOrDie(sdfp, "umelt", &(params->umelt));
+		SDFgetfloatOrDie(sdfp, "material_k", &(params->material_k));
+		SDFgetfloatOrDie(sdfp, "material_m", &(params->material_m));
+	}
 
     SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);
     SDFgetfloatOrDefault(sdfp, "SPHCWfac", &(params->SPHCWfac), 0.0);
@@ -294,6 +305,16 @@ void print_initial_ctl(setup_params_t params) {
     singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
     singlPrintf("int do_burning = %d;\n", params.do_burning);
 	singlPrintf("int do_strength = %d;\n", params.do_strength);
+	singlPrintf("int do_strength_test = %d;\n", params.do_strength_test);
+	if (params.do_strength) {
+		singlPrintf("int do_plastic = %d;\n", params.do_plastic);
+		singlPrintf("int frac_model = %d;\n", params.frac_model);
+		singlPrintf("float G_shear = %g;\n", params.G_shear);
+		singlPrintf("float E_Young = %g;\n", params.E_Young);
+		singlPrintf("float umelt = %g;\n", params.umelt);
+		singlPrintf("float material_k = %g;\n", params.material_k);
+		singlPrintf("float material_m = %g;\n", params.material_m);
+	}
 
 	if (params.do_output) {
 		if (params.short_output) 
