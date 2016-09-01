@@ -480,6 +480,7 @@ typedef struct{
     unsigned int nterms;
     int interactions;
     float min_nbr_dt;
+	strength_data_t strengthbody;
 } SinkSPH;
 
 typedef struct {
