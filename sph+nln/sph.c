@@ -64,6 +64,7 @@ UnSetSPHOffset(void)
     void 
 InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 {
+	int i;
     if( to == NULL ){
         SPHbody *bp = pp->ptr;
         if (from->isbody == NO_UPDATE)
@@ -73,6 +74,14 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
         bp->rho += from->rho;
         bp->du += from->du;       /* Why am I doing this? */
         bp->du_r += from->du_r;   /* Do I need to do anything else? */
+		/* strength quantities. which are needed? */
+		bp->data.strengthbody.dmg += from->strengthbody.dmg;
+		bp->data.strengthbody.ddmgdt += from->strengthbody.ddmgdt;
+		for (i = 0; i < NDIM*NDIM; i++) {
+			bp->data.strengthbody.stress[i] += from->strengthbody.stress[i];
+			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
+			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
+		}
         bp->drho_dt += from->drho_dt;
         bp->udot += from->udot;
         bp->nbrs += from->nbrs;
@@ -123,6 +132,14 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
         to->u_r = bp->u_r;
         to->du_r = bp->du_r;  /* Or = (float)0.0; ? */
         to->D = bp->D;
+		/* strength quantities. which are needed? */
+		bp->data.strengthbody.dmg += from->strengthbody.dmg;
+		bp->data.strengthbody.ddmgdt += from->strengthbody.ddmgdt;
+		for (i = 0; i < NDIM*NDIM; i++) {
+			bp->data.strengthbody.stress[i] += from->strengthbody.stress[i];
+			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
+			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
+		}
     }
 
     if (add_offset) {
