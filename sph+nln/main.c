@@ -2353,8 +2353,9 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].strengthbody.actv_threshold = btab[i].data.strengthbody.actv_threshold;
         for (j = 0; j < NDIM * NDIM; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
-            output_btab[i].strengthbody.strainrate[j] = btab[i].data.strengthbody.strainrate[j];
         }
+		for (j = 0; j < SRTERMS; j++)
+            output_btab[i].strengthbody.strainrate[j] = btab[i].data.strengthbody.strainrate[j];
     }
     /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
     Msgf(("Doing output of %d bodies\n", output_nobj));

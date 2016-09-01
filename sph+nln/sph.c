@@ -81,8 +81,9 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		for (i = 0; i < NDIM*NDIM; i++) {
 			bp->data.strengthbody.stress[i] += from->strengthbody.stress[i];
 			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
-			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
 		}
+		for (i = 0; i < SRTERMS; i++)
+			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
         bp->drho_dt += from->drho_dt;
         bp->udot += from->udot;
         bp->nbrs += from->nbrs;
@@ -139,8 +140,9 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		for (i = 0; i < NDIM*NDIM; i++) {
 			bp->data.strengthbody.stress[i] += from->strengthbody.stress[i];
 			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
-			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
 		}
+		for (i = 0; i < SRTERMS; i++)
+			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
     }
 
     if (add_offset) {
@@ -286,7 +288,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float stress_i[NDIM*NDIM];
 	float stress_j[NDIM*NDIM];
 	float dstressdt_i[NDIM*NDIM];
-	float strainrate_i[NDIM*NDIM];
+	float strainrate_i[SRTERMS];
 	float dstrainrate_i[NDIM*NDIM];
 	Vxd(float dr_i);
 	Vxd(float dv_i);
@@ -409,8 +411,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			for (i = 0; i < NDIM*NDIM; i++) {
 				stress_i[i] = sink->strengthbody.stress[i];
 				stress_j[i] = bp->data.strengthbody.stress[i];
-				strainrate_i[i] = sink->strengthbody.strainrate[i];
 			}
+			for (i = 0; i < SRTERMS; i++)
+				strainrate_i[i] = sink->strengthbody.strainrate[i];
 			dmg_i = sink->strengthbody.dmg;
 			dmg_j = bp->data.strengthbody.dmg;
 			VxVx(dr_i, = -r);
@@ -467,10 +470,10 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&stress_i[2],
 					&stress_i[5],
 					&strainrate_i[0],
-					&strainrate_i[4],
-					&strainrate_i[8],
 					&strainrate_i[1],
 					&strainrate_i[2],
+					&strainrate_i[3],
+					&strainrate_i[4],
 					&strainrate_i[5],
 					&rot_i[0],
 					&rot_i[1],
@@ -684,7 +687,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
 	float stress[NDIM*NDIM];
-	float strainrate[NDIM*NDIM];
+	float strainrate[SRTERMS];
 	float xmi, cracklen, ddmgdt, dudt;
     int decr,notprinted;
     long cycles=0, countc; 
@@ -756,8 +759,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		if (params.do_strength) {
 			for (i = 0; i < NDIM*NDIM; i++) {
 				stress[i] = p->data.strengthbody.stress[i];
-				strainrate[i] = p->data.strengthbody.strainrate[i];
 			}
+			for (i = 0; i < SRTERMS; i++)
+				strainrate[i] = p->data.strengthbody.strainrate[i];
 			fracture_(&stress[0],
 					&stress[4],
 					&stress[1],
@@ -780,11 +784,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&stress[2],
 					&stress[5],
 					&strainrate[0],
-					&strainrate[4],
 					&strainrate[1],
-					&strainrate[2],
+					&strainrate[3],
+					&strainrate[4],
 					&strainrate[5],
-					&strainrate[8],
+					&strainrate[2], /* not a typo! */
 					&(p->data.strengthbody.dmg),
 					&dudt);
 			p->udot += dudt;

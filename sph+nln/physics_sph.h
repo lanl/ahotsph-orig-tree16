@@ -47,7 +47,7 @@ typedef struct strength_s {
 	float vonMises;				/* von Mises yielding factor */
     float stress[NDIM*NDIM];         /* stress tensor */
     float dstressdt[NDIM*NDIM];         /* stress tensor */
-    float strainrate[NDIM*NDIM];      /* rate of change of stress tensor */
+    float strainrate[SRTERMS];      /* strain rate tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy, xz, yz */
 } strength_data_t;
 
 typedef struct {
