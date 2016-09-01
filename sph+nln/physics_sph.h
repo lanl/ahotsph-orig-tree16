@@ -37,14 +37,17 @@ typedef struct nuc_network_s {
 } nuc_network_data_t;
 
 typedef struct strength_s {
-	int n_defects;
-	int total_defects;
+//	int n_defects;
+	int actv_defects;		/* number of activated defects in particle */
+	int total_defects;		/* total number of defects in particle */
 	int is_strength;
-	float act_threshold;
+	float actv_threshold;
     float dmg;                  /* damage parameter */
     float ddmgdt;               /* rate of change of damage */
-    float stress[9];         /* stress tensor */
-    float dstressdt[9];      /* rate of change of stress tensor */
+	float vonMises;				/* von Mises yielding factor */
+    float stress[NDIM*NDIM];         /* stress tensor */
+    float dstressdt[NDIM*NDIM];         /* stress tensor */
+    float strainrate[NDIM*NDIM];      /* rate of change of stress tensor */
 } strength_data_t;
 
 typedef struct {
@@ -298,15 +301,15 @@ typedef struct {
 	float act_threshold;	/* activation threshold */\n\
     float dmg;                  /* damage parameter */\n\
     float ddmgdt;			/* rate of change of damage */\n\
-    float stressxx;        /* stress tensor */\n\
-    float stressxy;        /* stress tensor */\n\
-    float stressxz;        /* stress tensor */\n\
-    float stressyx;        /* stress tensor */\n\
-    float stressyy;        /* stress tensor */\n\
-    float stressyz;        /* stress tensor */\n\
-    float stresszx;        /* stress tensor */\n\
-    float stresszy;        /* stress tensor */\n\
-    float stresszz;        /* stress tensor */\n\
+    float stressxx;        /* stress tensor, el. 0 */\n\
+    float stressxy;        /* stress tensor, el. 1 */\n\
+    float stressxz;        /* stress tensor, el. 2 */\n\
+    float stressyx;        /* stress tensor, el. 3 */\n\
+    float stressyy;        /* stress tensor, el. 4 */\n\
+    float stressyz;        /* stress tensor, el. 5 */\n\
+    float stresszx;        /* stress tensor, el. 6 */\n\
+    float stresszy;        /* stress tensor, el. 7 */\n\
+    float stresszz;        /* stress tensor, el. 8 */\n\
     float dstressxxdt;      /* rate of change of stress tensor */\n\
     float dstressxydt;      /* rate of change of stress tensor */\n\
     float dstressxzdt;      /* rate of change of stress tensor */\n\

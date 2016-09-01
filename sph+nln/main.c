@@ -2345,15 +2345,15 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].nbrs = btab[i].nbrs;
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
-        output_btab[i].strengthbody.n_defects = btab[i].data.strengthbody.n_defects;
+        output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
         output_btab[i].strengthbody.total_defects = btab[i].data.strengthbody.total_defects;
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
         output_btab[i].strengthbody.ddmgdt = btab[i].data.strengthbody.ddmgdt;
-        output_btab[i].strengthbody.act_threshold = btab[i].data.strengthbody.act_threshold;
+        output_btab[i].strengthbody.actv_threshold = btab[i].data.strengthbody.actv_threshold;
         for (j = 0; j < NDIM * NDIM; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
-            output_btab[i].strengthbody.dstressdt[j] = btab[i].data.strengthbody.dstressdt[j];
+            output_btab[i].strengthbody.strainrate[j] = btab[i].data.strengthbody.strainrate[j];
         }
     }
     /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
