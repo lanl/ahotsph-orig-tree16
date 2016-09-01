@@ -662,6 +662,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
     double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
+	float stress[NDIM*NDIM];
+	float strainrate[NDIM*NDIM];
+	float xmi, cracklen, ddmgdt, dudt;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
@@ -728,6 +731,43 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                }
                */
         }
+
+		if (params.do_strength) {
+			for (i = 0; i < NDIM*NDIM; i++) {
+				stress[i] = p->data.strengthbody.stress[i];
+				strainrate[i] = p->data.strengthbody.strainrate[i];
+			}
+			fracture_(stress[0],
+					stress[4],
+					stress[1],
+					stress[2],
+					stress[5],
+					p->pr,
+					p->data.strengthbody.dmg,
+					p->data.strengthbody.actv_defects,
+					params.frac_model,
+					params.E_Young,
+					p->data.strengthbody.actv_threshold,
+					xmi,
+					cracklen,
+					ddmgdt);
+
+			strengthdu_(p->rho,
+					stress[0],
+					stress[4],
+					stress[1],
+					stress[2],
+					stress[5],
+					strainrate[0],
+					strainrate[4],
+					strainrate[1],
+					strainrate[2],
+					strainrate[5],
+					strainrate[8],
+					p->data.strengthbody.dmg,
+					dudt);
+			p->udot += dudt;
+		}
     }
 }
 
