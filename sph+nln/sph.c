@@ -162,6 +162,7 @@ nbrMAC(SinkSPH *sink, hcell **source_vec, int *result, int n)
 }
 
 
+/* calculate kernel table and initial rate of change terms */
     void
 macRho(SinkSPH *sink, hcell **source_vec, int *result, int n)
 {
@@ -264,6 +265,17 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
     Vxd(float f);
     Vxd(float dv);
     Vxd(float smv);
+	float stress_i[NDIM*NDIM];
+	float stress_j[NDIM*NDIM];
+	float dstressdt_i[NDIM*NDIM];
+	float strainrate_i[NDIM*NDIM];
+	float dstrainrate_i[NDIM*NDIM];
+	Vxd(float dr_i);
+	Vxd(float dv_i);
+	float dmg_i, dmg_j, u_i;
+	float rot_i[NDIM], drot_i[NDIM];
+	float vonMises_i;
+	float df_i[3]; /* acceleration due to stress */
     float min_nbr_dt = sink->min_nbr_dt;
     float extent_src;
     int daughters;
@@ -372,6 +384,113 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
                 sink->du_r += ( (clight < Dmeanr) ? clight : Dmeanr ) *
                     (sink->u_r - bp->u_r) * grpm / bp->rho_est;
             }
+		/* strength calculation */
+		/* reference: Benz & Asphaug 1995, Computer Physics Communications Vol. 87 */
+		if (params.do_strength) {
+			for (i = 0; i < NDIM*NDIM; i++) {
+				stress_i[i] = sink->strengthbody.stress[i];
+				stress_j[i] = bp->data.strengthbody.stress[i];
+				strainrate_i[i] = sink->strengthbody.strainrate[i];
+			}
+			dmg_i = sink->strengthbody.dmg;
+			dmg_j = bp->data.strengthbody.dmg;
+			VxVx(dr_i, = -r);
+			VxVx(dv_i, = -v);
+			VS(rot_i, = 0.);
+			VS(drot_i, = 0.);
+			params.umelt = 10.;
+			
+			if (params.do_plastic)
+				/* calculate von Mises yielding factor ('f' in eq. 9),
+				 * and calcuate reduced stress terms, viz. eq. 8 */
+				plastic_(stress_i[0], 
+						stress_i[4], 
+						stress_i[1],
+						stress_i[2],
+						stress_i[5],
+						u,
+						dmg_i,
+						params.umelt,
+						params.E_Young,
+						vonMises_i);
+			else
+				vonMises_i = 0.0;
+			sink->strengthbody.vonMises = vonMises_i;
+
+			/* compute gradients of strain rate and rotation. for ... ? */
+			straintensor_(grwtij/rho_est,
+					dv_i0,
+					dv_i1,
+					dv_i2, 
+					dr_i0,
+					dr_i1,
+					dr_i2,
+					dstrainrate_i[0],
+					dstrainrate_i[4],
+					dstrainrate_i[8],
+					dstrainrate_i[1],
+					dstrainrate_i[2],
+					dstrainrate_i[5],
+					drot_i[0],
+					drot_i[1],
+					drot_i[2]);
+
+			/* why are these set to zero after they were just calculated? */
+			VS(drot_i, = 0.);
+
+			deviator_(params.G_shear,
+					stress_i[0],
+					stress_i[4],
+					stress_i[8],
+					stress_i[1],
+					stress_i[2],
+					stress_i[5],
+					strainrate_i[0],
+					strainrate_i[4],
+					strainrate_i[8],
+					strainrate_i[1],
+					strainrate_i[2],
+					strainrate_i[5],
+					rot_i[0],
+					rot_i[1],
+					rot_i[2],
+					dstressdt_i[0],
+					dstressdt_i[4],
+					dstressdt_i[1],
+					dstressdt_i[2],
+					dstressdt_i[5]);
+			for (i = 0; i < NDIM*NDIM; i++) {
+				sink->strengthbody.dstressdt[i] += dstressdt_i[i];
+				stress_i[i] = 0;
+			}
+			/* why are these reset/hard coded?? */
+			stress_i[0] = 3.e5;
+			stress_i[4] = 5.e4;
+			stress_i[1] = 1.e0;
+
+			strengthforce_(grwtij/rho_est,
+					robar1,
+					stress_i[0],
+					stress_i[4],
+					stress_i[1],
+					stress_i[2],
+					stress_i[5],
+					stress_j[0],
+					stress_j[4],
+					stress_j[1],
+					stress_j[2],
+					stress_j[5],
+					dmg_i,
+					dmg_j,
+					dr_i0,
+					dr_i1,
+					dr_i2,
+					df_i[0],
+					df_i[1],
+					df_i[2]);
+		}
+		/* add to force of particle */
+		VxV(f, += df_i);
 
         nbrs++;
 accept:
@@ -389,6 +508,8 @@ failed:
     sink->udot += (float)0.5 * dq;
     VVx(sink->M1, += f);
     VVx(sink->lvel, += smv);
+	for (i = 0; i < NDIM*NDIM; i++)
+		sink->strengthbody.stress[i] = stress_i[i];
     sink->nbrs += nbrs;
     sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;
