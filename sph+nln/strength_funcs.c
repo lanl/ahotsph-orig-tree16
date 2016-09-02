@@ -16,7 +16,7 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int ***flaws_tbl_lo
 	nflaws_i = (int)(Nflaws/gnobj);
 	if (nflaws_i * gnobj < Nflaws)
 		nflaws_i += 1;
-	nflaws_i *= 4;
+	nflaws_i *= 3; /* generally, the max-nflaws_i seems to stay at < 3* ave-nflaws_i */
 	for (i = 0; i < gnobj; i++) {
 		(*flaws_tbl_lookup)[i][1] = -1; /* starting array index in eps[] */
 		(*flaws_tbl_lookup)[i][0] = 0; /* number of flaws in particle */
@@ -26,10 +26,6 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int ***flaws_tbl_lo
 	eps_act = (double **)malloc ( gnobj * sizeof (double *));
 	for (i = 0; i < gnobj; i++) {
 		eps_act[i] = (double *) malloc (nflaws_i * sizeof (double));
-		for (j = 0; j < nflaws_i; j++)
-			eps_act[i][j] = -1.;
-		/*
-		*/
 	}
 
 	iv_kVol = 1./kVol;
