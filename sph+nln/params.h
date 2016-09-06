@@ -33,6 +33,8 @@ typedef struct {
 	int do_strength;
 	int do_strength_test;
 	int do_plastic; /* include plasticity? 0 = perfectly elastic solid */
+	int make_brittle; /* add flaws to make solid break apart */
+	int Nflaws; /* set number of flaws in solid. should be ~ npart*ln(npart) */
 	int frac_model; /* 1=Weibull, 2=Mohr Coulomg, 3=1&2 */
     int windpartpershell;
     int old_winds;

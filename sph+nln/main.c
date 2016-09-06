@@ -42,6 +42,7 @@
 #include "nrutil.h"
 #include "units.h"
 #include "cool.h"
+#include "strength.h"
 
 #define MAXCOEF 16
 
@@ -161,11 +162,16 @@ double ldivtCF, tdivlCF;
 
 double grav_c, c_light;
 
+/* for network */
 int NNW;	/* number of isotopes in network */
 int **inNW;
 int nparr[NISO], nnarr[NISO];
 float **tablep; /*array to hold cooling curve table values*/
 float **ionfracp; /*array to hold ionfraction table values*/
+
+/* for strength */
+double *flaw_actv_tbl;
+int *flaw_actv_tbl_lookup;
 
 /*
 int **inNW;
@@ -537,6 +543,34 @@ main(int argc, char *argv[])
         VS(q->grav_acc, = 0.0);
         q->phi = 0.0;
     }
+
+	/* turn on to get strength data output */
+	if (params.do_strength_test)
+		params.do_strength = 1;
+
+	/* add flaws if doing a brittle solid */
+	if (params.do_strength && params.make_brittle) {
+		if (params.Nflaws < 0) 
+			params.Nflaws = SPHgnobj * log (SPHgnobj);
+		flaw_actv_tbl = (double *) malloc (params.Nflaws * sizeof (double));
+		flaw_actv_tbl_lookup = (int *) malloc (2 * SPHgnobj * sizeof (int));
+
+		/* let only rank 0 calculate the table, then send to all other ranks, 
+		 * to make sure each ranks sees the same data.
+		 * Better: let each rank calculate a chunk in the tables, then send to all
+		 * other ranks. */
+		/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
+		if (MPMY_Procnum() == 0) {
+			init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
+		}
+		printf("Before, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
+				MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
+		MPMY_Bcast (flaw_actv_tbl, params.Nflaws, MPMY_DOUBLE, 0);
+		MPMY_Bcast (flaw_actv_tbl_lookup, 2*SPHgnobj, MPMY_INT, 0);
+		printf("After, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
+				MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
+
+	}
 
     for (params.nsteps += iter; iter <= params.nsteps; iter++) {
         if (params.timeout > 0) MPMY_TimeoutReset(params.timeout);

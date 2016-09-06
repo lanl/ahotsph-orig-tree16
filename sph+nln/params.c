@@ -125,6 +125,8 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 
 	if (params->do_strength || params->do_strength_test) {
 		SDFgetintOrDefault(sdfp, "do_plastic", &(params->do_plastic), 0);
+		SDFgetintOrDefault(sdfp, "make_brittle", &(params->make_brittle), 0);
+		SDFgetintOrDefault(sdfp, "Nflaws", &(params->Nflaws), -1);
 		SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
 		SDFgetfloatOrDie(sdfp, "G_shear", &(params->G_shear));
 		SDFgetfloatOrDie(sdfp, "E_Young", &(params->E_Young));
@@ -307,7 +309,12 @@ void print_initial_ctl(setup_params_t params) {
 	singlPrintf("int do_strength = %d;\n", params.do_strength);
 	singlPrintf("int do_strength_test = %d;\n", params.do_strength_test);
 	if (params.do_strength) {
-		singlPrintf("int do_plastic = %d;\n", params.do_plastic);
+		singlPrintf("int do_plastic = %d;\n", params.make_brittle);
+		singlPrintf("int make_brittle = %d;\n", params.do_plastic);
+		if (params.Nflaws < 0)
+			singlPrintf("int Nflaws = %d; /*Nflaws will be set to 'npart * ln (npart)'*/\n", params.Nflaws);
+		else
+			singlPrintf("int Nflaws = %d;\n", params.Nflaws);
 		singlPrintf("int frac_model = %d;\n", params.frac_model);
 		singlPrintf("float G_shear = %g;\n", params.G_shear);
 		singlPrintf("float E_Young = %g;\n", params.E_Young);
@@ -324,7 +331,7 @@ void print_initial_ctl(setup_params_t params) {
 		singlPrintf("No output.\n");
 	}
 	singlPrintf("int timer_freq = %d;\n", params.timer_freq);
-	singlPrintf("float sort_tol = %g;", params.sort_tol);
+	singlPrintf("float sort_tol = %g;\n", params.sort_tol);
     singlPrintf("int do_periodic = %d;\n", params.do_periodic);
 
     singlPrintf("kernel coefficients:\n\t");
