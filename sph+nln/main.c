@@ -542,6 +542,21 @@ main(int argc, char *argv[])
         VS(q->acc_last, = 0.0);
         VS(q->grav_acc, = 0.0);
         q->phi = 0.0;
+		/* dev: (re-)set strength quantities */
+		if (params.do_strength_test) {
+			q->data.strengthbody.actv_defects = 0;
+			q->data.strengthbody.total_defects = 0;
+			q->data.strengthbody.is_strength = 1;
+			q->data.strengthbody.actv_threshold = 1.0;
+			q->data.strengthbody.dmg = 0.0;
+			q->data.strengthbody.ddmgdt = 0.0;
+			for (i = 0; i < NDIM*NDIM; i++) {
+				q->data.strengthbody.stress[i] = 1.0;
+			}
+			for (i = 0; i < SRTERMS; i++) {
+				q->data.strengthbody.strainrate[i] = 0.0;
+			}
+		}
     }
 
 	/* turn on to get strength data output */
