@@ -577,6 +577,7 @@ main(int argc, char *argv[])
 		/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
 		if (MPMY_Procnum() == 0) {
 			init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
+			write_defects_table("defects.table", SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
 		}
 		printf("Before, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
 				MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);

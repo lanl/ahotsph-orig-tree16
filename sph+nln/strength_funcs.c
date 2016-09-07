@@ -112,6 +112,7 @@ void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *f
 
 	fp = fopen (name, "w");
 	
+	/* write header */
     fprintf (fp, "# SDF\n");
     fprintf (fp, "parameter byteorder = %#x;\n", SDFcpubyteorder());
 	fprintf (fp, "int npart = %d;\n", gnobj);
@@ -119,6 +120,9 @@ void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *f
 	fprintf (fp, "struct {\n");
 	fprintf (fp, "\tint part_id;\n");
 	fprintf (fp, "\tdouble eps_actv;\n");
+    fprintf (fp, "}[%d];\n", nflaws);
+    fprintf (fp, "#\n");
+    fprintf (fp, "# SDF-EOH\n");
 
 	/* write data */
 	for (i = 0; i < gnobj; i++) {
@@ -129,10 +133,6 @@ void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *f
 			fwrite (&eps[index + j], sizeof (double), 1, fp);
 		}
 	}
-
-    fprintf (fp, "}[%d];\n", nflaws);
-    fprintf (fp, "#\n");
-    fprintf (fp, "# SDF-EOH\n");
 
 	fclose (fp);
 }
