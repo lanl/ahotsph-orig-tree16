@@ -4,6 +4,10 @@
 #include <math.h>
 #include <string.h>
 #include <float.h>
+#include "SDF.h"
+#include "malloc.h"
+#include "bigmalloc.h"
+#include "Msgs.h"
 
 void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_lookup, float kVol, float m) {
 	int i, j, nflaws_i;
@@ -66,4 +70,69 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_loo
 	for (i = 0; i < gnobj; i++)
 		free(eps_act[i]);
 	free(eps_act);
+}
+
+void read_defects_table(SDF *sdfp, int *nflaws, double **eps, int **flaws_tbl_lookup) {
+	if (!sdfp)
+		Error("Unable to access file with defects table\n");
+
+	int npart, index, count;
+	int i, j;
+	int *part_ids;
+
+	SDFgetintOrDie(sdfp, "npart", &npart);
+	SDFgetintOrDie(sdfp, "nflaws", nflaws);
+
+	(*eps) = (double *) malloc (*nflaws * sizeof (double));
+	(*flaws_tbl_lookup) = (int *) malloc (2 * npart * sizeof (int));
+	part_ids = (int *) malloc (*nflaws * sizeof (int));
+
+	SDFrdvecs(sdfp, "part_id", nflaws, &part_ids, SDFtype_sizes[SDF_INT],
+			"eps_actv", nflaws, eps, SDFtype_sizes[SDF_DOUBLE]);
+
+	/* create the lookup table */
+	index = 0;
+	for (i = 0, j = 0; i < npart; i++) {
+		(*flaws_tbl_lookup)[part_ids[j] * 2] = index;
+		while (part_ids[j] == part_ids[j + 1]) {
+			j++;
+		}
+		j++;
+		(*flaws_tbl_lookup)[i * 2 + 1] = j - index;
+		index = j;
+	}
+
+	free (part_ids);
+}
+
+void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *flaws_tbl_lookup) {
+	FILE *fp = NULL;
+	int i, j, nflaws_i;
+	int index;
+
+	fp = fopen (name, "w");
+	
+    fprintf (fp, "# SDF\n");
+    fprintf (fp, "parameter byteorder = %#x;\n", SDFcpubyteorder());
+	fprintf (fp, "int npart = %d;\n", gnobj);
+	fprintf (fp, "int nflaws = %d;\n", nflaws);
+	fprintf (fp, "struct {\n");
+	fprintf (fp, "\tint part_id;\n");
+	fprintf (fp, "\tdouble eps_actv;\n");
+
+	/* write data */
+	for (i = 0; i < gnobj; i++) {
+		index = flaws_tbl_lookup[i * 2];
+		nflaws_i = flaws_tbl_lookup[i * 2 + 1];
+		for (j = 0; j < nflaws_i; j++){
+			fwrite (&i, sizeof (int), 1, fp);
+			fwrite (&eps[index + j], sizeof (double), 1, fp);
+		}
+	}
+
+    fprintf (fp, "}[%d];\n", nflaws);
+    fprintf (fp, "#\n");
+    fprintf (fp, "# SDF-EOH\n");
+
+	fclose (fp);
 }
