@@ -266,6 +266,7 @@ main(int argc, char *argv[])
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
+	SDF *defects_sdfp = NULL;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -565,27 +566,35 @@ main(int argc, char *argv[])
 
 	/* add flaws if doing a brittle solid */
 	if (params.do_strength && params.make_brittle) {
-		if (params.Nflaws < 0) 
-			params.Nflaws = SPHgnobj * log (SPHgnobj);
-		flaw_actv_tbl = (double *) malloc (params.Nflaws * sizeof (double));
-		flaw_actv_tbl_lookup = (int *) malloc (2 * SPHgnobj * sizeof (int));
-
-		/* let only rank 0 calculate the table, then send to all other ranks, 
-		 * to make sure each ranks sees the same data.
-		 * Better: let each rank calculate a chunk in the tables, then send to all
-		 * other ranks. */
-		/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
-		if (MPMY_Procnum() == 0) {
-			init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
-			write_defects_table("defects.table", SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
+		if (params.defects_table_exists) {
+			/* note: on all ranks */
+			defects_sdfp = SDFopen(NULL, "defects.table");
+			read_defects_table(defects_sdfp, &(params.Nflaws), &flaw_actv_tbl, &flaw_actv_tbl_lookup);
+			SDFclose(defects_sdfp);
+		} else {
+			if (params.Nflaws < 0) 
+				params.Nflaws = SPHgnobj * log (SPHgnobj);
+			flaw_actv_tbl = (double *) malloc (params.Nflaws * sizeof (double));
+			flaw_actv_tbl_lookup = (int *) malloc (2 * SPHgnobj * sizeof (int));
+	
+			/* let only rank 0 calculate the table, then send to all other ranks, 
+			 * to make sure each ranks sees the same data.
+			 * Better: let each rank calculate a chunk in the tables, then send to all
+			 * other ranks. */
+			/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
+			if (MPMY_Procnum() == 0) {
+				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
+				write_defects_table("defects.table", SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
+			}
+			printf("Before, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
+					MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
+			MPMY_Bcast (flaw_actv_tbl, params.Nflaws, MPMY_DOUBLE, 0);
+			MPMY_Bcast (flaw_actv_tbl_lookup, 2*SPHgnobj, MPMY_INT, 0);
+			printf("After, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
+					MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
 		}
-		printf("Before, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
-				MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
-		MPMY_Bcast (flaw_actv_tbl, params.Nflaws, MPMY_DOUBLE, 0);
-		MPMY_Bcast (flaw_actv_tbl_lookup, 2*SPHgnobj, MPMY_INT, 0);
-		printf("After, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
-				MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
 
+		singlPrintf("int Nflaws = %d;\n", params.Nflaws);
 	}
 
     for (params.nsteps += iter; iter <= params.nsteps; iter++) {

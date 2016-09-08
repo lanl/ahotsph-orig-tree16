@@ -126,6 +126,10 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 	if (params->do_strength || params->do_strength_test) {
 		SDFgetintOrDefault(sdfp, "do_plastic", &(params->do_plastic), 0);
 		SDFgetintOrDefault(sdfp, "make_brittle", &(params->make_brittle), 0);
+		SDFgetintOrDefault(sdfp, "defects_table_exists", &(params->defects_table_exists), 0);
+	    /* if reading from flaws table, make sure solid is brittle */
+	    if (params->defects_table_exists)
+			params->make_brittle = 1;
 		SDFgetintOrDefault(sdfp, "Nflaws", &(params->Nflaws), -1);
 		SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
 		SDFgetfloatOrDie(sdfp, "G_shear", &(params->G_shear));
@@ -311,8 +315,11 @@ void print_initial_ctl(setup_params_t params) {
 	if (params.do_strength) {
 		singlPrintf("int do_plastic = %d;\n", params.make_brittle);
 		singlPrintf("int make_brittle = %d;\n", params.do_plastic);
-		if (params.Nflaws < 0)
+		singlPrintf("int defects_table_exists = %d;\n", params.defects_table_exists);
+		if (!params.defects_table_exists && params.Nflaws < 0)
 			singlPrintf("int Nflaws = %d; /*Nflaws will be set to 'npart * ln (npart)'*/\n", params.Nflaws);
+		else if (params.defects_table_exists && params.Nflaws < 0)
+			singlPrintf("int Nflaws = %d; /*Nflaws will be set from existing defects table*/\n", params.Nflaws);
 		else
 			singlPrintf("int Nflaws = %d;\n", params.Nflaws);
 		singlPrintf("int frac_model = %d;\n", params.frac_model);
