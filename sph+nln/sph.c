@@ -11,6 +11,7 @@
 #include "units.h"
 #include "cool.h"
 #include "strength5-short.h"
+#include "strength.h"
 
 #ifndef M_1_PI
 #define	M_1_PI 0.31830988618379067154
@@ -675,12 +676,12 @@ SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
 #include "Msgs.h"
 double eos_n, eos_u;
 
-
     void
 update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, float tpos, float R0)
 {
     SPHbody *p;
     int i,j,k; /*coupla indices for loops*/
+	int nflawi;
     double u, n, lcool, deltah, dt_cool;
     double *molfrac; /*float or double?? */
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
@@ -689,6 +690,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	float stress[NDIM*NDIM];
 	float strainrate[SRTERMS];
 	float xmi, cracklen, ddmgdt, dudt;
+	float epsmini;
+	float iv_Weibull_m = 1./params.material_m;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
@@ -762,6 +765,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 			}
 			for (i = 0; i < SRTERMS; i++)
 				strainrate[i] = p->data.strengthbody.strainrate[i];
+			nflawi = flaw_actv_tbl_lookup[p->ident * 2 + 1];
+			epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
 			fracture_(&stress[0],
 					&stress[4],
 					&stress[1],
@@ -769,11 +774,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&stress[5],
 					&(p->pr),
 					&(p->data.strengthbody.dmg),
-					&(p->data.strengthbody.actv_defects),
+					&(nflawi),
 					&(params.frac_model),
 					&(params.E_Young),
-					&(p->data.strengthbody.actv_threshold),
-					&xmi,
+					&(epsmini),
+					&iv_Weibull_m,
 					&cracklen,
 					&ddmgdt);
 
