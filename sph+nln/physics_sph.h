@@ -39,9 +39,9 @@ typedef struct nuc_network_s {
 typedef struct strength_s {
 //	int n_defects;
 	int actv_defects;		/* number of activated defects in particle */
-	int total_defects;		/* total number of defects in particle */
+	//int total_defects;		/* total number of defects in particle */
 	int is_strength;
-	float actv_threshold;
+	//float actv_threshold;
     float dmg;                  /* damage parameter */
     float ddmgdt;               /* rate of change of damage */
 	float vonMises;				/* von Mises yielding factor */
