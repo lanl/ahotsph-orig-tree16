@@ -48,7 +48,7 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_loo
 			exit(1);
 		}
 		(*flaws_tbl_lookup)[part_id * 2 + 1] += 1;
-		eps_act[part_id][cur_nflaws] = pow ((double) j * iv_kVol, iv_m);
+		eps_act[part_id][cur_nflaws] = pow (((double) j * iv_kVol), iv_m);
 	}
 
 	/* create actual table with flaw activation thresholds */
@@ -78,31 +78,47 @@ void read_defects_table(SDF *sdfp, int *nflaws, double **eps, int **flaws_tbl_lo
 
 	int npart, index, count;
 	int i, j;
-	int *part_ids;
+	int part_id;
+	void **addrs;
+	void *data; /* need continuous space in memory for all the data */
+	int stride = sizeof (int) + sizeof (double);
+	int offset = sizeof (int);
 
 	SDFgetintOrDie(sdfp, "npart", &npart);
 	SDFgetintOrDie(sdfp, "nflaws", nflaws);
 
 	(*eps) = (double *) malloc (*nflaws * sizeof (double));
 	(*flaws_tbl_lookup) = (int *) malloc (2 * npart * sizeof (int));
-	part_ids = (int *) malloc (*nflaws * sizeof (int));
+	addrs = (void **) malloc (2 * sizeof (void *));
+	data = (void *) malloc (*nflaws * stride);
 
-	SDFrdvecs(sdfp, "part_id", nflaws, &part_ids, SDFtype_sizes[SDF_INT],
-			"eps_actv", nflaws, eps, SDFtype_sizes[SDF_DOUBLE]);
+	addrs[0] = (char *)data;
+	addrs[1] = (char *)data + sizeof (int);
+
+	count = SDFseekrdvecs(sdfp,
+			"part_id", 0, *nflaws, addrs[0], stride,
+			"eps_actv", 0, *nflaws, addrs[1], stride, 
+			NULL);
 
 	/* create the lookup table */
 	index = 0;
-	for (i = 0, j = 0; i < npart; i++) {
-		(*flaws_tbl_lookup)[part_ids[j] * 2] = index;
-		while (part_ids[j] == part_ids[j + 1]) {
+	for (i = 0, j = 0; i < npart, j < *nflaws; i++) {
+		part_id = * (int *) (data + stride * j); /* potentially, part_id != i */
+		/* while this part_id same as previous part_id */
+		do {
+			(*eps)[j] = *(double *) (data + offset + stride * j);
 			j++;
-		}
-		j++;
-		(*flaws_tbl_lookup)[i * 2 + 1] = j - index;
+		} while (j < *nflaws && 
+				*(int *) (data + stride * j) == 
+				*(int *) (data + stride * (j - 1))); 
+		
+		(*flaws_tbl_lookup)[part_id * 2] = index;
+		(*flaws_tbl_lookup)[part_id * 2 + 1] = j - index;
 		index = j;
 	}
 
-	free (part_ids);
+	free (data);
+	free (addrs);
 }
 
 void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *flaws_tbl_lookup) {
