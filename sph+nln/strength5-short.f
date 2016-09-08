@@ -274,7 +274,7 @@ c
      $              frictioni*(0.5*(stmax+stmin)+
      $              (stmax-stmin)*cos(angle))
                ratiofsi=ratiofsi/(sigma0i*redi+tiny)
-               if (ratosfi.ge.1.0) then
+               if (ratiosfi.ge.1.0) then
                   ddmi=acoefi
                end if
             end if
