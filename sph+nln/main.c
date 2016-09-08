@@ -266,6 +266,7 @@ main(int argc, char *argv[])
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
+	float vol;
 	SDF *defects_sdfp = NULL;
 
 /*
@@ -515,11 +516,22 @@ main(int argc, char *argv[])
             (pq_keyproto)SPHGetKeyFromStruct, (pq_wgtproto)SPHGetCost,
             SPHCofmFromDaugh, (cellfromcofm_t)SPHCellFromCofm);
 
-
-    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
-        q->dt = q->dt_next = dt;
-        q->tacc = -1e30;
-    }
+	vol = 0.0;
+	if (params.do_strength) {
+	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
+	        q->dt = q->dt_next = dt;
+	        q->tacc = -1e30;
+			vol += q->h*q->h*q->h;
+	    }
+		MPMY_Combine(&vol, &vol, 1, MPMY_FLOAT, MPMY_SUM);
+		vol = 4. / 3. * M_PI * vol * ivlenCF3; /* cgs */
+		singlPrintf("Total volume is: %g\n", vol);
+	} else {
+	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
+	        q->dt = q->dt_next = dt;
+	        q->tacc = -1e30;
+	    }
+	}
 
     dt_last = dt;
     SPH_setup(NDIM, params.kernel_ncoef1, params.kernel_coef1, params.kernel_ncoef2, params.kernel_coef2);
@@ -581,7 +593,7 @@ main(int argc, char *argv[])
 			 * other ranks. */
 			/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
 			if (MPMY_Procnum() == 0) {
-				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
+				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k * vol, params.material_m);
 				sprintf(params.defects_file, "%s_flaws.sdf", params.outnamebase);
 				write_defects_table(params.defects_file, SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
 			}
