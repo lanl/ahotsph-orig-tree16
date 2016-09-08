@@ -173,6 +173,9 @@ float **ionfracp; /*array to hold ionfraction table values*/
 double *flaw_actv_tbl;
 int *flaw_actv_tbl_lookup;
 double vol_scaling;
+double G_shear;
+double E_Young;
+double u_melt;
 
 /*
 int **inNW;
@@ -457,6 +460,12 @@ main(int argc, char *argv[])
 
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
+
+	if (params.do_strength) {
+		G_shear = params.G_shear * ivmassCF * lenCF * timeCF2; /* to code units */
+		E_Young = params.E_Young * ivmassCF * lenCF * timeCF2; /* to code units */
+		u_melt = params.umelt * ivmassCF * ivlenCF2 * timeCF2; /* to code units */
+	}
 
     singlPrintf("float params.dt = %g;\n", params.dt);
     singlPrintf("int iter = %d;\n", iter);

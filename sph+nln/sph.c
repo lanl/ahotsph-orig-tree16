@@ -291,6 +291,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float dstressdt_i[NDIM*NDIM];
 	float strainrate_i[SRTERMS];
 	float dstrainrate_i[NDIM*NDIM];
+	float gshear = (float)G_shear;
+	float eyoung = (float)E_Young;
+	float umelt = (float)u_melt;
 	Vxd(float dr_i);
 	Vxd(float dv_i);
 	float dmg_i, dmg_j, u_i;
@@ -435,8 +438,8 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 						&stress_i[5],
 						&u_i,
 						&dmg_i,
-						&(params.umelt),
-						&(params.E_Young),
+						&umelt,
+						&eyoung,
 						&vonMises_i);
 			else
 				vonMises_i = 0.0;
@@ -463,7 +466,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			/* why are these set to zero after they were just calculated? */
 			VS(drot_i, = 0.);
 
-			deviator_(&params.G_shear,
+			deviator_(&gshear,
 					&stress_i[0],
 					&stress_i[4],
 					&stress_i[8],
