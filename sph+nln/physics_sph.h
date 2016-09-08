@@ -37,11 +37,8 @@ typedef struct nuc_network_s {
 } nuc_network_data_t;
 
 typedef struct strength_s {
-//	int n_defects;
 	int actv_defects;		/* number of activated defects in particle */
-	//int total_defects;		/* total number of defects in particle */
 	int is_strength;
-	//float actv_threshold;
     float dmg;                  /* damage parameter */
     float ddmgdt;               /* rate of change of damage */
 	float vonMises;				/* von Mises yielding factor */
@@ -296,9 +293,7 @@ typedef struct {
     unsigned int ident;		/* unique identifier */\n\
     float temp;                 /* temperature */\n\
 	int n_defects;			/* local number of defects */\n\
-	int total_defects;		/* total number of defects */\n\
 	int is_strength;		/* does particle feel strength? */\n\
-	float act_threshold;	/* activation threshold */\n\
     float dmg;                  /* damage parameter */\n\
     float ddmgdt;			/* rate of change of damage */\n\
     float stressxx;        /* stress tensor, el. 0 */\n\
@@ -384,9 +379,7 @@ typedef struct {
     unsigned int ident;		/* unique identifier */\n\
     float temp;                 /* temperature */\n\
 	int n_defects;			/* local number of defects */\n\
-	int total_defects;		/* total number of defects */\n\
 	int is_strength;		/* does particle feel strength? */\n\
-	float act_threshold;	/* activation threshold */\n\
     float dmg;                  /* damage */\n\
     float ddmgdt;			/* rate of change of damage */\n\
     float stressxx;        /* stress tensor */\n\

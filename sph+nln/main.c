@@ -546,9 +546,7 @@ main(int argc, char *argv[])
 		/* dev: (re-)set strength quantities */
 		if (params.do_strength_test) {
 			q->data.strengthbody.actv_defects = 0;
-			q->data.strengthbody.total_defects = 0;
 			q->data.strengthbody.is_strength = 1;
-			q->data.strengthbody.actv_threshold = 1.0;
 			q->data.strengthbody.dmg = 0.0;
 			q->data.strengthbody.ddmgdt = 0.0;
 			for (i = 0; i < NDIM*NDIM; i++) {
@@ -2406,11 +2404,9 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
         output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
-        output_btab[i].strengthbody.total_defects = btab[i].data.strengthbody.total_defects;
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
         output_btab[i].strengthbody.ddmgdt = btab[i].data.strengthbody.ddmgdt;
-        output_btab[i].strengthbody.actv_threshold = btab[i].data.strengthbody.actv_threshold;
         for (j = 0; j < NDIM * NDIM; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
         }
