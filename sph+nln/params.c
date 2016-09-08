@@ -128,8 +128,10 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 		SDFgetintOrDefault(sdfp, "make_brittle", &(params->make_brittle), 0);
 		SDFgetintOrDefault(sdfp, "defects_table_exists", &(params->defects_table_exists), 0);
 	    /* if reading from flaws table, make sure solid is brittle */
-	    if (params->defects_table_exists)
+	    if (params->defects_table_exists) {
 			params->make_brittle = 1;
+			SDFgetstringOrDie(sdfp, "defects_file", params->defects_file, sizeof (params->defects_file));
+		}
 		SDFgetintOrDefault(sdfp, "Nflaws", &(params->Nflaws), -1);
 		SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
 		SDFgetfloatOrDie(sdfp, "G_shear", &(params->G_shear));
@@ -322,6 +324,8 @@ void print_initial_ctl(setup_params_t params) {
 			singlPrintf("int Nflaws = %d; /*Nflaws will be set from existing defects table*/\n", params.Nflaws);
 		else
 			singlPrintf("int Nflaws = %d;\n", params.Nflaws);
+		if (params.defects_table_exists)
+			singlPrintf("char defects_file[] = %s;\n", params.defects_file);
 		singlPrintf("int frac_model = %d;\n", params.frac_model);
 		singlPrintf("float G_shear = %g;\n", params.G_shear);
 		singlPrintf("float E_Young = %g;\n", params.E_Young);

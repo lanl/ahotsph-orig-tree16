@@ -11,6 +11,7 @@ typedef struct {
 	char template_name[256]; /* wind template */
 	char winddata_name[256]; /* "winddata_name" */
 	char outnamebase[256];
+	char defects_file[256]; /* sdf file with defects table */
     int timeout;
     int fail_if_slow;
     int do_restart;
