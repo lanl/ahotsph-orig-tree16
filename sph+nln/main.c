@@ -172,6 +172,7 @@ float **ionfracp; /*array to hold ionfraction table values*/
 /* for strength */
 double *flaw_actv_tbl;
 int *flaw_actv_tbl_lookup;
+double vol_scaling;
 
 /*
 int **inNW;
@@ -266,7 +267,7 @@ main(int argc, char *argv[])
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
-	float vol;
+	double vol;
 	SDF *defects_sdfp = NULL;
 
 /*
@@ -523,9 +524,11 @@ main(int argc, char *argv[])
 	        q->tacc = -1e30;
 			vol += q->h*q->h*q->h;
 	    }
-		MPMY_Combine(&vol, &vol, 1, MPMY_FLOAT, MPMY_SUM);
-		vol = 4. / 3. * M_PI * vol * ivlenCF3; /* cgs */
-		singlPrintf("Total volume is: %g\n", vol);
+		MPMY_Combine(&vol, &vol, 1, MPMY_DOUBLE, MPMY_SUM);
+		vol = 4. / 3. * M_PI * vol * lenCF2 * lenCF; /* cgs */
+		vol_scaling = pow(vol, 1./params.material_m);
+		vol_scaling = 1./vol_scaling;
+		singlPrintf("Total volume is: %g, scaling factor is: %g\n", vol, vol_scaling);
 	} else {
 	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
 	        q->dt = q->dt_next = dt;
@@ -593,16 +596,12 @@ main(int argc, char *argv[])
 			 * other ranks. */
 			/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
 			if (MPMY_Procnum() == 0) {
-				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k * vol, params.material_m);
+				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
 				sprintf(params.defects_file, "%s_flaws.sdf", params.outnamebase);
 				write_defects_table(params.defects_file, SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
 			}
-			printf("Before, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
-					MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
 			MPMY_Bcast (flaw_actv_tbl, params.Nflaws, MPMY_DOUBLE, 0);
 			MPMY_Bcast (flaw_actv_tbl_lookup, 2*SPHgnobj, MPMY_INT, 0);
-			printf("After, Rank: %d, flaw_actv_tbl_lookup[1511]= %d\n",
-					MPMY_Procnum(), flaw_actv_tbl_lookup[1511]);
 		}
 
 		singlPrintf("int Nflaws = %d;\n", params.Nflaws);
