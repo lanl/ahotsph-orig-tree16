@@ -56,3 +56,41 @@ double uvst(double t) {
 double duvst(double t) {
     return 1.5*eos_n*(K_BOLTZ) + 4.0*t*t*t*(A_RAD);
 }
+
+/* pressure from different eos's */
+/* eta = rho/rho_0 */
+/* Schaefer et al. 2016, A&A */
+double liquid_eos (double k_bulk, double eta) {
+	return k_bulk * (eta - 1.0);
+}
+
+/* Schaefer et al. 2016, A&A */
+double murnaghan_eos(double k_bulk, double n_M, double eta) {
+	return k_bulk / n_M * (pow (eta, n_M) - 1.0);
+}
+
+/* Schaefer et al. 2016, A&A */
+double tillotson_eos(double A_T, double B_T, double E_0, double a_T, double b_T, double alpha_T, double beta_T, double eta, double u, double rho) {
+	/* first ~7 args are 'material constants' */
+	double pressure;
+
+	if (eta > 1.0) { /* compression */
+		pressure = (a_T + b_T / (1 + u / (E_0 * eta * eta))) * rho * u;
+		pressure += A_T * (eta - 1.0) + B_T * (eta - 1.0) * (eta - 1.0);
+	} else { /* expansion/vaporization? */
+		pressure = a_T * rho * u;
+		pressure += (b_T * rho * u / (1.0 + u / (E_0 * eta * eta)) + 
+					A_T * (eta - 1.0) * exp (-beta_T * (1./eta - 1.0)));
+		pressure *= exp (-alpha_T * (1./eta - 1.0) * (1./eta - 1.0));
+	}
+
+	return pressure;
+}
+
+/* Wikipedia on Anton-Schmidt equation of state */
+double anton_schmidt_eos(double k_bulk, double power_n, double eta) {
+	/* here, technically eta = Vol/Vol_0, but mass should be 
+	 * constant, so close enough */
+	return -k_bulk * pow (eta, power_n) * log (eta);
+}
+
