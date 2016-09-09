@@ -42,6 +42,7 @@ typedef struct strength_s {
     float dmg;                  /* damage parameter */
     float ddmgdt;               /* rate of change of damage */
 	float vonMises;				/* von Mises yielding factor */
+	float crack_len;			/* length of longest crack */
     float stress[NDIM*NDIM];         /* stress tensor */
     float dstressdt[NDIM*NDIM];         /* stress tensor */
     float strainrate[SRTERMS];      /* strain rate tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy, xz, yz */
@@ -558,6 +559,10 @@ void GravMinusSPH(void **btab, int *nobj, accbody **atab, int *anobj);
 /* In eos.c */
 double uvst(double t);
 double duvst(double t);
+double liquid_eos (double k_bulk, double eta);
+double murnaghan_eos(double k_bulk, double n_M, double eta);
+double tillotson_eos(double A_T, double B_T, double E_0, double a_T, double b_T, double alpha_T, double beta_T, double eta, double u, double rho);
+double anton_schmidt_eos(double k_bulk, double power_n, double eta);
 
 /* In newtraph.c */
 float newtraph(double xl, double xr, double prec, double (*f)(double x), 

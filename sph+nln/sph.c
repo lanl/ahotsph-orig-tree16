@@ -292,7 +292,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float strainrate_i[SRTERMS];
 	float dstrainrate_i[NDIM*NDIM];
 	float gshear = (float)G_shear;
-	float eyoung = (float)E_Young;
+	float yieldstr = (float)YieldStr;
 	float umelt = (float)u_melt;
 	Vxd(float dr_i);
 	Vxd(float dv_i);
@@ -439,7 +439,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 						&u_i,
 						&dmg_i,
 						&umelt,
-						&eyoung,
+						&yieldstr,
 						&vonMises_i);
 			else
 				vonMises_i = 0.0;
@@ -763,6 +763,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
         }
 
 		if (params.do_strength) {
+			p->temp = 300.0; /* fix temp for now */
 			for (i = 0; i < NDIM*NDIM; i++) {
 				stress[i] = p->data.strengthbody.stress[i];
 			}
@@ -782,7 +783,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&(params.E_Young),
 					&(epsmini),
 					&iv_Weibull_m,
-					&cracklen,
+					&(p->data.strengthbody.crack_len),
 					&ddmgdt);
 
 			strengthdu_(&(p->rho),
@@ -813,6 +814,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
     float ne, rho, max_rad, r2;
     double P_ratio, Gammai; 
     double tlo = 1.e0, tup = 2.5e11;
+	float rho0 = 1;
     int j, temp_ok;
     SPHbody *p;
 
@@ -845,6 +847,10 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	        Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
 	            (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
 	        p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
+		} else if (params.do_strength) {
+			p->temp = 300; /* fix temp */
+			p->data.strengthbody.is_strength = has_strength (*p);
+			p->pr = anton_schmidt_eos (K_bulk, p->rho_est/rho0, 1.);
 		} else {
 			p->pr = p->rho_est * p->u * (params.Gamma - 1);
 			eos_u = p->u * p->rho_est * massCF * ivlenCF * ivtimeCF2 ;

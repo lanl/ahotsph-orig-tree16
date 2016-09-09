@@ -175,6 +175,8 @@ int *flaw_actv_tbl_lookup;
 double vol_scaling;
 double G_shear;
 double E_Young;
+double K_bulk;
+double YieldStr;
 double u_melt;
 
 /*
@@ -464,6 +466,8 @@ main(int argc, char *argv[])
 	if (params.do_strength) {
 		G_shear = params.G_shear * ivmassCF * lenCF * timeCF2; /* to code units */
 		E_Young = params.E_Young * ivmassCF * lenCF * timeCF2; /* to code units */
+		K_bulk = params.K_bulk * ivmassCF * lenCF * timeCF2; /* to code units */
+		YieldStr = params.YieldStr * ivmassCF * lenCF * timeCF2; /* to code units */
 		u_melt = params.umelt * ivmassCF * ivlenCF2 * timeCF2; /* to code units */
 	}
 

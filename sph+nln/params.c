@@ -136,9 +136,12 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 		SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
 		SDFgetfloatOrDie(sdfp, "G_shear", &(params->G_shear));
 		SDFgetfloatOrDie(sdfp, "E_Young", &(params->E_Young));
+		SDFgetfloatOrDie(sdfp, "YieldStr", &(params->YieldStr));
 		SDFgetfloatOrDie(sdfp, "umelt", &(params->umelt));
 		SDFgetfloatOrDie(sdfp, "material_k", &(params->material_k));
 		SDFgetfloatOrDie(sdfp, "material_m", &(params->material_m));
+		params->K_bulk = params->E_Young * params->G_shear / 
+			(9. * params->G_shear - 3. * params->E_Young);
 	}
 
     SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);

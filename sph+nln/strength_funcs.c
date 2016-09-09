@@ -8,6 +8,7 @@
 #include "malloc.h"
 #include "bigmalloc.h"
 #include "Msgs.h"
+#include "physics_sph.h"
 
 void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_lookup, float kVol, float m) {
 	int i, j, nflaws_i;
@@ -151,4 +152,14 @@ void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *f
 	}
 
 	fclose (fp);
+}
+
+int has_strength(SPHbody p) {
+	if (p.data.strengthbody.is_strength == 0) /* redundant??? */
+		return 0;
+	if (p.u >= params.umelt)
+		return 0;
+	if (p.data.strengthbody.crack_len >= p.h * 4.)
+		return 0;
+	return 1;
 }

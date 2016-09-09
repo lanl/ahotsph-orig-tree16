@@ -103,7 +103,9 @@ typedef struct {
     float Gamma;
     float courant_number;
 	float G_shear; /* shear modulus for strength module */
-	float E_Young; /* "material dependent yield stress" */
+	float YieldStr; /* "material dependent yield stress" */
+	float E_Young; /* Young's modulus */
+	float K_bulk; /* bulk modulus, calculated */
 	float umelt; /* melting temperature, expressed as u */
 	float material_m; /* 'm' for Weibull distribution */
 	float material_k; /* 'k' for Weibull distribution */
