@@ -769,22 +769,24 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 			}
 			for (i = 0; i < SRTERMS; i++)
 				strainrate[i] = p->data.strengthbody.strainrate[i];
-			nflawi = flaw_actv_tbl_lookup[p->ident * 2 + 1];
-			epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
-			fracture_(&stress[0],
-					&stress[4],
-					&stress[1],
-					&stress[2],
-					&stress[5],
-					&(p->pr),
-					&(p->data.strengthbody.dmg),
-					&(nflawi),
-					&(params.frac_model),
-					&(params.E_Young),
-					&(epsmini),
-					&iv_Weibull_m,
-					&(p->data.strengthbody.crack_len),
-					&ddmgdt);
+			if (params.make_brittle) {
+				nflawi = flaw_actv_tbl_lookup[p->ident * 2 + 1];
+				epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
+				fracture_(&stress[0],
+						&stress[4],
+						&stress[1],
+						&stress[2],
+						&stress[5],
+						&(p->pr),
+						&(p->data.strengthbody.dmg),
+						&(nflawi),
+						&(params.frac_model),
+						&(params.E_Young),
+						&(epsmini),
+						&iv_Weibull_m,
+						&(p->data.strengthbody.crack_len),
+						&ddmgdt);
+			}
 
 			strengthdu_(&(p->rho),
 					&stress[0],

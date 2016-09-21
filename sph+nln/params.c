@@ -318,8 +318,8 @@ void print_initial_ctl(setup_params_t params) {
 	singlPrintf("int do_strength = %d;\n", params.do_strength);
 	singlPrintf("int do_strength_test = %d;\n", params.do_strength_test);
 	if (params.do_strength) {
-		singlPrintf("int do_plastic = %d;\n", params.make_brittle);
-		singlPrintf("int make_brittle = %d;\n", params.do_plastic);
+		singlPrintf("int do_plastic = %d;\n", params.do_plastic);
+		singlPrintf("int make_brittle = %d;\n", params.make_brittle);
 		singlPrintf("int defects_table_exists = %d;\n", params.defects_table_exists);
 		if (!params.defects_table_exists && params.Nflaws < 0)
 			singlPrintf("int Nflaws = %d; /*Nflaws will be set to 'npart * ln (npart)'*/\n", params.Nflaws);
