@@ -286,21 +286,21 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
     Vxd(float f);
     Vxd(float dv);
     Vxd(float smv);
-	float stress_i[NDIM*NDIM];
-	float stress_j[NDIM*NDIM];
-	float dstressdt_i[NDIM*NDIM];
-	float strainrate_i[SRTERMS];
-	float dstrainrate_i[NDIM*NDIM];
-	float gshear = (float)G_shear;
-	float yieldstr = (float)YieldStr;
-	float umelt = (float)u_melt;
-	Vxd(float dr_i);
-	Vxd(float dv_i);
-	float dmg_i, dmg_j, u_i;
-	float rot_i[NDIM], drot_i[NDIM];
-	float vonMises_i;
-	float df_i[3]; /* acceleration due to stress */
-	float grpm_over_rho;
+	double stress_i[NDIM*NDIM];
+	double stress_j[NDIM*NDIM];
+	double dstressdt_i[NDIM*NDIM];
+	double strainrate_i[SRTERMS];
+	double dstrainrate_i[NDIM*NDIM];
+	double gshear = (double)G_shear;
+	double yieldstr = (double)YieldStr;
+	double umelt = (double)u_melt;
+	Vxd(double dr_i);
+	Vxd(double dv_i);
+	double dmg_i, dmg_j, u_i;
+	double rot_i[NDIM], drot_i[NDIM];
+	double vonMises_i;
+	double df_i[3]; /* acceleration due to stress */
+	double grpm_dbl, robar1_dbl;
     float min_nbr_dt = sink->min_nbr_dt;
     float extent_src;
     int daughters;
@@ -413,22 +413,22 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 		/* reference: Benz & Asphaug 1995, Computer Physics Communications Vol. 87 */
 		if (params.do_strength) {
 			for (i = 0; i < NDIM*NDIM; i++) {
-				stress_i[i] = sink->strengthbody.stress[i];
-				stress_j[i] = bp->data.strengthbody.stress[i];
+				stress_i[i] = (double)sink->strengthbody.stress[i];
+				stress_j[i] = (double)bp->data.strengthbody.stress[i];
 			}
 			for (i = 0; i < SRTERMS; i++)
-				strainrate_i[i] = sink->strengthbody.strainrate[i];
-			dmg_i = sink->strengthbody.dmg;
-			dmg_j = bp->data.strengthbody.dmg;
-			VxVx(dr_i, = -r);
-			VxVx(dv_i, = -v);
+				strainrate_i[i] = (double)sink->strengthbody.strainrate[i];
+			dmg_i = (double)sink->strengthbody.dmg;
+			dmg_j = (double)bp->data.strengthbody.dmg;
+			VxVx(dr_i, = -1. * r);
+			VxVx(dv_i, = -1. * dv);
 			VS(rot_i, = 0.);
 			VS(drot_i, = 0.);
-			params.umelt = 10.;
-			grpm_over_rho = grwtij/rho_est;
-			u_i = u;
+			u_i = (double)u;
+			grpm_dbl = (double)grpm;
+			robar1_dbl = (double)robar1;
 			
-			if (params.do_plastic)
+			if (params.do_plastic) {
 				/* calculate von Mises yielding factor ('f' in eq. 9),
 				 * and calcuate reduced stress terms, viz. eq. 8 */
 				plastic_(&stress_i[0], 
@@ -441,12 +441,18 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 						&umelt,
 						&yieldstr,
 						&vonMises_i);
-			else
-				vonMises_i = 0.0;
-			sink->strengthbody.vonMises = vonMises_i;
+				for (i = 0; i < NDIM*NDIM; i++)
+					sink->strengthbody.stress[i] = (float)stress_i[i];
+				sink->strengthbody.vonMises = (float)vonMises_i;
+			} else {
+				vonMises_i = 1.0;
+				sink->strengthbody.vonMises = (float)vonMises_i;
+			}
 
 			/* compute gradients of strain rate and rotation. for ... ? */
-			straintensor_(&grpm_over_rho,
+			/*
+			if (0)
+			straintensor_(&grpm_dbl,
 					&dv_i0,
 					&dv_i1,
 					&dv_i2, 
@@ -488,16 +494,20 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&dstressdt_i[2],
 					&dstressdt_i[5]);
 			for (i = 0; i < NDIM*NDIM; i++) {
-				sink->strengthbody.dstressdt[i] += dstressdt_i[i];
-				stress_i[i] = 0;
+				sink->strengthbody.dstressdt[i] = (float)dstressdt_i[i];
+				stress_i[i] = 0.;
 			}
+			*/
 			/* why are these reset/hard coded?? */
+			/*
 			stress_i[0] = 3.e5;
 			stress_i[4] = 5.e4;
 			stress_i[1] = 1.e0;
+			*/
 
-			strengthforce_(&grpm_over_rho,
-					&robar1,
+			/*
+			strengthforce(&grpm_dbl,
+					&robar1_dbl,
 					&stress_i[0],
 					&stress_i[4],
 					&stress_i[1],
@@ -516,9 +526,10 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&df_i[0],
 					&df_i[1],
 					&df_i[2]);
-		}
+					*/
 		/* add to force of particle */
-		VxV(f, += df_i);
+		//VxV(f, += df_i);
+		}
 
         nbrs++;
 accept:
@@ -537,7 +548,7 @@ failed:
     VVx(sink->M1, += f);
     VVx(sink->lvel, += smv);
 	for (i = 0; i < NDIM*NDIM; i++)
-		sink->strengthbody.stress[i] = stress_i[i];
+		sink->strengthbody.stress[i] += (float)stress_i[i];
     sink->nbrs += nbrs;
     sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;
@@ -690,11 +701,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
     double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
-	float stress[NDIM*NDIM];
-	float strainrate[SRTERMS];
-	float xmi, cracklen, ddmgdt, dudt;
-	float epsmini;
-	float iv_Weibull_m = 1./params.material_m;
+	double stress[NDIM*NDIM];
+	double strainrate[SRTERMS];
+	double xmi, crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
+	double epsmini, eyoung;
+	double iv_Weibull_m = 1./params.material_m;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
@@ -765,30 +776,34 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		if (params.do_strength) {
 			p->temp = 300.0; /* fix temp for now */
 			for (i = 0; i < NDIM*NDIM; i++) {
-				stress[i] = p->data.strengthbody.stress[i];
+				stress[i] = (double)p->data.strengthbody.stress[i];
 			}
 			for (i = 0; i < SRTERMS; i++)
-				strainrate[i] = p->data.strengthbody.strainrate[i];
+				strainrate[i] = (double)p->data.strengthbody.strainrate[i];
+			dmg = (double)p->data.strengthbody.dmg;
 			if (params.make_brittle) {
 				nflawi = flaw_actv_tbl_lookup[p->ident * 2 + 1];
 				epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
+				pr_i = (double)p->pr;
+				crack_len = (double)p->data.strengthbody.crack_len;
+				eyoung = (double)params.E_Young;
 				fracture_(&stress[0],
 						&stress[4],
 						&stress[1],
 						&stress[2],
 						&stress[5],
-						&(p->pr),
-						&(p->data.strengthbody.dmg),
+						&(pr_i),
+						&(dmg),
 						&(nflawi),
 						&(params.frac_model),
-						&(params.E_Young),
+						&(eyoung),
 						&(epsmini),
 						&iv_Weibull_m,
-						&(p->data.strengthbody.crack_len),
+						&(crack_len),
 						&ddmgdt);
 			}
 
-			strengthdu_(&(p->rho),
+			strengthdu_(&(rho_i),
 					&stress[0],
 					&stress[4],
 					&stress[1],
@@ -800,9 +815,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&strainrate[4],
 					&strainrate[5],
 					&strainrate[2], /* not a typo! */
-					&(p->data.strengthbody.dmg),
+					&(dmg),
 					&dudt);
-			p->udot += dudt;
+			//p->udot += dudt;
 		}
     }
 }
