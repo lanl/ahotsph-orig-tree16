@@ -834,6 +834,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	float rho0 = 1;
     int j, temp_ok;
     SPHbody *p;
+	Material_t mat;
 
     max_rad = 0.95*R0*R0;
 

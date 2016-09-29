@@ -274,6 +274,8 @@ main(int argc, char *argv[])
     float tot_u, tot_pv;
 	double vol;
 	SDF *defects_sdfp = NULL;
+	clock_t time1, time2;
+	Material_t mat;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -327,6 +329,7 @@ main(int argc, char *argv[])
 					} else if (params.do_strength) {
 						sdfp = SPHRead_strength(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 								params.set_id, params.setpvel, params.new_h, params.new_u);
+						setconst1(&mat);
 					} else {
 					    sdfp = SPHRead(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 							   params.set_id, params.setpvel, params.new_h, params.new_u);

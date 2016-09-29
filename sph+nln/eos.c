@@ -3,6 +3,7 @@
 #include <Msgs.h>
 #include "singlio.h"
 #include "units.h"
+#include "eos.h"
 
 #define MAX_ITER 200
 
@@ -43,9 +44,6 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 
 
 /* changed: these now need to be in cgs */
-extern double eos_n;
-extern double eos_u;
-
 #include "physics_sph.h"
 
 double uvst(double t) {
@@ -69,22 +67,76 @@ double murnaghan_eos(double k_bulk, double n_M, double eta) {
 	return k_bulk / n_M * (pow (eta, n_M) - 1.0);
 }
 
-/* Schaefer et al. 2016, A&A */
-double tillotson_eos(double A_T, double B_T, double E_0, double a_T, double b_T, double alpha_T, double beta_T, double eta, double u, double rho) {
-	/* first ~7 args are 'material constants' */
-	double pressure;
+ void setconst1(Material_t *m) {
+	m->rho0 = 8.05;
+    m->A = 1.80e11;
+	m->B = 1.80e11;
+    m->a = 0.5;
+    m->b = 1.3;
+    m->alpha = 5.;
+    m->beta = 5.;
+    m->u0 = 1.60e11;
+    m->Eiv = 3.50e10; /* E. of incipient vaporization */
+    m->Ecv = 1.80e11; /* E. of complete vaporizaton */
+    m->mu = 2.5e11;
+    m->umelt = 3.0e10;
+    m->yield = 3.5e10;
+    m->pweib = 6.2;
+    m->cweib = 1.e27;
+}
 
-	if (eta > 1.0) { /* compression */
-		pressure = (a_T + b_T / (1 + u / (E_0 * eta * eta))) * rho * u;
-		pressure += A_T * (eta - 1.0) + B_T * (eta - 1.0) * (eta - 1.0);
-	} else { /* expansion/vaporization? */
-		pressure = a_T * rho * u;
-		pressure += (b_T * rho * u / (1.0 + u / (E_0 * eta * eta)) + 
-					A_T * (eta - 1.0) * exp (-beta_T * (1./eta - 1.0)));
-		pressure *= exp (-alpha_T * (1./eta - 1.0) * (1./eta - 1.0));
+
+void tillotson_eos (float rho, float u, Material_t *m, float *pressure, float *cs) {
+	float PC = 0.;
+	float csC = 0.;
+	float rho0m1 = 1. / m->rho0;
+	float rhom1 = 1. / rho;
+	float eta = rho * rho0m1;
+	float mu = eta - 1.;
+	float csmin = 0.25 * m->A * rho0m1;
+	float Pmin = 0.;
+	float c1 = u / (m->u0 * eta * eta);
+	float c2 = 1. / (c1 + 1.);
+
+	if (u > m->Eiv && eta < 1.) {
+		float d1 = m->rho0 * rhom1;
+		float d2 = d1 - 1.;
+		float ex1 = (m->beta * d2 < 60) ? exp (- m->beta * d2) : 0.0;
+		float ex2 = (m->alpha * d2 * d2 < 60) ? exp (-m->alpha * d2 * d2) : 0.0;
+		*pressure = m->a * rho * u;
+		*pressure += ex2 * (m->b * rho * u * c2 + m->A * mu * ex1);
+
+		/* sound speed? */
+		*cs = m->b * u * (3. * c1 + 1.) * c2 * c2 + 2. * m->alpha * d2 * m->b * d1 * u * c2;
+		*cs += m->A * ex1 * ((2. * m->alpha * d2 + m->beta) * mu * d1 * rhom1 + rho0m1);
+		*cs = *cs * ex2 +  m->a * u;
+		*cs += *pressure * rhom1 * (m->a + m->b * c2 * c2 * ex2);
+		if (*cs < 0.) 
+			*cs = 0.;
 	}
 
-	return pressure;
+	if (u < m->Ecv || eta >= 1.) {
+		PC = (m->a + m->b * c2) * rho * u + m->A * mu + m->B * mu * mu;
+		csC = m->a * u + rho0m1 * (m->A + 2. * m->B * mu) + m->b * u * (3. * c1 + 1.) * c2 * c2;
+		csC += PC * rhom1 * (m->a + m->b * c2 * c2);
+
+		if (u > m->Eiv && u < m->Ecv && eta < 1) {
+			float e1 = m->Ecv - u;
+			float e2 = u - m->Eiv;
+			float e3 = 1. / (m->Ecv - m->Eiv);
+			*pressure = (e2 * *pressure + e1 * PC) * e3;
+			*cs = (e2 * *cs + e1 * csC) * e3;
+		} else {
+			*pressure = PC;
+			*cs = csC;
+		}
+	}
+	if (*cs < csmin)
+		*cs = csmin;
+	if (*pressure < Pmin) 
+		*pressure = Pmin;
+	*cs = sqrt (*cs);
+
 }
 
 /* Wikipedia on Anton-Schmidt equation of state */
