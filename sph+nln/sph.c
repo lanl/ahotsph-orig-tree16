@@ -77,6 +77,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
         bp->du += from->du;       /* Why am I doing this? */
         bp->du_r += from->du_r;   /* Do I need to do anything else? */
 		/* strength quantities. which are needed? */
+		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
 			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
 		}
@@ -87,6 +88,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		bp->data.strengthbody.vonMises = from->strengthbody.vonMises;
 		bp->data.strengthbody.crack_len = from->strengthbody.crack_len;
 		bp->data.strengthbody.is_strength = from->strengthbody.is_strength;
+		}
         bp->drho_dt += from->drho_dt;
         bp->udot += from->udot;
         bp->nbrs += from->nbrs;
@@ -138,6 +140,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
         to->du_r = bp->du_r;  /* Or = (float)0.0; ? */
         to->D = bp->D;
 		/* strength quantities. which are needed? */
+		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
 			bp->data.strengthbody.stress[i] = from->strengthbody.stress[i];
 			bp->data.strengthbody.dstressdt[i] = 0.0;
@@ -149,6 +152,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		bp->data.strengthbody.vonMises = from->strengthbody.vonMises;
 		bp->data.strengthbody.crack_len = from->strengthbody.crack_len;
 		bp->data.strengthbody.is_strength = from->strengthbody.is_strength;
+		}
     }
 
     if (add_offset) {
@@ -435,27 +439,6 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			grpm_dbl = (double)grpm;
 			robar1_dbl = (double)robar1;
 			
-			if (params.do_plastic) {
-				/* calculate von Mises yielding factor ('f' in eq. 9),
-				 * and calcuate reduced stress terms, viz. eq. 8 */
-				plastic_(&stress_i[0], 
-						&stress_i[4], 
-						&stress_i[1],
-						&stress_i[2],
-						&stress_i[5],
-						&u_i,
-						&dmg_i,
-						&umelt,
-						&yieldstr,
-						&vonMises_i);
-				for (i = 0; i < NDIM*NDIM; i++)
-					sink->strengthbody.stress[i] = (float)stress_i[i];
-				sink->strengthbody.vonMises = (float)vonMises_i;
-			} else {
-				vonMises_i = 1.0;
-				sink->strengthbody.vonMises = (float)vonMises_i;
-			}
-
 			/* compute gradients of strain rate and rotation. for ... ? */
 			straintensor_(&grpm_dbl,
 					&dv_i0,
