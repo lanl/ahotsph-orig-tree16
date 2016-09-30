@@ -7,6 +7,7 @@
 #include "timers.h"
 #include "ndim.h"
 #include "params.h"
+#include "eos.h"
 
 #ifndef NISO
 #define NISO 20 	/* number of isotopes tracked */
