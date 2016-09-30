@@ -68,6 +68,10 @@ typedef struct {
     float temp;                 /* temperature, used to enforce LTE */
     float du;                   /* change in internal energy this timestep */
     float dt_next;
+	union {
+	   nuc_network_data_t nucnetw;
+       strength_data_t strengthbody;
+	} data;
     /* Things declared above this line are communicated between processors */
     /* so they can be used in in the loop over nbrs in FindRho and ForceSPH */
     /* Don't add anything above this line unless you fix TBODYSZ */
@@ -98,10 +102,6 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
-	union {
-	   nuc_network_data_t nucnetw;
-       strength_data_t strengthbody;
-	} data;
 } SPHbody;
 
 /* windbody and WINDOUTBODYDESC need to be padded to a double boundary for
