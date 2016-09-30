@@ -421,14 +421,33 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
             }
 		/* strength calculation */
 		/* reference: Benz & Asphaug 1995, Computer Physics Communications Vol. 87 */
-		if (0) {
-		//if (params.do_strength) {
-			for (i = 0; i < NDIM*NDIM; i++) {
-				stress_i[i] = (double)sink->strengthbody.stress[i];
-				stress_j[i] = (double)bp->data.strengthbody.stress[i];
-			}
-			for (i = 0; i < SRTERMS; i++)
-				strainrate_i[i] = (double)sink->strengthbody.strainrate[i];
+		if (params.do_strength) {
+			/* this is way faster! */
+			stress_j[0] = (double)bp->data.strengthbody.stress[0];
+			stress_j[1] = (double)bp->data.strengthbody.stress[1];
+			stress_j[2] = (double)bp->data.strengthbody.stress[2];
+			stress_j[3] = (double)bp->data.strengthbody.stress[3];
+			stress_j[4] = (double)bp->data.strengthbody.stress[4];
+			stress_j[5] = (double)bp->data.strengthbody.stress[5];
+			stress_j[6] = (double)bp->data.strengthbody.stress[6];
+			stress_j[7] = (double)bp->data.strengthbody.stress[7];
+			stress_j[8] = (double)bp->data.strengthbody.stress[8];
+			stress_i[0] = (double)sink->strengthbody.stress[0];
+			stress_i[1] = (double)sink->strengthbody.stress[1];
+			stress_i[2] = (double)sink->strengthbody.stress[2];
+			stress_i[3] = (double)sink->strengthbody.stress[3];
+			stress_i[4] = (double)sink->strengthbody.stress[4];
+			stress_i[5] = (double)sink->strengthbody.stress[5];
+			stress_i[6] = (double)sink->strengthbody.stress[6];
+			stress_i[7] = (double)sink->strengthbody.stress[7];
+			stress_i[8] = (double)sink->strengthbody.stress[8];
+			
+			strainrate_i[0] = (double)sink->strengthbody.strainrate[0];
+			strainrate_i[1] = (double)sink->strengthbody.strainrate[1];
+			strainrate_i[2] = (double)sink->strengthbody.strainrate[2];
+			strainrate_i[3] = (double)sink->strengthbody.strainrate[3];
+			strainrate_i[4] = (double)sink->strengthbody.strainrate[4];
+			strainrate_i[5] = (double)sink->strengthbody.strainrate[5];
 			dmg_i = (double)sink->strengthbody.dmg;
 			dmg_j = (double)bp->data.strengthbody.dmg;
 			VxVx(dr_i, = r);
@@ -457,8 +476,12 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&drot_i[1],
 					&drot_i[2]);
 
-			for (i = 0; i < SRTERMS; i++)
-				sink->strengthbody.strainrate[i] += (float)dstrainrate_i[i];
+			sink->strengthbody.strainrate[0] += (float)dstrainrate_i[0];
+			sink->strengthbody.strainrate[1] += (float)dstrainrate_i[1];
+			sink->strengthbody.strainrate[2] += (float)dstrainrate_i[2];
+			sink->strengthbody.strainrate[3] += (float)dstrainrate_i[3];
+			sink->strengthbody.strainrate[4] += (float)dstrainrate_i[4];
+			sink->strengthbody.strainrate[5] += (float)dstrainrate_i[5];
 
 			drot[0] += drot_i[0];
 			drot[1] += drot_i[1];
@@ -730,8 +753,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                */
         }
 
-		if (0) {
-		//if (params.do_strength) {
+		//if (0) {
+		if (params.do_strength) {
 			p->temp = 306.0; /* fix temp for now */
 			for (i = 0; i < NDIM*NDIM; i++)
 				stress[i] = (double)p->data.strengthbody.stress[i];
@@ -762,6 +785,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 						&ddmgdt);
 			}
 
+			if (0)
 			strengthdu_(&(rho_i),
 					&stress[0],
 					&stress[4],
