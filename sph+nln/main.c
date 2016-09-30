@@ -580,8 +580,11 @@ main(int argc, char *argv[])
 			q->data.strengthbody.is_strength = 1;
 			q->data.strengthbody.dmg = 0.0;
 			q->data.strengthbody.ddmgdt = 0.0;
+			q->data.strengthbody.vonMises = 1.0;
+			q->data.strengthbody.crack_len = 0.0;
 			for (i = 0; i < NDIM*NDIM; i++) {
-				q->data.strengthbody.stress[i] = 1.0;
+				q->data.strengthbody.stress[i] = 0.0;
+				q->data.strengthbody.dstressdt[i] = 0.0;
 			}
 			for (i = 0; i < SRTERMS; i++) {
 				q->data.strengthbody.strainrate[i] = 0.0;
@@ -623,6 +626,7 @@ main(int argc, char *argv[])
 		singlPrintf("int Nflaws = %d;\n", params.Nflaws);
 	}
 
+	/* main loop over time steps */
     for (params.nsteps += iter; iter <= params.nsteps; iter++) {
         if (params.timeout > 0) MPMY_TimeoutReset(params.timeout);
         /* Reset timers and counters */
@@ -1008,6 +1012,8 @@ main(int argc, char *argv[])
                     q->nterms = 0;
                     VS(q->acc, = 0.0);
                     VS(q->lvel, = 0.0);
+					for (i = 0; i < SRTERMS; i++) 
+						q->data.strengthbody.strainrate[i] = 0.0;
                 }
             }
 
@@ -1221,6 +1227,16 @@ main(int argc, char *argv[])
         ABUpdateXs(&SPHbtab[0].u, SPHstride, &SPHbtab[0].udot, SPHstride, 
                 &SPHbtab[0].udot_last, SPHstride, &SPHbtab[0].ident,
                 SPHstride3, SPHnobj, dt, dt_last);
+		if (params.do_strength) {
+			for (i = 0; i < NDIM*NDIM; i++) 
+				ABUpdateXs(&SPHbtab[0].data.strengthbody.stress[i], SPHstride, 
+					&SPHbtab[0].data.strengthbody.dstressdt[i], SPHstride,
+					&SPHbtab[0].data.strengthbody.stress_last[i], SPHstride,
+					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
+			UpdateSXs(&SPHbtab[0].data.strengthbody.dmg, SPHstride, 
+					&SPHbtab[0].data.strengthbody.ddmgdt, SPHstride,
+					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
+		}
         /* One must be careful with this integration scheme, since v */
         /* is a derived variable.  To really adjust v, change pos_last */
 #ifdef POS_IS_DOUBLE
