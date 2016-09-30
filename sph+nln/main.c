@@ -1182,6 +1182,10 @@ main(int argc, char *argv[])
                 /* pos is large and sigle precision */
                 VVV(SPHbtab[i].pos_last, = SPHbtab[i].pos,- dt*SPHbtab[i].vel);
                 SPHbtab[i].udot_last = SPHbtab[i].udot;
+				for (int j = 0; j < NDIM*NDIM; j++) {
+					SPHbtab[i].data.strengthbody.stress_last[j] = 
+						SPHbtab[i].data.strengthbody.stress[j];
+				}
             }
         }
         else if (added_particles) {
