@@ -562,7 +562,8 @@ double uvst(double t);
 double duvst(double t);
 double liquid_eos (double k_bulk, double eta);
 double murnaghan_eos(double k_bulk, double n_M, double eta);
-double tillotson_eos(double A_T, double B_T, double E_0, double a_T, double b_T, double alpha_T, double beta_T, double eta, double u, double rho);
+void setconst1(Material_t *m);
+void tillotson_eos (float rho, float u, Material_t *m, float *pressure, float *cs);
 double anton_schmidt_eos(double k_bulk, double power_n, double eta);
 
 /* In newtraph.c */
