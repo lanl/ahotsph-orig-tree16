@@ -302,7 +302,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	double dstressdt_i[NDIM*NDIM];
 	double strainrate_i[SRTERMS];
 	float strainrate[SRTERMS];
-	double dstrainrate_i[NDIM*NDIM];
+	double dstrainrate_i[SRTERMS];
 	double gshear = (double)G_shear;
 	double yieldstr = (double)YieldStr;
 	double umelt = (double)u_melt;
@@ -469,10 +469,10 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&dr_i1,
 					&dr_i2,
 					&dstrainrate_i[0],
-					&dstrainrate_i[4],
-					&dstrainrate_i[8],
 					&dstrainrate_i[1],
 					&dstrainrate_i[2],
+					&dstrainrate_i[3],
+					&dstrainrate_i[4],
 					&dstrainrate_i[5],
 					&drot_i[0],
 					&drot_i[1],
