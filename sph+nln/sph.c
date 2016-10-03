@@ -79,6 +79,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		/* strength quantities. which are needed? */
 		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
+	//		bp->data.strengthbody.stress[i] += from->strengthbody.stress[i];
 			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
 		}
 		for (i = 0; i < SRTERMS; i++)
@@ -142,16 +143,17 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		/* strength quantities. which are needed? */
 		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
-			bp->data.strengthbody.stress[i] = from->strengthbody.stress[i];
-			bp->data.strengthbody.dstressdt[i] = 0.0;
+			to->strengthbody.stress[i] = bp->data.strengthbody.stress[i];
+			to->strengthbody.dstressdt[i] = bp->data.strengthbody.dstressdt[i];
+			to->strengthbody.stress_last[i] = bp->data.strengthbody.stress_last[i];
 		}
 		for (i = 0; i < SRTERMS; i++)
-			bp->data.strengthbody.strainrate[i] = 0.0;
-		//bp->data.strengthbody.rotation[i] = 0.0;
-		bp->data.strengthbody.actv_defects = from->strengthbody.actv_defects;
-		bp->data.strengthbody.vonMises = from->strengthbody.vonMises;
-		bp->data.strengthbody.crack_len = from->strengthbody.crack_len;
-		bp->data.strengthbody.is_strength = from->strengthbody.is_strength;
+			to->strengthbody.strainrate[i] = bp->data.strengthbody.strainrate[i];
+		//to->strengthbody.rotation[i] = 0.0;
+		to->strengthbody.actv_defects = bp->data.strengthbody.actv_defects;
+		to->strengthbody.vonMises = bp->data.strengthbody.vonMises;
+		to->strengthbody.crack_len = bp->data.strengthbody.crack_len;
+		to->strengthbody.is_strength = bp->data.strengthbody.is_strength;
 		}
     }
 
