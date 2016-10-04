@@ -516,11 +516,11 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&dr_i0,
 					&dr_i1,
 					&dr_i2,
-					&df_i[0],
-					&df_i[1],
-					&df_i[2]);
-		/* add to force of particle */
-		//VxV(f, += df_i);
+					&(df_i[0]),
+					&(df_i[1]),
+					&(df_i[2]));
+			/* add to force of particle */
+			VxV(f, += df_i);
 		}
 
         nbrs++;
@@ -765,7 +765,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
                */
         }
 
-		//if (0) {
 		if (params.do_strength) {
 			p->temp = 306.0; /* fix temp for now */
 			for (i = 0; i < NDIM*NDIM; i++)
@@ -812,7 +811,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&strainrate[2], /* not a typo! */
 					&(dmg),
 					&dudt);
-			//p->udot += dudt;
+			p->udot += dudt;
 		}
     }
 }
