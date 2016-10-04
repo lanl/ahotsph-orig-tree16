@@ -1,12 +1,12 @@
 /* n.b., Fortran wants real*4 passed as double's, and all arguments passed by reference */
-void plastic_(double *sxxi, double *syyi, double *sxyi, double *sxzi, double *syzi, double *ui, double *dmi, double *umelti, double *yiei, double *vonmises);
+void plastic_(float *sxxi, float *syyi, float *sxyi, float *sxzi, float *syzi, float *ui, float *dmi, float *umelti, float *yiei, float *vonmises);
 
 void straintensor_(double *grpmrj, double *dvx, double *dvy, double *dvz, double *dx, double *dy, double *dz, double *depsxxi, double *depsyyi, double *depszzi, double *depsxyi, double *depsxzi, double *depsyzi, double *drxyi, double *drxzi, double *dryzi);
 
-void deviator_(double *xmui, double *sxxi, double *syyi, double *szzi, double *sxyi, double *sxzi, double *syzi, double *epsxxi, double *epsyyi, double *epszzi, double *epsxyi, double *epsxzi, double *epsyzi, double *rxyi, double *rxzi, double *ryzi, double *dsxxi, double *dsyyi, double *dsxyi, double *dsxzi, double *dsyzi);
+void deviator_(float *xmui, float *sxxi, float *syyi, float *szzi, float *sxyi, float *sxzi, float *syzi, float *epsxxi, float *epsyyi, float *epszzi, float *epsxyi, float *epsxzi, float *epsyzi, float *rxyi, float *rxzi, float *ryzi, float *dsxxi, float *dsyyi, float *dsxyi, float *dsxzi, float *dsyzi);
 
-void strengthforce_(double *grpmj, double *rhoij, double *sxxi, double *syyi, double *sxyi, double *sxzi, double *syzi, double *sxxj, double *syyj, double *sxyj, double *sxzj, double *syzj, double *dmi, double *dmj, double *dx, double *dy, double *dz, double *dfxi, double *dfyi, double *dfzi);
+void strengthforce_(float *grpmj, float *rhoij, float *sxxi, float *syyi, float *sxyi, float *sxzi, float *syzi, float *sxxj, float *syyj, float *sxyj, float *sxzj, float *syzj, float *dmi, float *dmj, float *dx, float *dy, float *dz, float *dfxi, float *dfyi, float *dfzi);
 
-void fracture_(double *sxxi, double *syyi, double *sxyi, double *sxzi, double *syzi, double *pri, double *dmi, int *nflawi, int *ifrac, double *youngi, double *epsmini, double *xmi, double *acoefi, double *ddmi);
+void fracture_(float *sxxi, float *syyi, float *sxyi, float *sxzi, float *syzi, float *pri, float *dmi, int *nflawi, int *ifrac, float *youngi, float *epsmini, float *xmi, float *acoefi, float *ddmi);
 
-void strengthdu_(double *rhoi, double *sxxi, double *syyi, double *sxyi, double *sxzi, double *syzi, double *epsxxi, double *epsyyi, double *epsxyi, double *epsxzi, double *epsyzi, double *epszzi, double *dmi, double *dudt);
+void strengthdu_(float *rhoi, float *sxxi, float *syyi, float *sxyi, float *sxzi, float *syzi, float *epsxxi, float *epsyyi, float *epsxyi, float *epsxzi, float *epsyzi, float *epszzi, float *dmi, float *dudt);
