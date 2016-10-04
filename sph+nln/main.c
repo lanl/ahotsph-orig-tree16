@@ -274,7 +274,6 @@ main(int argc, char *argv[])
     float tot_u, tot_pv;
 	double vol;
 	SDF *defects_sdfp = NULL;
-	clock_t time1, time2;
 	Material_t mat;
 
 /*
