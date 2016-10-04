@@ -345,6 +345,16 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
             VxV(r, = cp->pos);	
             extent_src = cp->bmax + cp->lap;
             daughters = cp->daughters;
+			stress_j[0] = 0.0;
+			stress_j[1] = 0.0;
+			stress_j[2] = 0.0;
+			stress_j[3] = 0.0;
+			stress_j[4] = 0.0;
+			stress_j[5] = 0.0;
+			stress_j[6] = 0.0;
+			stress_j[7] = 0.0;
+			stress_j[8] = 0.0;
+
         } else {
             bp = source->ptr;
             VxV(r, = bp->pos);
@@ -530,7 +540,7 @@ failed:
     VVx(sink->M1, += f);
     VVx(sink->lvel, += smv);
 	for (i = 0; i < NDIM*NDIM; i++)
-		sink->strengthbody.stress[i] += (float)stress_i[i];
+		sink->strengthbody.stress[i] += (float)stress_j[i];
     sink->nbrs += nbrs;
     sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;
