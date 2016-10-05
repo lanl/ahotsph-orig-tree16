@@ -328,7 +328,7 @@ main(int argc, char *argv[])
 					} else if (params.do_strength) {
 						sdfp = SPHRead_strength(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 								params.set_id, params.setpvel, params.new_h, params.new_u);
-						setconst1(&mat);
+						setconst2(&mat);
 					} else {
 					    sdfp = SPHRead(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 							   params.set_id, params.setpvel, params.new_h, params.new_u);
@@ -582,8 +582,9 @@ main(int argc, char *argv[])
 			q->data.strengthbody.vonMises = 1.0;
 			q->data.strengthbody.crack_len = 0.0;
 			for (i = 0; i < NDIM*NDIM; i++) {
-				q->data.strengthbody.stress[i] = 0.0;
+				q->data.strengthbody.stress[i] = 0.1;
 				q->data.strengthbody.dstressdt[i] = 0.0;
+				q->data.strengthbody.stress_last[i] = 0.0;
 			}
 			for (i = 0; i < SRTERMS; i++) {
 				q->data.strengthbody.strainrate[i] = 0.0;

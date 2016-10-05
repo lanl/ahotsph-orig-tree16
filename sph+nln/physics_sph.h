@@ -593,6 +593,7 @@ double duvst(double t);
 double liquid_eos (double k_bulk, double eta);
 double murnaghan_eos(double k_bulk, double n_M, double eta);
 void setconst1(Material_t *m);
+void setconst2(Material_t *m);
 void tillotson_eos (float rho, float u, Material_t *m, float *pressure, float *cs);
 double anton_schmidt_eos(double k_bulk, double power_n, double eta);
 

@@ -901,37 +901,10 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 				vonMises = 1.0;
 			}
 			p->data.strengthbody.vonMises = (float)vonMises;
-
-			if (0) {
-			/* calculate rate of change of stress tensor */
-			deviator_(&gshear,
-					&stress[0],
-					&stress[4],
-					&stress[8],
-					&stress[1],
-					&stress[2],
-					&stress[5],
-					&strainrate[0],
-					&strainrate[1],
-					&strainrate[2],
-					&strainrate[3],
-					&strainrate[4],
-					&strainrate[5],
-					&rot[0],
-					&rot[1],
-					&rot[2],
-					&dstressdt[0],
-					&dstressdt[4],
-					&dstressdt[1],
-					&dstressdt[2],
-					&dstressdt[5]);
-			for (i = 0; i < NDIM*NDIM; i++)
-				p->data.strengthbody.dstressdt[i] = (float)dstressdt[i];
-			}
 			
 			p->data.strengthbody.is_strength = has_strength (*p);
 			/* eventually, this is done at the beginning in main */
-			setconst1 (&mat);
+			setconst2 (&mat);
 			/* calculate pressure, sound speed */
 			tillotson_eos (p->rho_est, p->u, &mat, &(p->pr), &(p->vsound));
 		} else {

@@ -163,3 +163,29 @@ int has_strength(SPHbody p) {
 		return 0;
 	return 1;
 }
+
+void strength_force (double *grpmj, double *rhoij,
+     double *sxxi,double *syyi,double *sxyi,double *sxzi,double *syzi,double *sxxj,double *syyj,double *
+     sxyj,double *sxzj,double *syzj,double *dmi,double *dmj,double *dx,double *dy,double *dz,double *dfxi,double *dfyi,double *dfzi) {
+
+	double redi, redj;
+	double sigxxij, sigyyij, sigzzij, sigxyij, sigxzij, sigyzij;
+	double tx, ty, tz;
+//  material strength if pairs belong to same object
+
+      redi=1.-*dmi * *dmi * *dmi;
+      redj=1.-* dmj * *dmj * *dmj;
+      sigxxij=(redi* *sxxi + redj* *sxxj)/ *rhoij;
+      sigyyij=(redi* *syyi + redj* *syyj)/ *rhoij;
+      sigzzij=(redi* *sxxi - redi* *syyi + redj* *sxxj - redj* *syyj)/ *rhoij;
+      sigxyij=( *sxyi + redj* *sxyj)/ *rhoij;
+      sigxzij=( *sxzi + redj* *sxzj)/ *rhoij;
+      sigyzij=( *syzi + redj* *syzj)/ *rhoij;
+      tx=sigxxij* *dx + sigxyij* *dy + sigxzij* *dz;
+      ty=sigxyij* *dx + sigyyij* *dy + sigyzij* *dz;
+      tz=sigxzij* *dx + sigyzij* *dy + sigzzij* *dz;
+
+      *dfxi= *grpmj*tx;
+      *dfyi= *grpmj*ty;
+      *dfzi= *grpmj*tz;
+}

@@ -11,3 +11,7 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_loo
 void read_defects_table(SDF *sdfp, int *nflaws, double **eps, int **flaws_tbl_lookup);
 void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *flaws_tbl_lookup);
 int has_strength(SPHbody p);
+void strength_force (double *grpmj, double *rhoij,
+     double *sxxi,double *syyi,double *sxyi,double *sxzi,double *syzi,double *sxxj,double *syyj,double *
+     sxyj,double *sxzj,double *syzj,double *dmi,double *dmj,double *dx,double *dy,double *dz,double *dfxi,double *dfyi,double *dfzi);
+
