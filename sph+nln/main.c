@@ -582,13 +582,21 @@ main(int argc, char *argv[])
 			q->data.strengthbody.vonMises = 1.0;
 			q->data.strengthbody.crack_len = 0.0;
 			for (i = 0; i < NDIM*NDIM; i++) {
-				q->data.strengthbody.stress[i] = 0.1;
+				q->data.strengthbody.stress[i] = 0.0;
 				q->data.strengthbody.dstressdt[i] = 0.0;
-				q->data.strengthbody.stress_last[i] = 0.0;
+				q->data.strengthbody.dstressdt_last[i] = 0.0;
 			}
 			for (i = 0; i < SRTERMS; i++) {
 				q->data.strengthbody.strainrate[i] = 0.0;
 			}
+			q->data.strengthbody.stress[0] = -1.0e12;
+			q->data.strengthbody.stress[4] = 1.0e12;
+			/*
+			q->data.strengthbody.stress[8] = 2.0e12;
+			q->data.strengthbody.dstressdt_last[0] = -1.0e12;
+			q->data.strengthbody.dstressdt_last[4] = -1.0e12;
+			q->data.strengthbody.dstressdt_last[8] = 2.0e12;
+			*/
 		}
     }
 
@@ -1189,8 +1197,8 @@ main(int argc, char *argv[])
                 VVV(SPHbtab[i].pos_last, = SPHbtab[i].pos,- dt*SPHbtab[i].vel);
                 SPHbtab[i].udot_last = SPHbtab[i].udot;
 				for (int j = 0; j < NDIM*NDIM; j++) {
-					SPHbtab[i].data.strengthbody.stress_last[j] = 
-						SPHbtab[i].data.strengthbody.stress[j];
+					SPHbtab[i].data.strengthbody.dstressdt_last[j] = 
+						SPHbtab[i].data.strengthbody.dstressdt[j];
 				}
             }
         }
@@ -1231,7 +1239,7 @@ main(int argc, char *argv[])
 			for (i = 0; i < NDIM*NDIM; i++) 
 				ABUpdateXs(&SPHbtab[0].data.strengthbody.stress[i], SPHstride, 
 					&SPHbtab[0].data.strengthbody.dstressdt[i], SPHstride,
-					&SPHbtab[0].data.strengthbody.stress_last[i], SPHstride,
+					&SPHbtab[0].data.strengthbody.dstressdt_last[i], SPHstride,
 					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
 			UpdateSXs(&SPHbtab[0].data.strengthbody.dmg, SPHstride, 
 					&SPHbtab[0].data.strengthbody.ddmgdt, SPHstride,

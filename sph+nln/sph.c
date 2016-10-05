@@ -143,12 +143,12 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		/* strength quantities. which are needed? */
 		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
-			to->strengthbody.stress[i] = bp->data.strengthbody.stress[i];
-			to->strengthbody.dstressdt[i] = bp->data.strengthbody.dstressdt[i];
-			to->strengthbody.stress_last[i] = bp->data.strengthbody.stress_last[i];
+			to->strengthbody.stress[i] = 0.0;//bp->data.strengthbody.stress[i];
+			to->strengthbody.dstressdt[i] = 0.0;//bp->data.strengthbody.dstressdt[i];
+			//to->strengthbody.dstressdt_last[i] = 0.0;//bp->data.strengthbody.dstressdt_last[i];
 		}
 		for (i = 0; i < SRTERMS; i++)
-			to->strengthbody.strainrate[i] = bp->data.strengthbody.strainrate[i];
+			to->strengthbody.strainrate[i] = 0.0;//bp->data.strengthbody.strainrate[i];
 		//to->strengthbody.rotation[i] = 0.0;
 		to->strengthbody.actv_defects = bp->data.strengthbody.actv_defects;
 		to->strengthbody.vonMises = bp->data.strengthbody.vonMises;

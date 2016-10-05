@@ -46,7 +46,7 @@ typedef struct strength_s {
 	float crack_len;			/* length of longest crack */
     float stress[NDIM*NDIM];         /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
     float dstressdt[NDIM*NDIM];         /* stress tensor */
-    float stress_last[NDIM*NDIM];         /* stress tensor, previous step */
+    float dstressdt_last[NDIM*NDIM];         /* stress tensor, previous step */
     float strainrate[SRTERMS];      /* strain rate tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy, xz, yz */
 } strength_data_t;
 
