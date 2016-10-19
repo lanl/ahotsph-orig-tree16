@@ -567,6 +567,7 @@ main(int argc, char *argv[])
     this_eps = params.eps;
     this_tol = params.tol;
 
+	float stress_mag = 1.0e+1;
     /* Testing initialization */
     for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
         VS(q->acc, = 0.0);
@@ -582,16 +583,26 @@ main(int argc, char *argv[])
 			q->data.strengthbody.vonMises = 1.0;
 			q->data.strengthbody.crack_len = 0.0;
 			for (i = 0; i < NDIM*NDIM; i++) {
-				q->data.strengthbody.stress[i] = 0.0;
 				q->data.strengthbody.dstressdt[i] = 0.0;
 				q->data.strengthbody.dstressdt_last[i] = 0.0;
 			}
 			for (i = 0; i < SRTERMS; i++) {
 				q->data.strengthbody.strainrate[i] = 0.0;
 			}
+			/* hopefully equil stress terms? */
+			q->data.strengthbody.stress[0] = -1.0*stress_mag;
+			q->data.strengthbody.stress[1] = 0.5*stress_mag;
+			q->data.strengthbody.stress[2] = 0.5*stress_mag;
+			q->data.strengthbody.stress[3] = 0.5*stress_mag;
+			q->data.strengthbody.stress[4] = -1.0*stress_mag;
+			q->data.strengthbody.stress[5] = 0.5*stress_mag;
+			q->data.strengthbody.stress[6] = 0.5*stress_mag;
+			q->data.strengthbody.stress[7] = 0.5*stress_mag;
+			q->data.strengthbody.stress[8] = -1.0*stress_mag;
+			q->data.strengthbody.dstressdt[8] = -0.0001;
+			/*
 			q->data.strengthbody.stress[0] = -1.0e12;
 			q->data.strengthbody.stress[4] = 1.0e12;
-			/*
 			q->data.strengthbody.stress[8] = 2.0e12;
 			q->data.strengthbody.dstressdt_last[0] = -1.0e12;
 			q->data.strengthbody.dstressdt_last[4] = -1.0e12;
