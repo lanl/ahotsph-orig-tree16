@@ -1059,6 +1059,15 @@ main(int argc, char *argv[])
             FreeTree(&SPHtree);
             singlPrintf("FreeTree done %d (%d)\n", maxmem(), maxheap());
 
+			/*
+			*/
+			for (q = SPHsinkbtab; q < SPHsinkbtab+SPHsinknobj; q++) {
+				for (i = 0; i < 9; i++) {
+				if (!isfinite(q->data.strengthbody.dstressdt[i]))
+					q->data.strengthbody.dstressdt[i] = 0.0;
+				}
+			}
+
             if (make_sink_tree) {
                 SPHbody *r;
                 FreeTree(&SPHsinktree);
@@ -1247,11 +1256,19 @@ main(int argc, char *argv[])
                 &SPHbtab[0].udot_last, SPHstride, &SPHbtab[0].ident,
                 SPHstride3, SPHnobj, dt, dt_last);
 		if (params.do_strength) {
-			for (i = 0; i < NDIM*NDIM; i++) 
+			for (i = 0; i < NDIM*NDIM; i++) {
+				if (!isfinite(SPHbtab[0].data.strengthbody.stress[i]))
+					singlPrintf("stress not finite\n");
+				if (!isfinite(SPHbtab[0].data.strengthbody.dstressdt[i]))
+					singlPrintf("dstressdt not finite\n");
+				if (!isfinite(SPHbtab[0].data.strengthbody.strainrate[i]))
+					singlPrintf("strainrate not finite\n");
+
 				ABUpdateXs(&SPHbtab[0].data.strengthbody.stress[i], SPHstride, 
 					&SPHbtab[0].data.strengthbody.dstressdt[i], SPHstride,
 					&SPHbtab[0].data.strengthbody.dstressdt_last[i], SPHstride,
 					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
+			}
 			UpdateSXs(&SPHbtab[0].data.strengthbody.dmg, SPHstride, 
 					&SPHbtab[0].data.strengthbody.ddmgdt, SPHstride,
 					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);

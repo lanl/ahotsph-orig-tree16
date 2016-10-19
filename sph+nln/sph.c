@@ -79,8 +79,9 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		/* strength quantities. which are needed? */
 		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
-	//		bp->data.strengthbody.stress[i] += from->strengthbody.stress[i];
+	//		bp->data.strengthbody.stress[i] = from->strengthbody.stress[i];
 			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
+			//bp->data.strengthbody.dstressdt[i] = 0.0;
 		}
 		for (i = 0; i < SRTERMS; i++)
 			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
@@ -143,9 +144,10 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		/* strength quantities. which are needed? */
 		if (params.do_strength) {
 		for (i = 0; i < NDIM*NDIM; i++) {
-			to->strengthbody.stress[i] = 0.0;//bp->data.strengthbody.stress[i];
-			to->strengthbody.dstressdt[i] = 0.0;//bp->data.strengthbody.dstressdt[i];
-			//to->strengthbody.dstressdt_last[i] = 0.0;//bp->data.strengthbody.dstressdt_last[i];
+			to->strengthbody.stress[i] = bp->data.strengthbody.stress[i];
+			//Brandon sets this to zero. won't this prevent any change in stress??
+			//to->strengthbody.dstressdt[i] = bp->data.strengthbody.dstressdt[i];
+			to->strengthbody.dstressdt[i] = 0.0;
 		}
 		for (i = 0; i < SRTERMS; i++)
 			to->strengthbody.strainrate[i] = 0.0;//bp->data.strengthbody.strainrate[i];
@@ -297,20 +299,21 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
     Vxd(float f);
     Vxd(float dv);
     Vxd(float smv);
-	float stress_i[NDIM*NDIM];
-	float stress_j[NDIM*NDIM];
-	double dstressdt_i[NDIM*NDIM];
-	double strainrate_i[SRTERMS];
-	float strainrate[SRTERMS];
-	double dstrainrate_i[SRTERMS];
-	double gshear = (double)G_shear;
+	float stress_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
+	float stress_j[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
+	float dstressdt_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
+	double strainrate_i[SRTERMS] = {0,0,0,0,0,0};
+	float strainrate[SRTERMS] = {0,0,0,0,0,0};
+	double dstrainrate_i[SRTERMS] = {0,0,0,0,0,0};
+	float gshear = (float)G_shear;
 	double yieldstr = (double)YieldStr;
 	double umelt = (double)u_melt;
 	Vxd(double dr_i);
 	Vxd(double dv_i);
 	float dmg_i, dmg_j, u_i;
-	double rot_i[NDIM], drot_i[NDIM], drot[NDIM];
-	double vonMises_i;
+	double drot_i[NDIM], drot[NDIM];
+	float rot_i[NDIM]; 
+	float vonMises_i;
 	float df_i[3]; /* acceleration due to stress */
 	double grpm_dbl, robar1_dbl;
     float min_nbr_dt = sink->min_nbr_dt;
@@ -454,23 +457,25 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			stress_i[7] = sink->strengthbody.stress[7];
 			stress_i[8] = sink->strengthbody.stress[8];
 			
-			strainrate_i[0] = (double)sink->strengthbody.strainrate[0];
-			strainrate_i[1] = (double)sink->strengthbody.strainrate[1];
-			strainrate_i[2] = (double)sink->strengthbody.strainrate[2];
-			strainrate_i[3] = (double)sink->strengthbody.strainrate[3];
-			strainrate_i[4] = (double)sink->strengthbody.strainrate[4];
-			strainrate_i[5] = (double)sink->strengthbody.strainrate[5];
+			/* equilibrium, no strain */
+			strainrate_i[0] = 0.0;//(double)sink->strengthbody.strainrate[0];
+			strainrate_i[1] = 0.0;//(double)sink->strengthbody.strainrate[1];
+			strainrate_i[2] = 0.0;//(double)sink->strengthbody.strainrate[2];
+			strainrate_i[3] = 0.0;//(double)sink->strengthbody.strainrate[3];
+			strainrate_i[4] = 0.0;//(double)sink->strengthbody.strainrate[4];
+			strainrate_i[5] = 0.0;//(double)sink->strengthbody.strainrate[5];
 			dmg_i = sink->strengthbody.dmg;
 			dmg_j = bp->data.strengthbody.dmg;
 			VxVx(dr_i, = r);
 			VxVx(dv_i, = dv);
-			VS(rot_i, = 0.);
+			VS(rot_i, = 0.); /* equilibrium, no rotation */
 			VS(drot_i, = 0.);
 			u_i = u;
 			grpm_dbl = (double)grpm;
 			robar1_dbl = (double)robar1;
 			
 			/* compute gradients of strain rate and rotation. for ... ? */
+			/* i.e. sets dstrainrate_* and drot_* */
 			straintensor_(&grpm_dbl,
 					&dv_i0,
 					&dv_i1,
@@ -488,16 +493,59 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&(drot_i[1]),
 					&(drot_i[2]));
 
-			sink->strengthbody.strainrate[0] += (float)dstrainrate_i[0];
-			sink->strengthbody.strainrate[1] += (float)dstrainrate_i[1];
-			sink->strengthbody.strainrate[2] += (float)dstrainrate_i[2];
-			sink->strengthbody.strainrate[3] += (float)dstrainrate_i[3];
-			sink->strengthbody.strainrate[4] += (float)dstrainrate_i[4];
-			sink->strengthbody.strainrate[5] += (float)dstrainrate_i[5];
+			strainrate_i[0] = 1.0e-3;
+			strainrate[0] += (float)strainrate_i[0];
+			strainrate[1] += (float)strainrate_i[1];
+			strainrate[2] += (float)strainrate_i[2];
+			strainrate[3] += (float)strainrate_i[3];
+			strainrate[4] += (float)strainrate_i[4];
+			strainrate[5] += (float)strainrate_i[5];
 
 			drot[0] += drot_i[0];
 			drot[1] += drot_i[1];
 			drot[2] += drot_i[2];
+
+			/* calculate rate of change of stress tensor */
+			deviator_(&gshear,
+					&stress_j[0],
+					&stress_j[4],
+					&stress_j[8],
+					&stress_j[1],
+					&stress_j[2],
+					&stress_j[5],
+					&strainrate[0],
+					&strainrate[1],
+					&strainrate[2],
+					&strainrate[3],
+					&strainrate[4],
+					&strainrate[5],
+					&rot_i[0],
+					&rot_i[1],
+					&rot_i[2],
+					&dstressdt_i[0],
+					&dstressdt_i[4],
+					&dstressdt_i[1],
+					&dstressdt_i[2],
+					&dstressdt_i[5]);
+			dstressdt_i[4] = 1.5e+4;
+			if (isfinite(dstressdt_i[0]))
+			sink->strengthbody.dstressdt[0] += (float)dstressdt_i[0];
+			if (isfinite(dstressdt_i[1]))
+			sink->strengthbody.dstressdt[1] += (float)dstressdt_i[1];
+			if (isfinite(dstressdt_i[2]))
+			sink->strengthbody.dstressdt[2] += (float)dstressdt_i[2];
+			if (isfinite(dstressdt_i[3]))
+			sink->strengthbody.dstressdt[3] += (float)dstressdt_i[3];
+			if (isfinite(dstressdt_i[4]))
+			sink->strengthbody.dstressdt[4] += (float)dstressdt_i[4];
+			if (isfinite(dstressdt_i[5]))
+			sink->strengthbody.dstressdt[5] += (float)dstressdt_i[5];
+			if (isfinite(dstressdt_i[6]))
+			sink->strengthbody.dstressdt[6] += (float)dstressdt_i[6];
+			if (isfinite(dstressdt_i[7]))
+			sink->strengthbody.dstressdt[7] += (float)dstressdt_i[7];
+			if (isfinite(dstressdt_i[8]))
+			sink->strengthbody.dstressdt[8] += (float)dstressdt_i[8];
 
 			strengthforce_(&grpm,
 					&robar1,
@@ -520,7 +568,8 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&(df_i[1]),
 					&(df_i[2]));
 			/* add to force of particle */
-			VxV(f, += df_i);
+			VVx(df_i, = f);
+			VxV(f, -= 0.9999*df_i);
 		}
 
         nbrs++;
@@ -539,8 +588,14 @@ failed:
     sink->udot += (float)0.5 * dq;
     VVx(sink->M1, += f);
     VVx(sink->lvel, += smv);
-	for (i = 0; i < NDIM*NDIM; i++)
-		sink->strengthbody.stress[i] += (float)stress_j[i];
+	//for (i = 0; i < NDIM*NDIM; i++)
+	//	sink->strengthbody.stress[i] += (float)stress_j[i];
+	sink->strengthbody.strainrate[0] += strainrate[0];
+	sink->strengthbody.strainrate[1] += strainrate[1];
+	sink->strengthbody.strainrate[2] += strainrate[2];
+	sink->strengthbody.strainrate[3] += strainrate[3];
+	sink->strengthbody.strainrate[4] += strainrate[4];
+	sink->strengthbody.strainrate[5] += strainrate[5];
     sink->nbrs += nbrs;
     sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;
@@ -796,7 +851,6 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 						&ddmgdt);
 			}
 
-			if (0)
 			strengthdu_(&(rho_i),
 					&stress[0],
 					&stress[4],
@@ -811,7 +865,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&strainrate[2], /* not a typo! */
 					&(dmg),
 					&dudt);
-			p->udot += dudt;
+			//p->udot -= 0.0;//dudt;
 		}
     }
 }
@@ -873,13 +927,8 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 			for (i = 0; i < NDIM*NDIM; i++) {
 				stress[i] = (double)p->data.strengthbody.stress[i];
 			}
-			for (i = 0; i < SRTERMS; i++)
-				strainrate[i] = (double)p->data.strengthbody.strainrate[i];
-			rot[0] = 0.0;
-			rot[1] = 0.0;
-			rot[2] = 0.0;
-			dmg_i = (double)p->data.strengthbody.dmg;
-			u_i = (double)p->u;
+			dmg_i = p->data.strengthbody.dmg;
+			u_i = p->u;
 			vonMises = p->data.strengthbody.vonMises;
 			
 			if (params.do_plastic) {
