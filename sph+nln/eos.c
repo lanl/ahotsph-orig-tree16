@@ -93,7 +93,7 @@ double murnaghan_eos(double k_bulk, double n_M, double eta) {
     m->rho0 = 8.05;
     m->A = 1.28e12;
     m->B = 1.05e12;
-    m->a = 0.5;
+    m->a = 0.5; /* like (gamma - 1.) term ?? */
     m->b = 1.5;
     m->alpha = 5.;
     m->beta = 5.;
@@ -109,19 +109,22 @@ double murnaghan_eos(double k_bulk, double n_M, double eta) {
 }
 
 void tillotson_eos (float rho, float u, Material_t *m, float *pressure, float *cs) {
-	float PC = 0.;
-	float csC = 0.;
+	float PC = 0.; /* pressure, current */
+	float csC = 0.; /* sound speed, current */
 	float rho0m1 = 1. / m->rho0;
 	float rhom1 = 1. / rho;
 	float eta = rho * rho0m1;
 	float mu = eta - 1.;
 	float csmin = 0.25 * m->A * rho0m1;
-	float Pmin = 0.;
+	float Pmin = 0.; /* set floor on pressure */
 	float c1 = u / (m->u0 * eta * eta);
 	float c2 = 1. / (c1 + 1.);
 
+	/* A. Brundage, 2013, 12th Hypervelocity Impact Symposium, 
+	 * Procedia Engineering, 58, 461-470 describes an implementation of this eos - CIE */
 	if (u > m->Eiv && eta < 1.) {
-		float d1 = m->rho0 * rhom1;
+		/* eq. 3, but there u> u_cv */
+		float d1 = m->rho0 * rhom1; /* = 1/eta ? */
 		float d2 = d1 - 1.;
 		float ex1 = (m->beta * d2 < 60) ? exp (- m->beta * d2) : 0.0;
 		float ex2 = (m->alpha * d2 * d2 < 60) ? exp (-m->alpha * d2 * d2) : 0.0;
@@ -138,6 +141,7 @@ void tillotson_eos (float rho, float u, Material_t *m, float *pressure, float *c
 	}
 
 	if (u < m->Ecv || eta >= 1.) {
+		/* eq. 2 */
 		PC = (m->a + m->b * c2) * rho * u + m->A * mu + m->B * mu * mu;
 		csC = m->a * u + rho0m1 * (m->A + 2. * m->B * mu) + m->b * u * (3. * c1 + 1.) * c2 * c2;
 		csC += PC * rhom1 * (m->a + m->b * c2 * c2);
@@ -146,6 +150,7 @@ void tillotson_eos (float rho, float u, Material_t *m, float *pressure, float *c
 			float e1 = m->Ecv - u;
 			float e2 = u - m->Eiv;
 			float e3 = 1. / (m->Ecv - m->Eiv);
+			/* eq. 5 */
 			*pressure = (e2 * *pressure + e1 * PC) * e3;
 			*cs = (e2 * *cs + e1 * csC) * e3;
 		} else {
