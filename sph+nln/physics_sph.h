@@ -48,7 +48,19 @@ typedef struct strength_s {
     float dstressdt[NDIM*NDIM];         /* stress tensor */
     float dstressdt_last[NDIM*NDIM];         /* stress tensor, previous step */
     float strainrate[SRTERMS];      /* strain rate tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy, xz, yz */
+	float dstraindt[SRTERMS];		/* rate of change in strain tensor */
+	float dstraindt_last[SRTERMS];
 } strength_data_t;
+
+typedef struct strength_out_s {
+	int actv_defects;		/* number of activated defects in particle */
+	int is_strength;
+    float dmg;                  /* damage parameter */
+	float vonMises;				/* von Mises yielding factor */
+	float crack_len;			/* length of longest crack */
+    float stress[NDIM*NDIM];         /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
+    float strainrate[SRTERMS];      /* strain rate tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy, xz, yz */
+} strength_data_out_t;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -211,7 +223,8 @@ typedef struct {
     float temp;
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
-	strength_data_t strengthbody;
+	strength_data_out_t strengthbody;
+	int padding;
 } SPHoutbody_strength;
 
 typedef struct {
@@ -297,7 +310,6 @@ typedef struct {
 	int actv_defects;			/* local number of defects */\n\
 	int is_strength;		/* does particle feel strength? */\n\
     float dmg;                  /* damage parameter */\n\
-    float ddmgdt;			/* rate of change of damage */\n\
 	float vonMises;			/* von Mises yielding factor */\n\
 	float crack_len;		/* length of longest crack */\n\
     float stressxx;        /* stress tensor, el. 0 */\n\
@@ -309,30 +321,13 @@ typedef struct {
     float stresszx;        /* stress tensor, el. 6 */\n\
     float stresszy;        /* stress tensor, el. 7 */\n\
     float stresszz;        /* stress tensor, el. 8 */\n\
-    float dstressxxdt;      /* rate of change of stress tensor */\n\
-    float dstressxydt;      /* rate of change of stress tensor */\n\
-    float dstressxzdt;      /* rate of change of stress tensor */\n\
-    float dstressyxdt;      /* rate of change of stress tensor */\n\
-    float dstressyydt;      /* rate of change of stress tensor */\n\
-    float dstressyzdt;      /* rate of change of stress tensor */\n\
-    float dstresszxdt;      /* rate of change of stress tensor */\n\
-    float dstresszydt;      /* rate of change of stress tensor */\n\
-    float dstresszzdt;      /* rate of change of stress tensor */\n\
-    float stressxx_last;        /* stress tensor, el. 0 */\n\
-    float stressxy_last;        /* stress tensor, el. 1 */\n\
-    float stressxz_last;        /* stress tensor, el. 2 */\n\
-    float stressyx_last;        /* stress tensor, el. 3 */\n\
-    float stressyy_last;        /* stress tensor, el. 4 */\n\
-    float stressyz_last;        /* stress tensor, el. 5 */\n\
-    float stresszx_last;        /* stress tensor, el. 6 */\n\
-    float stresszy_last;        /* stress tensor, el. 7 */\n\
-    float stresszz_last;        /* stress tensor, el. 8 */\n\
 	float strainratexx;		/* strain rate tensor */\n\
 	float strainrateyy;		/* strain rate tensor */\n\
 	float strainratezz;		/* strain rate tensor */\n\
 	float strainratexy;		/* strain rate tensor */\n\
 	float strainratexz;		/* strain rate tensor */\n\
 	float strainrateyz;		/* strain rate tensor */\n\
+	int padding;\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\

@@ -84,7 +84,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 			//bp->data.strengthbody.dstressdt[i] = 0.0;
 		}
 		for (i = 0; i < SRTERMS; i++)
-			bp->data.strengthbody.strainrate[i] += from->strengthbody.strainrate[i];
+			bp->data.strengthbody.dstraindt[i] += from->strengthbody.dstraindt[i];
 		//bp->data.strengthbody.rotation[i] += from->strengthbody.rotation[i];
 		bp->data.strengthbody.actv_defects += from->strengthbody.actv_defects;
 		bp->data.strengthbody.vonMises = from->strengthbody.vonMises;
@@ -150,7 +150,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 			to->strengthbody.dstressdt[i] = 0.0;
 		}
 		for (i = 0; i < SRTERMS; i++)
-			to->strengthbody.strainrate[i] = 0.0;//bp->data.strengthbody.strainrate[i];
+			to->strengthbody.dstraindt[i] = 0.0;//bp->data.strengthbody.strainrate[i];
 		//to->strengthbody.rotation[i] = 0.0;
 		to->strengthbody.actv_defects = bp->data.strengthbody.actv_defects;
 		to->strengthbody.vonMises = bp->data.strengthbody.vonMises;
@@ -302,8 +302,8 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float stress_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
 	float stress_j[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
 	float dstressdt_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
-	double strainrate_i[SRTERMS] = {0,0,0,0,0,0};
-	float strainrate[SRTERMS] = {0,0,0,0,0,0};
+	float strainrate_i[SRTERMS] = {0,0,0,0,0,0};
+	float dstrainrate[SRTERMS] = {0,0,0,0,0,0};
 	double dstrainrate_i[SRTERMS] = {0,0,0,0,0,0};
 	float gshear = (float)G_shear;
 	double yieldstr = (double)YieldStr;
@@ -459,12 +459,12 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			stress_i[8] = sink->strengthbody.stress[8];
 			
 			/* equilibrium, no strain */
-			strainrate_i[0] = 0.0;//(double)sink->strengthbody.strainrate[0];
-			strainrate_i[1] = 0.0;//(double)sink->strengthbody.strainrate[1];
-			strainrate_i[2] = 0.0;//(double)sink->strengthbody.strainrate[2];
-			strainrate_i[3] = 0.0;//(double)sink->strengthbody.strainrate[3];
-			strainrate_i[4] = 0.0;//(double)sink->strengthbody.strainrate[4];
-			strainrate_i[5] = 0.0;//(double)sink->strengthbody.strainrate[5];
+			strainrate_i[0] = sink->strengthbody.strainrate[0];
+			strainrate_i[1] = sink->strengthbody.strainrate[1];
+			strainrate_i[2] = sink->strengthbody.strainrate[2];
+			strainrate_i[3] = sink->strengthbody.strainrate[3];
+			strainrate_i[4] = sink->strengthbody.strainrate[4];
+			strainrate_i[5] = sink->strengthbody.strainrate[5];
 			dmg_i = sink->strengthbody.dmg;
 			dmg_j = bp->data.strengthbody.dmg;
 			VxVx(dr_i, = r);
@@ -494,13 +494,13 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&(drot_i[1]),
 					&(drot_i[2]));
 
-			strainrate_i[0] = 1.0e-3;
-			strainrate[0] += (float)strainrate_i[0];
-			strainrate[1] += (float)strainrate_i[1];
-			strainrate[2] += (float)strainrate_i[2];
-			strainrate[3] += (float)strainrate_i[3];
-			strainrate[4] += (float)strainrate_i[4];
-			strainrate[5] += (float)strainrate_i[5];
+			//strainrate_i[0] = 1.0e-3;
+			dstrainrate[0] += (float)dstrainrate_i[0];
+			dstrainrate[1] += (float)dstrainrate_i[1];
+			dstrainrate[2] += (float)dstrainrate_i[2];
+			dstrainrate[3] += (float)dstrainrate_i[3];
+			dstrainrate[4] += (float)dstrainrate_i[4];
+			dstrainrate[5] += (float)dstrainrate_i[5];
 
 			drot[0] += drot_i[0];
 			drot[1] += drot_i[1];
@@ -597,12 +597,12 @@ failed:
     VVx(sink->lvel, += smv);
 	//for (i = 0; i < NDIM*NDIM; i++)
 	//	sink->strengthbody.stress[i] += (float)stress_j[i];
-	sink->strengthbody.strainrate[0] += strainrate[0];
-	sink->strengthbody.strainrate[1] += strainrate[1];
-	sink->strengthbody.strainrate[2] += strainrate[2];
-	sink->strengthbody.strainrate[3] += strainrate[3];
-	sink->strengthbody.strainrate[4] += strainrate[4];
-	sink->strengthbody.strainrate[5] += strainrate[5];
+	sink->strengthbody.dstraindt[0] += dstrainrate[0];
+	sink->strengthbody.dstraindt[1] += dstrainrate[1];
+	sink->strengthbody.dstraindt[2] += dstrainrate[2];
+	sink->strengthbody.dstraindt[3] += dstrainrate[3];
+	sink->strengthbody.dstraindt[4] += dstrainrate[4];
+	sink->strengthbody.dstraindt[5] += dstrainrate[5];
     sink->nbrs += nbrs;
     sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;

@@ -588,18 +588,22 @@ main(int argc, char *argv[])
 			}
 			for (i = 0; i < SRTERMS; i++) {
 				q->data.strengthbody.strainrate[i] = 0.0;
+				q->data.strengthbody.dstraindt[i] = 0.0;
+				q->data.strengthbody.dstraindt_last[i] = 0.0;
 			}
+			rad = sqrt(q->pos[0] * q->pos[0] + q->pos[1] * q->pos[1] + q->pos[2] * q->pos[2]);
 			/* hopefully equil stress terms? */
-			q->data.strengthbody.stress[0] = -1.0*stress_mag;
-			q->data.strengthbody.stress[1] = 0.5*stress_mag;
-			q->data.strengthbody.stress[2] = 0.5*stress_mag;
-			q->data.strengthbody.stress[3] = 0.5*stress_mag;
-			q->data.strengthbody.stress[4] = -1.0*stress_mag;
-			q->data.strengthbody.stress[5] = 0.5*stress_mag;
-			q->data.strengthbody.stress[6] = 0.5*stress_mag;
-			q->data.strengthbody.stress[7] = 0.5*stress_mag;
-			q->data.strengthbody.stress[8] = -1.0*stress_mag;
-			q->data.strengthbody.dstressdt[8] = -0.0001;
+			/* diag. terms = normal stresses, off-diag. terms = shear stresses */
+			//q->data.strengthbody.stress[0] = 1.0*stress_mag;// * q->pos[0] / rad;
+			//q->data.strengthbody.stress[1] = 1.0*stress_mag;
+			//q->data.strengthbody.stress[2] = 1.0*stress_mag;
+			//q->data.strengthbody.stress[3] = 0.5*stress_mag;
+			//q->data.strengthbody.stress[4] = -1.0*stress_mag * q->pos[1] / rad;
+			//q->data.strengthbody.stress[5] = 0.5*stress_mag;
+			//q->data.strengthbody.stress[6] = 1.0*stress_mag;
+			//q->data.strengthbody.stress[7] = 0.5*stress_mag;
+			//q->data.strengthbody.stress[8] = -1.0*stress_mag * q->pos[2] / rad;
+			//q->data.strengthbody.dstressdt[8] = -0.0001;
 			/*
 			q->data.strengthbody.stress[0] = -1.0e12;
 			q->data.strengthbody.stress[4] = 1.0e12;
@@ -1269,6 +1273,13 @@ main(int argc, char *argv[])
 					&SPHbtab[0].data.strengthbody.dstressdt_last[i], SPHstride,
 					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
 			}
+			for (i = 0; i < SRTERMS; i++) {
+				ABUpdateXs(&SPHbtab[0].data.strengthbody.strainrate[i], SPHstride,
+						&SPHbtab[0].data.strengthbody.dstraindt[i], SPHstride,
+						&SPHbtab[0].data.strengthbody.dstraindt_last[i], SPHstride,
+						&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
+			}
+
 			UpdateSXs(&SPHbtab[0].data.strengthbody.dmg, SPHstride, 
 					&SPHbtab[0].data.strengthbody.ddmgdt, SPHstride,
 					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
@@ -2489,7 +2500,6 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
-        output_btab[i].strengthbody.ddmgdt = btab[i].data.strengthbody.ddmgdt;
         for (j = 0; j < NDIM * NDIM; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
         }
