@@ -435,9 +435,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
                 sink->du_r += ( (clight < Dmeanr) ? clight : Dmeanr ) *
                     (sink->u_r - bp->u_r) * grpm / bp->rho_est;
             }
-		/* strength calculation */
+		/* strength calculation, only if both sink and source feel strength */
 		/* reference: Benz & Asphaug 1995, Computer Physics Communications Vol. 87 */
-		if (params.do_strength) {
+		if (params.do_strength && bp->data.strengthbody.is_strength && sink->strengthbody.is_strength) {
 			/* this is way faster! */
 			stress_j[0] = bp->data.strengthbody.stress[0];
 			stress_j[1] = bp->data.strengthbody.stress[1];
@@ -932,6 +932,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	            (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
 	        p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
 		} else if (params.do_strength) {
+			if (p->data.strengthbody.is_strength) {
 
 			for (i = 0; i < NDIM*NDIM; i++) {
 				stress[i] = (double)p->data.strengthbody.stress[i];
@@ -966,6 +967,22 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 			setconst2 (&mat);
 			/* calculate pressure, sound speed */
 			tillotson_eos (p->rho_est, p->u, &mat, &(p->pr), &(p->vsound));
+			if (p->pr != 0.0) {
+			//	p->pr = 0.0;
+				/* try to guess a stress tensor, assume diag. terms = 0 cuz equil */
+				/*
+				p->data.strengthbody.stress[0] = p->pr;
+				p->data.strengthbody.stress[1] = -0.5*p->pr;
+				p->data.strengthbody.stress[2] = -0.5*p->pr;
+				p->data.strengthbody.stress[3] = -0.5*p->pr;
+				p->data.strengthbody.stress[4] = p->pr;
+				p->data.strengthbody.stress[5] = -0.5*p->pr;
+				p->data.strengthbody.stress[6] = 0.5*p->pr;
+				p->data.strengthbody.stress[7] = 0.5*p->pr;
+				p->data.strengthbody.stress[8] = -2.0*p->pr;
+				*/
+			}
+			}
 		} else {
 			p->pr = p->rho_est * p->u * (params.Gamma - 1);
 			eos_u = p->u * p->rho_est * massCF * ivlenCF * ivtimeCF2 ;

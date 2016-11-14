@@ -275,6 +275,7 @@ main(int argc, char *argv[])
 	double vol;
 	SDF *defects_sdfp = NULL;
 	Material_t mat;
+	float rad;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -567,7 +568,7 @@ main(int argc, char *argv[])
     this_eps = params.eps;
     this_tol = params.tol;
 
-	float stress_mag = 1.0e+1;
+	float stress_mag = 1.0e+2;
     /* Testing initialization */
     for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
         VS(q->acc, = 0.0);
@@ -576,6 +577,7 @@ main(int argc, char *argv[])
         q->phi = 0.0;
 		/* dev: (re-)set strength quantities */
 		if (params.do_strength_test) {
+			//q->u = 0.e-0;
 			q->data.strengthbody.actv_defects = 0;
 			q->data.strengthbody.is_strength = 1;
 			q->data.strengthbody.dmg = 0.0;
@@ -1035,7 +1037,8 @@ main(int argc, char *argv[])
                     q->nterms = 0;
                     VS(q->acc, = 0.0);
                     VS(q->lvel, = 0.0);
-					for (i = 0; i < SRTERMS; i++) 
+				//	VS(q->vel, = 0.0);
+					for (i = 0; i < SRTERMS; i++)
 						q->data.strengthbody.strainrate[i] = 0.0;
                 }
             }
