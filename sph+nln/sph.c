@@ -315,6 +315,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float rot_i[NDIM]; 
 	float vonMises_i;
 	float df_i[3]; /* acceleration due to stress */
+	float robar;
 	double grpm_dbl, robar1_dbl;
     float min_nbr_dt = sink->min_nbr_dt;
     float extent_src;
@@ -472,7 +473,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			VS(drot_i, = 0.);
 			u_i = u;
 			grpm_dbl = (double)grpm;
-			robar1_dbl = (double)robar1;
+			robar = 1. / robar1;
 			
 			/* compute gradients of strain rate and rotation. for ... ? */
 			/* i.e. sets dstrainrate_* and drot_* */
@@ -513,21 +514,22 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&stress_j[1],
 					&stress_j[2],
 					&stress_j[5],
-					&strainrate[0],
-					&strainrate[1],
-					&strainrate[2],
-					&strainrate[3],
-					&strainrate[4],
-					&strainrate[5],
+					&strainrate_i[0],
+					&strainrate_i[1],
+					&strainrate_i[2],
+					&strainrate_i[3],
+					&strainrate_i[4],
+					&strainrate_i[5],
 					&rot_i[0],
 					&rot_i[1],
 					&rot_i[2],
 					&dstressdt_i[0],
 					&dstressdt_i[4],
+					&dstressdt_i[8],
 					&dstressdt_i[1],
 					&dstressdt_i[2],
 					&dstressdt_i[5]);
-			dstressdt_i[4] = 1.5e+4;
+			//dstressdt_i[4] = 1.5e+4;
 			if (isfinite(dstressdt_i[0]))
 			sink->strengthbody.dstressdt[0] += (float)dstressdt_i[0];
 			if (isfinite(dstressdt_i[1]))
@@ -548,14 +550,16 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			sink->strengthbody.dstressdt[8] += (float)dstressdt_i[8];
 
 			strengthforce_(&grpm,
-					&robar1,
+					&robar,
 					&(stress_i[0]),
 					&(stress_i[4]),
+					&(stress_i[8]),
 					&(stress_i[1]),
 					&(stress_i[2]),
 					&(stress_i[5]),
 					&(stress_j[0]),
 					&(stress_j[4]),
+					&(stress_i[8]),
 					&(stress_j[1]),
 					&(stress_j[2]),
 					&(stress_j[5]),
@@ -568,8 +572,11 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&(df_i[1]),
 					&(df_i[2]));
 			/* add to force of particle */
+			/*
 			VVx(df_i, = f);
 			VxV(f, -= 0.9999*df_i);
+			*/
+			VxV(f, -= df_i);
 		}
 
         nbrs++;
@@ -837,6 +844,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 				eyoung = (double)params.E_Young;
 				fracture_(&stress[0],
 						&stress[4],
+						&stress[8],
 						&stress[1],
 						&stress[2],
 						&stress[5],
@@ -854,6 +862,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 			strengthdu_(&(rho_i),
 					&stress[0],
 					&stress[4],
+					&stress[8],
 					&stress[1],
 					&stress[2],
 					&stress[5],
@@ -865,7 +874,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&strainrate[2], /* not a typo! */
 					&(dmg),
 					&dudt);
-			//p->udot -= 0.0;//dudt;
+			p->udot -= dudt;
 		}
     }
 }
@@ -936,6 +945,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 				 * and calcuate reduced stress terms, viz. eq. 8 */
 				plastic_(&stress[0], 
 						&stress[4], 
+						&stress[8], 
 						&stress[1],
 						&stress[2],
 						&stress[5],

@@ -1,5 +1,5 @@
       subroutine strengthforce(grpmj,rhoij,
-     $     sxxi,syyi,sxyi,sxzi,syzi,sxxj,syyj,
+     $     sxxi,syyi,szzi,sxyi,sxzi,syzi,sxxj,syyj,szzj,
      $     sxyj,sxzj,syzj,dmi,dmj,dx,dy,dz,dfxi,dfyi,dfzi)
 c****************************************************************
 c This subroutine calculates the force from the strength module *
@@ -16,8 +16,8 @@ c     grpmj kernel gradient
 c     redi,redj: reduction from damage
 c     rhoij:  average rho
       real*4 rhoij,grpmj
-      real*4 sxxi,syyi,sxyi,sxzi,syzi
-      real*4 sxxj,syyj,sxyj,sxzj,syzj
+      real*4 sxxi,syyi,szzi,sxyi,sxzi,syzi
+      real*4 sxxj,syyj,szzj,sxyj,sxzj,syzj
       real*4 dmi,dmj
       real*4 dx,dy,dz
 c
@@ -42,7 +42,8 @@ c
       redj=1.-dmj**3
       sigxxij=(redi*sxxi + redj*sxxj)/rhoij
       sigyyij=(redi*syyi + redj*syyj)/rhoij
-      sigzzij=(redi*sxxi - redi*syyi + redj*sxxj - redj*syyj)/rhoij
+c      sigzzij=(redi*sxxi - redi*syyi + redj*sxxj - redj*syyj)/rhoij
+      sigzzij=(redi*szzi + redj*szzj)/rhoij
       sigxyij=(sxyi + redj*sxyj)/rhoij
       sigxzij=(sxzi + redj*sxzj)/rhoij
       sigyzij=(syzi + redj*syzj)/rhoij
@@ -59,7 +60,7 @@ c
 
       subroutine deviator(xmui,sxxi,syyi,szzi,sxyi,sxzi,
      $     syzi,epsxxi,epsyyi,epszzi,epsxyi,epsxzi,epsyzi,
-     $     rxyi,rxzi,ryzi,dsxxi,dsyyi,dsxyi,dsxzi,dsyzi)
+     $     rxyi,rxzi,ryzi,dsxxi,dsyyi,dszzi,dsxyi,dsxzi,dsyzi)
 c***************************************************************
 c                                                              *
 c  subroutine to compute the derivative of the deviatoric      *
@@ -80,7 +81,7 @@ c       xmui:  shear modulus
 c
 c--output
 c      dsxxi,dsyyi,dsxyi,dsxzi,dsyzi: rate of change of the stress tensor
-      real*4 dsxxi,dsyyi,dsxyi,dsxzi,dsyzi
+      real*4 dsxxi,dsyyi,dszzi,dsxyi,dsxzi,dsyzi
 c
 c--variables
 c      div3:  mean of the strain rate tensor
@@ -95,6 +96,8 @@ c
       dsxxi=xmu2*(epsxxi-div3)+2.*sxyi*rxyi+
      $     2.*sxzi*rxzi
       dsyyi=xmu2*(epsyyi-div3)-2.*sxyi*rxyi+
+     $     2.*syzi*ryzi
+      dszzi=xmu2*(epszzi-div3)-2.*sxzi*rxzi+
      $     2.*syzi*ryzi
       dsxyi=xmu2*epsxyi+(syyi-sxxi)*rxyi+
      $     sxzi*ryzi+syzi*rxzi
@@ -144,7 +147,7 @@ c
       return
       end
 
-      subroutine strengthdu(rhoi,sxxi,syyi,sxyi,sxzi,syzi,
+      subroutine strengthdu(rhoi,sxxi,syyi,szzi,sxyi,sxzi,syzi,
      $     epsxxi,epsyyi,epsxyi,epsxzi,epsyzi,epszzi,dmi,dudt)
 c****************************************************************
 c This subroutine calculates the change in energy (du/dt) from  *
@@ -158,7 +161,7 @@ c     sxxi,syyi,sxyi,sxzi,syzi: stress tensor components
 c     epsxxi,epsyyi,epsxyi,epsxzi,epsyzi: strain rate tensor components
 c     redi: reduction from damage
       real*4 rhoi,dmi
-      real*4 sxxi,syyi,sxyi,sxzi,syzi
+      real*4 sxxi,syyi,szzi,sxyi,sxzi,syzi
       real*4 epsxxi,epsyyi,epszzi,epsxyi,epsxzi,epsyzi
 c
       real*4 redi
@@ -169,13 +172,16 @@ c
       real*4 dudt
 c
       redi=1.0-dmi**3
-      dudt=sxxi*epsxxi+syyi*epsyyi+(-sxxi-syyi)*epszzi+
-     $     2.0*sxyi*epsxyi+2.0*sxzi*epszzi+2.0*syzi*epszzi
+c      dudt=sxxi*epsxxi+syyi*epsyyi+(-sxxi-syyi)*epszzi+
+c     $     2.0*sxyi*epsxyi+2.0*sxzi*epszzi+2.0*syzi*epszzi
+c     extend to full 3D, also, is there a typo on the 2nd line?
+      dudt=sxxi*epsxxi+syyi*epsyyi+szzi*epszzi+
+     $     2.0*sxyi*epsxyi+2.0*sxzi*epsxzi+2.0*syzi*epsyzi
       dudt=dudt/rhoi*redi
 
       return
       end
-      subroutine fracture(sxxi,syyi,sxyi,sxzi,syzi,pri,dmi,nflawi,
+      subroutine fracture(sxxi,syyi,szzi,sxyi,sxzi,syzi,pri,dmi,nflawi,
      $     ifrac,youngi,epsmini,xmi,acoefi,ddmi)
 c************************************************************************
 c This code determines the initiation of fraction and evolves           *
@@ -188,7 +194,7 @@ c       dmi:  damage
 c       pri:  pressure
 c       ifrac: fracture model...  only 1 viable at the moment
 c
-      real*4 sxxi,syyi,sxyi,sxzi,syzi
+      real*4 sxxi,syyi,szzi,sxyi,sxzi,syzi
       real*4 dmi,pri
       integer ifrac
 c
@@ -230,7 +236,7 @@ c
          redi=1.0-dmi**3
          sxxip=redi*sxxi-pri
          syyip=redi*syyi-pri
-         szzip=-redi*sxxi-redi*syyi-pri
+         szzip=redi*szzi-pri
          sxyip=redi*sxyi
          syzip=redi*syzi
          sxzip=redi*sxzi
@@ -364,8 +370,8 @@ c
       return
       end
 
-      subroutine plastic(sxxi,syyi,sxyi,sxzi,syzi,ui,dmi,umelti,yiei,
-     $     vonmisesi)
+      subroutine plastic(sxxi,syyi,szzi,sxyi,sxzi,syzi,ui,dmi,umelti,
+     $     yiei,vonmisesi)
 c************************************************************************
 c  This subroutine applies the von Mises criterion to limit the         *
 c deviatoric stress (von Mises, R., 1913,  Mechanik der festen Korperim *
@@ -379,7 +385,7 @@ c       dmi:  damage
 c       ui:  internal energy
 c
 c
-      real*4 sxxi,syyi,sxyi,sxzi,syzi
+      real*4 sxxi,syyi,szzi,sxyi,sxzi,syzi
       real*4 ui,dmi
 c-- material data
 c       umelti:  melt energy for material
@@ -428,7 +434,7 @@ c
       redi=1.0-dmi**3
       txxi=(redi*sxxi+tiny)/yst + tiny
       tyyi=(redi*syyi+tiny)/yst + tiny
-      tzzi=-txxi-tyyi
+      tzzi=(redi*szzi+tiny)/yst + tiny
       txyi=(redi*sxyi+tiny)/yst + tiny
       txzi=(redi*sxzi+tiny)/yst + tiny
       tyzi=(redi*syzi+tiny)/yst + tiny
