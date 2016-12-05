@@ -42,6 +42,8 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "do_drag", &(params->do_drag), 0);
     SDFgetintOrDefault(sdfp, "has_grav_data", &(params->has_grav_data), params->do_grav);
 
+	SDFgetintOrDefault (sdfp, "poly_eos", &(params->poly_eos), 0);
+
 	if (params->do_sph || params->do_grav) {
 	    if (SDFhasname("SPHdatafile", sdfp))
 	        SDFgetstring(sdfp, "SPHdatafile", params->SPHdatafile, sizeof(params->SPHdatafile));

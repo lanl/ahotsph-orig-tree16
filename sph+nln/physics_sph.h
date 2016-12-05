@@ -26,6 +26,8 @@
 #define K_BOLTZ (9.059183e-66)
 #define MH (8.411685e-58)
 */
+#define POLY_EOS_K 0.5f
+#define POLY_EOS_GAMMA 1.5f
 
 
 typedef struct {

@@ -64,6 +64,7 @@ typedef struct {
 	int log_image;
     int kernel_ncoef1;
     int kernel_ncoef2;
+	int poly_eos;
     float new_h;
     float new_u;
     float r_inner;
