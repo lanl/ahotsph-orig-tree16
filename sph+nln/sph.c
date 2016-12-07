@@ -653,6 +653,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	
 		    /* Figure out good upper and lower limits for temp */
 		    p->temp = newtraph(4.0e3, 1.5e11, eos_u*1.0e-6, uvst, duvst);
+			p->mpf = p->h;
 		}
 
         /* calculate the total pressure by calculating the respective 
