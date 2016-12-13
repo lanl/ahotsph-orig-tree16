@@ -595,10 +595,10 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	        temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
 		} else {
 		    /* Calculate temperature from u, then "create" photons (a*T^4) */
-		    eos_n = ((double)(p->rho_est))/((double)(MH));
-			eos_n *= ivlenCF3;
+		    eos_n = (double)(p->rho_est) * ivlenCF3 * massCF;
+			eos_n /= (double) MH;
 		    eos_u = ((double)(p->u))*((double)(p->rho_est));
-			eos_u = massCF * ivlenCF2 * ivtimeCF; 
+			eos_u *= massCF * ivlenCF * ivtimeCF2; 
 	
 		    /* Figure out good upper and lower limits for temp */
 		    p->temp = newtraph(4.0e3, 1.5e11, eos_u*1.0e-6, uvst, duvst);
@@ -646,14 +646,14 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
 		else {
 		    /* Calculate temperature from u, then "create" photons (a*T^4) */
-		    eos_n = ((double)(p->rho_est))/((double)(MH));
-			eos_n *= ivlenCF3;
+		    eos_n = (double)(p->rho_est) * ivlenCF3 * massCF;
+			eos_n /= (double) MH;
 		    eos_u = ((double)(p->u))*((double)(p->rho_est));
-			eos_u = massCF * ivlenCF2 * ivtimeCF; 
+			eos_u *= massCF * ivlenCF * ivtimeCF2; 
 	
 		    /* Figure out good upper and lower limits for temp */
 		    p->temp = newtraph(4.0e3, 1.5e11, eos_u*1.0e-6, uvst, duvst);
-			p->mpf = p->h;
+			p->mfp = p->h;
 		}
 
         /* calculate the total pressure by calculating the respective 
@@ -670,7 +670,8 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
         /* from D. Clayton's Stellar Evolution book, p.119 */
         Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
             (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
-        p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
+        /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
+		p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
 
         if (params.do_diffusion) {
             /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
