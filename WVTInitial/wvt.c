@@ -1576,7 +1576,7 @@ update_WVT(SPHbody *btab, int nobj, double dt, int *limit_high, int *limit_low)
 	
 	p->udot += p->drho_dt * p->pr / (p->rho * p->rho);
 	
-	if (!finite(p->udot)) 
+	if (!isfinite(p->udot)) 
 	    Error("Bad value for udot\n");
 	
 	/* Are these limits appropriate? */

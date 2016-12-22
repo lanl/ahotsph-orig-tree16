@@ -146,11 +146,11 @@ void CellFromCofm(cell *cp, cofmdata *cmp)
 	bmaxhalf = cmp->bmax * (float)0.5;
 	rcritmax = bmaxhalf + sqrtf_fast(bmaxhalf*bmaxhalf
 					 + sqrtf_fast((float)3.*invTol*B2));
-	if (!finite(rcritmax))
+	if (!isfinite(rcritmax))
 	  Error("Bad rcritmax, q->bmax = %g, B2 = %g\n", cmp->bmax, B2);
 	if (B2 == (float)0.0) Error("B2 is zero\n");
 	B3 = B2 * sqrtf_fast(B2*cmp->massinv); 
-	if (!finite(B2) || !finite(B3) || !finite(cmp->bmax))
+	if (!isfinite(B2) || !isfinite(B3) || !isfinite(cmp->bmax))
 	  Error("Bad value B2 = %g, B3 = %g, bmax = %g\n", B2, B3, cmp->bmax);
 	a[0] = 2.*B3;
 	a[1] = -3. * B2;
@@ -190,7 +190,7 @@ static void rcrit_poly(double r, double *value, double *deriv)
     /* See pg. 149 of Numerical Rec. */
     /* We could unroll it... */
     while(n>0) { dp = dp*r + p; p = p*r + a[--n]; }
-    if (!finite(p) || !finite(dp))
+    if (!isfinite(p) || !isfinite(dp))
       Error("Bad p or dp, p = %g, dp = %g, n = %d\n", p, dp, n);
     *value = p;
     *deriv = dp;
