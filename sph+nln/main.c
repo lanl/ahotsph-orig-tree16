@@ -2089,7 +2089,7 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
     SPHbody *p;
     int i,j;
     sortresult_t outputsort;
-    SPHoutbody *output_btab;
+    SPHoutbody_NW *output_btab;
     int output_nobj = nobj;
     float tpos_out = tpos;
     float tvel_out = tvel; /* changed in Integrate() */
@@ -2167,8 +2167,8 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
     }
     /* I'm guessing this writes whatever is in output_btab, matched to SPHOUTBODYDESC -CIE */
     SDFwrite(outname, output_gnobj, 
-            output_nobj, output_btab, sizeof(SPHoutbody),
-            SPHOUTBODYDESC,
+            output_nobj, output_btab, sizeof(SPHoutbody_NW),
+            SPHOUTBODYDESC_NW,
             "npart", SDF_INT, output_gnobj,
             "iter", SDF_INT, iter,
             "dt", SDF_FLOAT, dt,

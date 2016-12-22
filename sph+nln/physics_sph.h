@@ -141,8 +141,36 @@ typedef struct {
     float temp;
     float Y_el;
     float mfp;
-    float abund[NISO];
 } SPHoutbody;
+
+typedef struct {
+#ifdef POS_IS_DOUBLE
+    double pos[NDIM];		/* position of body */
+#else
+    float pos[NDIM];		/* position of body */
+#endif
+    float mass;			/* mass of body */
+    float vel[NDIM];		/* velocity of body */
+    float u;
+    float h;
+    float rho;
+    float drho_dt;
+    float udot;
+#ifdef SPH_SAVE_ACC
+    float acc[NDIM];
+    float acc_last[NDIM];
+    float phi;
+    float dt;
+#endif
+    float pr;
+    unsigned int nbrs; 
+    unsigned int ident;		/* unique? identifier */
+    unsigned int windid;
+    float temp;
+    float Y_el;
+    float mfp;
+    float abund[NISO];
+} SPHoutbody_NW;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -184,6 +212,28 @@ typedef struct {
     float temp;                 /* temperature */\n\
     float Y_el;                  /* for alignment */\n\
     float mfp;			/* mean free path */\n\
+}"
+#define SPHOUTBODYDESC_NW \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float ax, ay, az;		/* acceleration */\n\
+    float lax, lay, laz;	/* acceleration at tpos-dt */\n\
+    float phi;			/* potential */\n\
+    float idt;			/* timestep */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float Y_el;                  /* for alignment */\n\
+    float mfp;			/* mean free path */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
 #define SPHSHORTOUTBODYDESC \
@@ -200,6 +250,24 @@ typedef struct {
 }"
 #else
 #define SPHOUTBODYDESC \
+"struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float pr;		/* pressure */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+    unsigned int windid;        /* wind id */\n\
+    float temp;                 /* temperature */\n\
+    float Y_el;                  /* for alignment */\n\
+    float mfp;			/* mean free path */\n\
+}"
+#define SPHOUTBODYDESC_NW \
 "struct {\n\
     double x, y, z;		/* position of body */\n\
     float mass;			/* mass of body */\n\
