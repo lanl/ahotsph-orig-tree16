@@ -150,7 +150,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 			to->strengthbody.dstressdt[i] = 0.0;
 		}
 		for (i = 0; i < SRTERMS; i++)
-			to->strengthbody.dstraindt[i] = 0.0;//bp->data.strengthbody.strainrate[i];
+			to->strengthbody.dstraindt[i] = 0.0;//bp->data.strengthbody.strain[i];
 		//to->strengthbody.rotation[i] = 0.0;
 		to->strengthbody.actv_defects = bp->data.strengthbody.actv_defects;
 		to->strengthbody.vonMises = bp->data.strengthbody.vonMises;
@@ -302,9 +302,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float stress_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
 	float stress_j[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
 	float dstressdt_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
-	float strainrate_i[SRTERMS] = {0,0,0,0,0,0};
-	float dstrainrate[SRTERMS] = {0,0,0,0,0,0};
-	double dstrainrate_i[SRTERMS] = {0,0,0,0,0,0};
+	float strain_i[SRTERMS] = {0,0,0,0,0,0};
+	float dstraindt[SRTERMS] = {0,0,0,0,0,0};
+	double dstraindt_i[SRTERMS] = {0,0,0,0,0,0};
 	float gshear = (float)G_shear;
 	double yieldstr = (double)YieldStr;
 	double umelt = (double)u_melt;
@@ -459,12 +459,12 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			stress_i[8] = sink->strengthbody.stress[8];
 			
 			/* equilibrium, no strain */
-			strainrate_i[0] = sink->strengthbody.strainrate[0];
-			strainrate_i[1] = sink->strengthbody.strainrate[1];
-			strainrate_i[2] = sink->strengthbody.strainrate[2];
-			strainrate_i[3] = sink->strengthbody.strainrate[3];
-			strainrate_i[4] = sink->strengthbody.strainrate[4];
-			strainrate_i[5] = sink->strengthbody.strainrate[5];
+			strain_i[0] = sink->strengthbody.strain[0];
+			strain_i[1] = sink->strengthbody.strain[1];
+			strain_i[2] = sink->strengthbody.strain[2];
+			strain_i[3] = sink->strengthbody.strain[3];
+			strain_i[4] = sink->strengthbody.strain[4];
+			strain_i[5] = sink->strengthbody.strain[5];
 			dmg_i = sink->strengthbody.dmg;
 			dmg_j = bp->data.strengthbody.dmg;
 			VxVx(dr_i, = r);
@@ -476,7 +476,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			robar = 1. / robar1;
 			
 			/* compute gradients of strain rate and rotation. for ... ? */
-			/* i.e. sets dstrainrate_* and drot_* */
+			/* i.e. sets dstraindt_* and drot_* */
 			straintensor_(&grpm_dbl,
 					&dv_i0,
 					&dv_i1,
@@ -484,23 +484,23 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&dr_i0,
 					&dr_i1,
 					&dr_i2,
-					&(dstrainrate_i[0]),
-					&(dstrainrate_i[1]),
-					&(dstrainrate_i[2]),
-					&(dstrainrate_i[3]),
-					&(dstrainrate_i[4]),
-					&(dstrainrate_i[5]),
+					&(dstraindt_i[0]),
+					&(dstraindt_i[1]),
+					&(dstraindt_i[2]),
+					&(dstraindt_i[3]),
+					&(dstraindt_i[4]),
+					&(dstraindt_i[5]),
 					&(drot_i[0]),
 					&(drot_i[1]),
 					&(drot_i[2]));
 
-			//strainrate_i[0] = 1.0e-3;
-			dstrainrate[0] += (float)dstrainrate_i[0];
-			dstrainrate[1] += (float)dstrainrate_i[1];
-			dstrainrate[2] += (float)dstrainrate_i[2];
-			dstrainrate[3] += (float)dstrainrate_i[3];
-			dstrainrate[4] += (float)dstrainrate_i[4];
-			dstrainrate[5] += (float)dstrainrate_i[5];
+			//strain_i[0] = 1.0e-3;
+			dstraindt[0] += (float)dstraindt_i[0];
+			dstraindt[1] += (float)dstraindt_i[1];
+			dstraindt[2] += (float)dstraindt_i[2];
+			dstraindt[3] += (float)dstraindt_i[3];
+			dstraindt[4] += (float)dstraindt_i[4];
+			dstraindt[5] += (float)dstraindt_i[5];
 
 			drot[0] += drot_i[0];
 			drot[1] += drot_i[1];
@@ -514,12 +514,12 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&stress_j[1],
 					&stress_j[2],
 					&stress_j[5],
-					&strainrate_i[0],
-					&strainrate_i[1],
-					&strainrate_i[2],
-					&strainrate_i[3],
-					&strainrate_i[4],
-					&strainrate_i[5],
+					&strain_i[0],
+					&strain_i[1],
+					&strain_i[2],
+					&strain_i[3],
+					&strain_i[4],
+					&strain_i[5],
 					&rot_i[0],
 					&rot_i[1],
 					&rot_i[2],
@@ -597,12 +597,12 @@ failed:
     VVx(sink->lvel, += smv);
 	//for (i = 0; i < NDIM*NDIM; i++)
 	//	sink->strengthbody.stress[i] += (float)stress_j[i];
-	sink->strengthbody.dstraindt[0] += dstrainrate[0];
-	sink->strengthbody.dstraindt[1] += dstrainrate[1];
-	sink->strengthbody.dstraindt[2] += dstrainrate[2];
-	sink->strengthbody.dstraindt[3] += dstrainrate[3];
-	sink->strengthbody.dstraindt[4] += dstrainrate[4];
-	sink->strengthbody.dstraindt[5] += dstrainrate[5];
+	sink->strengthbody.dstraindt[0] += dstraindt[0];
+	sink->strengthbody.dstraindt[1] += dstraindt[1];
+	sink->strengthbody.dstraindt[2] += dstraindt[2];
+	sink->strengthbody.dstraindt[3] += dstraindt[3];
+	sink->strengthbody.dstraindt[4] += dstraindt[4];
+	sink->strengthbody.dstraindt[5] += dstraindt[5];
     sink->nbrs += nbrs;
     sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;
@@ -756,7 +756,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
     double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
 	float stress[NDIM*NDIM];
-	float strainrate[SRTERMS];
+	float strain[SRTERMS];
 	float xmi, crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
 	float epsmini, eyoung;
 	float iv_Weibull_m = 1./params.material_m;
@@ -833,7 +833,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 				stress[i] = (double)p->data.strengthbody.stress[i];
 			
 			for (i = 0; i < SRTERMS; i++)
-				strainrate[i] = (double)p->data.strengthbody.strainrate[i];
+				strain[i] = (double)p->data.strengthbody.strain[i];
 			dmg = (double)p->data.strengthbody.dmg;
 			rho_i = (double)p->rho;
 			if (params.make_brittle) {
@@ -866,12 +866,12 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&stress[1],
 					&stress[2],
 					&stress[5],
-					&strainrate[0],
-					&strainrate[1],
-					&strainrate[3],
-					&strainrate[4],
-					&strainrate[5],
-					&strainrate[2], /* not a typo! */
+					&strain[0],
+					&strain[1],
+					&strain[3],
+					&strain[4],
+					&strain[5],
+					&strain[2], /* not a typo! */
 					&(dmg),
 					&dudt);
 			p->udot -= dudt;
@@ -893,7 +893,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
     SPHbody *p;
 	Material_t mat;
 	float stress[NDIM*NDIM], dstressdt[NDIM*NDIM];
-	float strainrate[SRTERMS];
+	float strain[SRTERMS];
 	float rot[NDIM];
 	float dmg_i;
 	float vonMises, u_i;

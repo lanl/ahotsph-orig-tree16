@@ -589,7 +589,7 @@ main(int argc, char *argv[])
 				q->data.strengthbody.dstressdt_last[i] = 0.0;
 			}
 			for (i = 0; i < SRTERMS; i++) {
-				q->data.strengthbody.strainrate[i] = 0.0;
+				q->data.strengthbody.strain[i] = 0.0;
 				q->data.strengthbody.dstraindt[i] = 0.0;
 				q->data.strengthbody.dstraindt_last[i] = 0.0;
 			}
@@ -1039,7 +1039,7 @@ main(int argc, char *argv[])
                     VS(q->lvel, = 0.0);
 				//	VS(q->vel, = 0.0);
 					for (i = 0; i < SRTERMS; i++)
-						q->data.strengthbody.strainrate[i] = 0.0;
+						q->data.strengthbody.strain[i] = 0.0;
                 }
             }
 
@@ -1268,8 +1268,8 @@ main(int argc, char *argv[])
 					singlPrintf("stress not finite\n");
 				if (!isfinite(SPHbtab[0].data.strengthbody.dstressdt[i]))
 					singlPrintf("dstressdt not finite\n");
-				if (!isfinite(SPHbtab[0].data.strengthbody.strainrate[i]))
-					singlPrintf("strainrate not finite\n");
+				if (!isfinite(SPHbtab[0].data.strengthbody.strain[i]))
+					singlPrintf("strain not finite\n");
 
 				ABUpdateXs(&SPHbtab[0].data.strengthbody.stress[i], SPHstride, 
 					&SPHbtab[0].data.strengthbody.dstressdt[i], SPHstride,
@@ -1277,7 +1277,7 @@ main(int argc, char *argv[])
 					&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
 			}
 			for (i = 0; i < SRTERMS; i++) {
-				ABUpdateXs(&SPHbtab[0].data.strengthbody.strainrate[i], SPHstride,
+				ABUpdateXs(&SPHbtab[0].data.strengthbody.strain[i], SPHstride,
 						&SPHbtab[0].data.strengthbody.dstraindt[i], SPHstride,
 						&SPHbtab[0].data.strengthbody.dstraindt_last[i], SPHstride,
 						&SPHbtab[0].ident, SPHstride3, SPHnobj, dt, dt_last);
@@ -2507,7 +2507,7 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
         }
 		for (j = 0; j < SRTERMS; j++)
-            output_btab[i].strengthbody.strainrate[j] = btab[i].data.strengthbody.strainrate[j];
+            output_btab[i].strengthbody.strain[j] = btab[i].data.strengthbody.strain[j];
     }
     /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
     Msgf(("Doing output of %d bodies\n", output_nobj));
