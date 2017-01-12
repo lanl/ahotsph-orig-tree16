@@ -888,6 +888,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
     float ne, rho, max_rad, r2;
     double P_ratio, Gammai; 
     double tlo = 1.e0, tup = 2.5e11;
+    double pr_d, rho_d, u_d, cs_d;
 	float rho0 = 1;
     int j, temp_ok;
     SPHbody *p;
@@ -962,12 +963,17 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 			}
 			p->data.strengthbody.vonMises = (float)vonMises;
 			
-			p->data.strengthbody.is_strength = has_strength (*p);
+			//p->data.strengthbody.is_strength = has_strength (*p);
 			/* eventually, this is done at the beginning in main */
 			setconst2 (&mat);
 			/* calculate pressure, sound speed */
-			tillotson_eos (p->rho_est, p->u, &mat, &(p->pr), &(p->vsound));
+            rho_d = (double)p->rho_est;
+            u_d = (double)p->u;
+			tillotson_eos (rho_d, u_d, &mat, &(pr_d), &(cs_d));
+            p->pr = (float)pr_d;
+            p->vsound = (float)cs_d;
 			if (p->pr != 0.0) {
+            //    printf ("pr not zero: %g\n",pr_d);
 			//	p->pr = 0.0;
 				/* try to guess a stress tensor, assume diag. terms = 0 cuz equil */
 				/*
