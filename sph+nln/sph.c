@@ -559,7 +559,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&(stress_i[5]),
 					&(stress_j[0]),
 					&(stress_j[4]),
-					&(stress_i[8]),
+					&(stress_j[8]),
 					&(stress_j[1]),
 					&(stress_j[2]),
 					&(stress_j[5]),
