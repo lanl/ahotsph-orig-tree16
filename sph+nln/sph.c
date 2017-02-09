@@ -90,6 +90,7 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 		bp->data.strengthbody.vonMises = from->strengthbody.vonMises;
 		bp->data.strengthbody.crack_len = from->strengthbody.crack_len;
 		bp->data.strengthbody.is_strength = from->strengthbody.is_strength;
+		bp->data.strengthbody.dmg = from->strengthbody.dmg;
 		}
         bp->drho_dt += from->drho_dt;
         bp->udot += from->udot;
@@ -149,13 +150,16 @@ InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
 			//to->strengthbody.dstressdt[i] = bp->data.strengthbody.dstressdt[i];
 			to->strengthbody.dstressdt[i] = 0.0;
 		}
-		for (i = 0; i < SRTERMS; i++)
+		for (i = 0; i < SRTERMS; i++) {
 			to->strengthbody.dstraindt[i] = 0.0;//bp->data.strengthbody.strain[i];
+            to->strengthbody.strain[i] = bp->data.strengthbody.strain[i];
+        }
 		//to->strengthbody.rotation[i] = 0.0;
 		to->strengthbody.actv_defects = bp->data.strengthbody.actv_defects;
 		to->strengthbody.vonMises = bp->data.strengthbody.vonMises;
 		to->strengthbody.crack_len = bp->data.strengthbody.crack_len;
 		to->strengthbody.is_strength = bp->data.strengthbody.is_strength;
+		to->strengthbody.dmg = bp->data.strengthbody.dmg;
 		}
     }
 
