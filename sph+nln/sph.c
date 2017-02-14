@@ -885,7 +885,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&strain[2], /* not a typo! */
 					&(dmg),
 					&dudt);
-			p->udot -= dudt;
+			p->D = dudt;
 		}
     }
 }
