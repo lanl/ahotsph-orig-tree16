@@ -408,7 +408,7 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
         poro2 = grpm * (pro2 + bp->pr / (bp->rho_est * bp->rho_est));
         rij1 = (float)1.0 / rij;
         VxVx(runi, = rij1 * r);
-        VxVx(f, += poro2 * runi);
+        //VxVx(f, += poro2 * runi);
         VxVVx(dv, = bp->vel, - v);
         VxVx(smv, += robar1 * wpm * dv);
         projv = Dotx(dv, runi);
@@ -506,11 +506,12 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			dstraindt[4] += (float)dstraindt_i[4];
 			dstraindt[5] += (float)dstraindt_i[5];
 
-			drot[0] += drot_i[0];
-			drot[1] += drot_i[1];
-			drot[2] += drot_i[2];
+			drot[0] = 0.0;//+= drot_i[0];
+			drot[1] = 0.0;//+= drot_i[1];
+			drot[2] = 0.0;//+= drot_i[2];
 
 			/* calculate rate of change of stress tensor */
+            /* in update_intermediate
 			deviator_(&gshear,
 					&stress_j[0],
 					&stress_j[4],
@@ -552,7 +553,13 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 			sink->strengthbody.dstressdt[7] += (float)dstressdt_i[7];
 			if (isfinite(dstressdt_i[8]))
 			sink->strengthbody.dstressdt[8] += (float)dstressdt_i[8];
+            */
 
+			/*
+             * subtract out any non-stress acceleration?!?
+			VVx(df_i, = f);
+			VxV(f, -= df_i);
+			*/
 			strengthforce_(&grpm,
 					&robar,
 					&(stress_i[0]),
