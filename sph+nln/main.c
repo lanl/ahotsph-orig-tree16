@@ -577,7 +577,9 @@ main(int argc, char *argv[])
         q->phi = 0.0;
 		/* dev: (re-)set strength quantities */
 		if (params.do_strength_test) {
-			//q->u = 0.e-0;
+			q->u = 1.5e-0;
+            q->temp = 1.0;
+            q->pr = 0.0;
 			q->data.strengthbody.actv_defects = 0;
 			q->data.strengthbody.is_strength = 1;
 			q->data.strengthbody.dmg = 0.0;
@@ -594,6 +596,10 @@ main(int argc, char *argv[])
 				q->data.strengthbody.dstraindt_last[i] = 0.0;
 			}
 			rad = sqrt(q->pos[0] * q->pos[0] + q->pos[1] * q->pos[1] + q->pos[2] * q->pos[2]);
+            if (q->pos[2] < 2.0)
+                q->acc[2] = 1.0e-1;
+            else
+                q->acc[2] = -1.0e-1;
 			/* hopefully equil stress terms? */
 			/* diag. terms = normal stresses, off-diag. terms = shear stresses */
 			//q->data.strengthbody.stress[0] = 1.0*stress_mag;// * q->pos[0] / rad;
@@ -1035,11 +1041,11 @@ main(int argc, char *argv[])
                     q->udot = (float)0.0;
                     q->nbrs = 0;
                     q->nterms = 0;
-                    VS(q->acc, = 0.0);
+            //        VS(q->acc, = 0.0);
                     VS(q->lvel, = 0.0);
 				//	VS(q->vel, = 0.0);
-					for (i = 0; i < SRTERMS; i++)
-						q->data.strengthbody.strain[i] = 0.0;
+					//for (i = 0; i < SRTERMS; i++)
+					//	q->data.strengthbody.strain[i] = 0.0;
                 }
             }
 
