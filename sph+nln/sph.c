@@ -534,7 +534,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&dstressdt_i[1],
 					&dstressdt_i[2],
 					&dstressdt_i[5]);
+                    */
 			//dstressdt_i[4] = 1.5e+4;
+            /*
 			if (isfinite(dstressdt_i[0]))
 			sink->strengthbody.dstressdt[0] += (float)dstressdt_i[0];
 			if (isfinite(dstressdt_i[1]))
@@ -583,11 +585,20 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 					&(df_i[1]),
 					&(df_i[2]));
 			/* add to force of particle */
-			/*
-			VVx(df_i, = f);
-			VxV(f, -= 0.9999*df_i);
-			*/
-			VxV(f, -= df_i);
+            if (!isfinite (df_i[0])) {
+                printf ("df_i[0] not finite: %g\n", df_i[0]);
+                printf ("dmg_i = %f, dmg_j = %f\n", dmg_i, dmg_j);
+            }
+            if (!isfinite (df_i[1])) {
+                printf ("df_i[1] not finite: %g\n", df_i[1]);
+                printf ("dmg_i = %f, dmg_j = %f\n", dmg_i, dmg_j);
+            }
+            if (!isfinite (df_i[2])) {
+                printf ("df_i[2] not finite: %g\n", df_i[2]);
+                printf ("dmg_i = %f, dmg_j = %f\n", dmg_i, dmg_j);
+            }
+
+			VxV(f, += df_i);
 		}
 
         nbrs++;
@@ -948,7 +959,56 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
 			for (i = 0; i < NDIM*NDIM; i++) {
 				stress[i] = (double)p->data.strengthbody.stress[i];
+                dstressdt[i] = 0.0;
 			}
+            for (i = 0; i < SRTERMS; i++) 
+                strain[i] = (double)p->data.strengthbody.strain[i];
+            rot[0] = 0.0;//p->data.strengthbody.rotation[0];
+            rot[1] = 0.0;//p->data.strengthbody.rotation[1];
+            rot[2] = 0.0;//p->data.strengthbody.rotation[2];
+			/* calculate rate of change of stress tensor */
+			deviator_(&gshear,
+					&stress[0],
+					&stress[4],
+					&stress[8],
+					&stress[1],
+					&stress[2],
+					&stress[5],
+					&strain[0],
+					&strain[1],
+					&strain[2],
+					&strain[3],
+					&strain[4],
+					&strain[5],
+					&rot[0],
+					&rot[1],
+					&rot[2],
+					&dstressdt[0],
+					&dstressdt[4],
+					&dstressdt[8],
+					&dstressdt[1],
+					&dstressdt[2],
+					&dstressdt[5]);
+			//dstressdt_i[4] = 1.5e+4;
+			if (isfinite(dstressdt[0]))
+			p->data.strengthbody.dstressdt[0] = (float)dstressdt[0];
+			if (isfinite(dstressdt[1]))
+			p->data.strengthbody.dstressdt[1] = (float)dstressdt[1];
+			if (isfinite(dstressdt[2]))
+			p->data.strengthbody.dstressdt[2] = (float)dstressdt[2];
+			if (isfinite(dstressdt[3]))
+			p->data.strengthbody.dstressdt[3] = (float)dstressdt[3];
+			if (isfinite(dstressdt[4]))
+			p->data.strengthbody.dstressdt[4] = (float)dstressdt[4];
+			if (isfinite(dstressdt[5]))
+			p->data.strengthbody.dstressdt[5] = (float)dstressdt[5];
+			if (isfinite(dstressdt[6]))
+			p->data.strengthbody.dstressdt[6] = (float)dstressdt[6];
+			if (isfinite(dstressdt[7]))
+			p->data.strengthbody.dstressdt[7] = (float)dstressdt[7];
+			if (isfinite(dstressdt[8]))
+			p->data.strengthbody.dstressdt[8] = (float)dstressdt[8];
+
 			dmg_i = p->data.strengthbody.dmg;
 			u_i = p->u;
 			vonMises = p->data.strengthbody.vonMises;

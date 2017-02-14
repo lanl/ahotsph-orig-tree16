@@ -20,6 +20,7 @@ c     rhoij:  average rho
       real*4 sxxj,syyj,szzj,sxyj,sxzj,syzj
       real*4 dmi,dmj
       real*4 dx,dy,dz
+      real*8 inf
 c
 c--output:
 c     fxi,fyi,fzi:  acceleration terms
@@ -54,6 +55,44 @@ c      sigzzij=(redi*sxxi - redi*syyi + redj*sxxj - redj*syyj)/rhoij
       dfxi=grpmj*tx
       dfyi=grpmj*ty
       dfzi=grpmj*tz
+
+      inf = HUGE (0.0)
+
+      if (dfxi .gt. inf .or. dfxi .ne. dfxi) then
+          write (*,*) "dfxi is ", dfxi
+          write (*,*) "dx, dy, dz, redi, redj, sigxxij, sigxyij,",
+     *     " sigxzij, tx"
+          write (*,*) dx, dy, dz, redi, redj, sigxxij, sigxyij, sigxzij,
+     *     tx
+          write (*,*) "sxxi, sxxj, sxyi, sxyj, sxzi, sxzj"
+          write (*,*) sxxi, sxxj, sxyi, sxyj, sxzi, sxzj
+          write (*,*) "rhoij, dmi, dmj"
+          write (*,*) rhoij, dmi, dmj
+      endif
+
+      if (dfyi .gt. inf .or. dfyi .ne. dfyi) then
+          write (*,*) "dfyi is ", dfyi
+          write (*,*) "dx, dy, dz, redi, redj, sigxyij, sigyyij,",
+     *     " sigyzij, ty"
+          write (*,*) dx, dy, dz, redi, redj, sigxyij, sigyyij, sigyzij,
+     *     ty
+          write (*,*) "sxyi, sxyj, syyi, syyj, syzi, syzj"
+          write (*,*) sxyi, sxyj, syyi, syyj, syzi, syzj
+          write (*,*) "rhoij, dmi, dmj"
+          write (*,*) rhoij, dmi, dmj
+      endif
+
+      if (dfzi .gt. inf .or. dfzi .ne. dfzi) then
+          write (*,*) "dfzi is ", dfzi
+          write (*,*) "dx, dy, dz, redi, redj, sigxzij, sigyzij,",
+     *     " sigzzij, tz"
+          write (*,*) dx, dy, dz, redi, redj, sigxzij, sigyzij, sigzzij,
+     *     tz
+          write (*,*) "sxzi, sxzj, syzi, szyj, szzi, szzj"
+          write (*,*) sxzi, sxzj, syzi, syzj, szzi, szzj
+          write (*,*) "rhoij, dmi, dmj"
+          write (*,*) rhoij, dmi, dmj
+      endif
 
       return
       end
