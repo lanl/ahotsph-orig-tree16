@@ -976,6 +976,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 			tillotson_eos (rho_d, u_d, &mat, &(pr_d), &(cs_d));
             p->pr = (float)pr_d;
             p->vsound = (float)cs_d;
+            p->padding = p->vsound;
 			if (p->pr != 0.0) {
             //    printf ("pr not zero: %g\n",pr_d);
 			//	p->pr = 0.0;

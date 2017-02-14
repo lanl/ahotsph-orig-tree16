@@ -115,6 +115,7 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
+    float padding;
 } SPHbody;
 
 /* windbody and WINDOUTBODYDESC need to be padded to a double boundary for
@@ -224,7 +225,7 @@ typedef struct {
     unsigned int nbrs; 
     unsigned int ident;		/* unique? identifier */
 	strength_data_out_t strengthbody;
-	int padding;
+	float padding;
 } SPHoutbody_strength;
 
 typedef struct {
@@ -327,7 +328,7 @@ typedef struct {
 	float strainxy;		/* strain tensor */\n\
 	float strainxz;		/* strain tensor */\n\
 	float strainyz;		/* strain tensor */\n\
-	int padding;\n\
+	float padding;\n\
 }"
 #define SPHSHORTOUTBODYDESC \
 "struct {\n\

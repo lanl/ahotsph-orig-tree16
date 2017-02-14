@@ -2493,13 +2493,14 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
 #ifdef SPH_SAVE_ACC
         VV(output_btab[i].acc, = btab[i].acc);
         VV(output_btab[i].acc_last, = btab[i].acc_last);
-        output_btab[i].phi = btab[i].phi;
+        output_btab[i].phi = btab[i].D;
         output_btab[i].dt = btab[i].dt;
 #endif
         output_btab[i].pr = btab[i].pr;
         output_btab[i].nbrs = btab[i].nbrs;
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
+        output_btab[i].padding = btab[i].padding;
         output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
