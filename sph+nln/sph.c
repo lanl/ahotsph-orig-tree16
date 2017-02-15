@@ -897,6 +897,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 					&(dmg),
 					&dudt);
 			p->D = dudt;
+            p->udot += dudt;
 		}
     }
 }
