@@ -2510,6 +2510,7 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
+        output_btab[i].strengthbody.vonMises = btab[i].data.strengthbody.vonMises;
         for (j = 0; j < NDIM * NDIM; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
         }
