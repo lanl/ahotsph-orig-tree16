@@ -125,7 +125,7 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     if (!params->do_restart) 
         SDFgetfloatOrDie(sdfp, "dt", &(params->dt));
 
-    SDFgetfloatOrDefault(sdfp, "dark_dt", &(params->dark_dt), 1e30);
+    SDFgetfloatOrDefault(sdfp, "dark_dt", &(params->dark_dt), (params->do_grav ? params->dt : 1e30));
     SDFgetintOrDie(sdfp, "nsteps", &(params->nsteps));
     SDFgetintOrDefault(sdfp, "log_time", &(params->log_time), 0);
     SDFgetintOrDefault(sdfp, "comov_eps", &(params->comov_eps), 0);

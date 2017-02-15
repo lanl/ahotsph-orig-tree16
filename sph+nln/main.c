@@ -368,9 +368,9 @@ main(int argc, char *argv[])
 		            }
 		        } 
 	
+				/* on restart, get dt from sdf file */
 		        SDFgetfloatOrDefault(sdfp, "dt", &dt, 0.0);
-		        SDFgetfloatOrDefault(sdfp, "dark_dt", &(params.dark_dt), dt);
-				if (params.do_restart) 
+				if (params.do_restart)
 					params.dt = dt;
 	        } else {
 	            sdfp = InitRead(params.name, csdfp, (void **)&btab, &gnobj, &nobj, 
@@ -508,11 +508,11 @@ main(int argc, char *argv[])
 
 
     for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
-        q->dt = q->dt_next = dt;
+        q->dt = q->dt_next = params.dt;
         q->tacc = -1e30;
     }
 
-    dt_last = dt;
+    dt_last = params.dt;
     SPH_setup(NDIM, params.kernel_ncoef1, params.kernel_coef1, params.kernel_ncoef2, params.kernel_coef2);
     inherit = (inherit_t)InheritSinkNlogN;
 
@@ -1185,8 +1185,8 @@ main(int argc, char *argv[])
 
         /* Fear my nested ternary operators! */
         if (params.adaptive_dt) Fix_dt(&dt, 
-                (((params.dark_dt<dt_max) ? params.dark_dt:dt_max) < dt_wind)
-                ? ((params.dark_dt<dt_max) ? params.dark_dt:dt_max):dt_wind,
+                (((params.dark_dt<params.dt_max) ? params.dark_dt:params.dt_max) < dt_wind)
+                ? ((params.dark_dt<params.dt_max) ? params.dark_dt:params.dt_max):dt_wind,
                 params.tlow_cut, tmin, tbad, params.dt_short, params.dt_long,
                 udot_limit[0], udot_limit[1]);
 
@@ -2534,7 +2534,7 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
             } else {
                 p->dt = p->min_nbr_dt;
             }
-            if (dti > dt_max && 2.0*p->dt < dt_max) p->dt_next = 2.0*p->dt;
+            if (dti > params.dt_max && 2.0*p->dt < params.dt_max) p->dt_next = 2.0*p->dt;
             else if (dti > 2.0*p->dt) p->dt_next = 2.0*p->dt;
             else if (dti < p->dt) {
                 p->dt *= 0.5;
@@ -2544,7 +2544,7 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
                 min_dt = dti;
             if (dti < dt)
                 tlow++;
-            if (p->dt_next > dt_max) p->dt_next = dt_max;
+            if (p->dt_next > params.dt_max) p->dt_next = params.dt_max;
             if (p->rho > max_rho) max_rho = p->rho;
             if (p->rho < min_rho) min_rho = p->rho;
             if (p->u > max_u) max_u = p->u;
