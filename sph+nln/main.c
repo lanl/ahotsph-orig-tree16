@@ -596,10 +596,13 @@ main(int argc, char *argv[])
 				q->data.strengthbody.dstraindt_last[i] = 0.0;
 			}
 			rad = sqrt(q->pos[0] * q->pos[0] + q->pos[1] * q->pos[1] + q->pos[2] * q->pos[2]);
-            if (q->pos[2] < 2.0)
-                q->acc[2] = 1.0e-1;
-            else
-                q->acc[2] = -1.0e-1;
+            if (q->pos[2] < 1.0) {
+                q->vel[1] = 1.0e+1;
+            } else if (q->pos[2] > 1.5 && q->pos[2] < 2.5) { 
+                q->vel[1] = -1.0e+1;
+            } else {
+                q->vel[1] = 1.0e+1;
+            }
 			/* hopefully equil stress terms? */
 			/* diag. terms = normal stresses, off-diag. terms = shear stresses */
 			//q->data.strengthbody.stress[0] = 1.0*stress_mag;// * q->pos[0] / rad;

@@ -879,6 +879,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 						&iv_Weibull_m,
 						&(crack_len),
 						&ddmgdt);
+                p->padding = ddmgdt;
 			}
 
 			strengthdu_(&(rho_i),
