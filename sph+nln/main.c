@@ -600,7 +600,7 @@ main(int argc, char *argv[])
                 q->vel[1] = 1.0e+1;
             } else if (q->pos[2] > 1.5 && q->pos[2] < 2.5) { 
                 q->vel[1] = -1.0e+1;
-            } else {
+            } else if (q->pos[2] > 3.0) {
                 q->vel[1] = 1.0e+1;
             }
 			/* hopefully equil stress terms? */
