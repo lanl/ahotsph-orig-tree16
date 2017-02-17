@@ -9,7 +9,19 @@
 #include "bigmalloc.h"
 #include "Msgs.h"
 #include "physics_sph.h"
+#include "eos.h"
 
+
+/* This routine creates flaws and assigns them randomly to SPH particles, such that
+ * an SPH particle can have more than one flaw. 
+ * Two tables are created:
+ * - eps: contains the activation energy for each flaw, ordered first by particle ID,
+ *   then by energy (both ascending)
+ * - flaws_tbl_lookup: contains the starting index into eps for a given particle ID, 
+ *   and the number of flaws for this SPH particle, such that
+ *      + [part_id * 2] is the starting index into eps
+ *      + [part_id * 2 + 1] contains the number of flaws
+ */
 void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_lookup, float kVol, float m) {
 	int i, j, nflaws_i;
 	int part_id, cur_nflaws, index;
@@ -21,7 +33,9 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_loo
 	nflaws_i = (int)(Nflaws/gnobj);
 	if (nflaws_i * gnobj < Nflaws)
 		nflaws_i += 1;
-	nflaws_i *= 3; /* generally, the max-nflaws_i seems to stay at < 3* ave-nflaws_i */
+    /* get an estimate on the global max number of flaws per particle */
+    /* generally, the max-nflaws_i seems to stay at < 3* ave-nflaws_i */
+	nflaws_i *= 3; 
 	for (i = 0; i < gnobj; i++) {
 		(*flaws_tbl_lookup)[i * 2] = -1; /* starting array index in eps[] */
 		(*flaws_tbl_lookup)[i * 2 + 1] = 0; /* number of flaws in particle */
@@ -73,6 +87,8 @@ void init_defects_table(int gnobj, int Nflaws, double **eps, int **flaws_tbl_loo
 	free(eps_act);
 }
 
+
+/* see init_defects_table for a description of eps and flaws_tbl_lookup */
 void read_defects_table(SDF *sdfp, int *nflaws, double **eps, int **flaws_tbl_lookup) {
 	if (!sdfp)
 		Error("Unable to access file with defects table\n");
