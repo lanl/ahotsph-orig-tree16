@@ -173,12 +173,37 @@ void write_defects_table (char *name, int gnobj, int nflaws, double *eps, int *f
 int has_strength(SPHbody p) {
 	if (p.data.strengthbody.is_strength == 0) /* redundant??? */
 		return 0;
-	if (p.u >= params.umelt)
+	if (p.u >= params.material.umelt)
 		return 0;
 	if (p.data.strengthbody.crack_len >= p.h * 4.)
 		return 0;
 	return 1;
 }
+
+void set_material (SDF *sdfp, Material_t *mat) {
+    *mat = *(Material_t *) malloc (sizeof (Material_t));
+    SDFgetdoubleOrDie (sdfp, "Vol0", &(mat->Vol0));
+    SDFgetdoubleOrDie (sdfp, "rho0", &(mat->rho0));
+    SDFgetdoubleOrDie (sdfp, "Till_A", &(mat->A));
+    SDFgetdoubleOrDie (sdfp, "Till_B", &(mat->B));
+    SDFgetdoubleOrDie (sdfp, "Till_a", &(mat->a));
+    SDFgetdoubleOrDie (sdfp, "Till_b", &(mat->b));
+    SDFgetdoubleOrDie (sdfp, "Till_alpha", &(mat->alpha));
+    SDFgetdoubleOrDie (sdfp, "Till_beta", &(mat->beta));
+    SDFgetdoubleOrDie (sdfp, "Eiv", &(mat->Eiv));
+    SDFgetdoubleOrDie (sdfp, "Ecv", &(mat->Ecv));
+    SDFgetdoubleOrDie (sdfp, "u0", &(mat->u0));
+    SDFgetdoubleOrDie (sdfp, "umelt", &(mat->umelt));
+    SDFgetdoubleOrDie (sdfp, "mu", &(mat->mu));
+    SDFgetdoubleOrDie (sdfp, "Yieldstr", &(mat->yield));
+    SDFgetdoubleOrDie (sdfp, "G_shear", &(mat->G_shear));
+    SDFgetdoubleOrDie (sdfp, "E_Young", &(mat->E_Young));
+    SDFgetfloatOrDie (sdfp, "material_k", &(mat->material_k));
+    SDFgetfloatOrDie (sdfp, "material_m", &(mat->material_m));
+	mat->A = mat->E_Young * mat->G_shear / 
+		(9. * mat->G_shear - 3. * mat->E_Young);
+}
+
 
 void strength_force (double *grpmj, double *rhoij,
      double *sxxi,double *syyi,double *sxyi,double *sxzi,double *syzi,double *sxxj,double *syyj,double *

@@ -134,14 +134,7 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 		}
 		SDFgetintOrDefault(sdfp, "Nflaws", &(params->Nflaws), -1);
 		SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
-		SDFgetfloatOrDie(sdfp, "G_shear", &(params->G_shear));
-		SDFgetfloatOrDie(sdfp, "E_Young", &(params->E_Young));
-		SDFgetfloatOrDie(sdfp, "YieldStr", &(params->YieldStr));
-		SDFgetfloatOrDie(sdfp, "umelt", &(params->umelt));
-		SDFgetfloatOrDie(sdfp, "material_k", &(params->material_k));
-		SDFgetfloatOrDie(sdfp, "material_m", &(params->material_m));
-		params->K_bulk = params->E_Young * params->G_shear / 
-			(9. * params->G_shear - 3. * params->E_Young);
+        set_material (sdfp, &(params->material));
 	}
 
     SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);
@@ -330,11 +323,25 @@ void print_initial_ctl(setup_params_t params) {
 		if (params.defects_table_exists)
 			singlPrintf("char defects_file[] = %s;\n", params.defects_file);
 		singlPrintf("int frac_model = %d;\n", params.frac_model);
-		singlPrintf("float G_shear = %g;\n", params.G_shear);
-		singlPrintf("float E_Young = %g;\n", params.E_Young);
-		singlPrintf("float umelt = %g;\n", params.umelt);
-		singlPrintf("float material_k = %g;\n", params.material_k);
-		singlPrintf("float material_m = %g;\n", params.material_m);
+		singlPrintf("float G_shear = %g;\n", params.material.G_shear);
+		singlPrintf("float E_Young = %g;\n", params.material.E_Young);
+		singlPrintf("float yield = %g;\n", params.material.yield);
+		singlPrintf("float umelt = %g;\n", params.material.umelt);
+		singlPrintf("float material_k = %g;\n", params.material.material_k);
+		singlPrintf("float material_m = %g;\n", params.material.material_m);
+        singlPrintf ("float Vol0 = %g;\n", params.material.Vol0);
+        singlPrintf ("float rho0 = %g;\n", params.material.rho0);
+        singlPrintf ("float u0 = %g;\n", params.material.u0);
+        singlPrintf ("float A = %g;\n", params.material.A);
+        singlPrintf ("float B = %g;\n", params.material.B);
+        singlPrintf ("float a = %g;\n", params.material.a);
+        singlPrintf ("float b = %g;\n", params.material.b);
+        singlPrintf ("float alpha = %g;\n", params.material.alpha);
+        singlPrintf ("float beta = %g;\n", params.material.beta);
+        singlPrintf ("float Eiv = %g;\n", params.material.Eiv);
+        singlPrintf ("float Ecv = %g;\n", params.material.Ecv);
+        singlPrintf ("float mu = %g;\n", params.material.mu);
+
 	}
 
 	if (params.do_output) {

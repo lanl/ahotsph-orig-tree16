@@ -309,9 +309,9 @@ macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
 	float strain_i[SRTERMS] = {0,0,0,0,0,0};
 	float dstraindt[SRTERMS] = {0,0,0,0,0,0};
 	double dstraindt_i[SRTERMS] = {0,0,0,0,0,0};
-	float gshear = (float)G_shear;
-	double yieldstr = (double)YieldStr;
-	double umelt = (double)u_melt;
+	float gshear = (float)(params.material.G_shear);
+	double yieldstr = (double)(params.material.yield);
+	double umelt = (double)(params.material.umelt);
 	Vxd(double dr_i);
 	Vxd(double dv_i);
 	float dmg_i, dmg_j, u_i;
@@ -781,7 +781,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	float strain[SRTERMS];
 	float xmi, crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
 	float epsmini, eyoung;
-	float iv_Weibull_m = 1./params.material_m;
+	float iv_Weibull_m = 1./params.material.material_m;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
@@ -863,7 +863,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 				epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
 				pr_i = (double)p->pr;
 				crack_len = (double)p->data.strengthbody.crack_len;
-				eyoung = (double)params.E_Young;
+				eyoung = (double)params.material.E_Young;
 				fracture_(&stress[0],
 						&stress[4],
 						&stress[8],
@@ -922,9 +922,9 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 	float rot[NDIM];
 	float dmg_i;
 	float vonMises, u_i;
-	float umelt = (float)u_melt;
-	float gshear = (float)G_shear;
-	float yieldstr = (float)YieldStr; 
+	float umelt = (float)(params.material.umelt);
+	float gshear = (float)(params.material.G_shear);
+	float yieldstr = (float)(params.material.yield); 
 	int i;
 
     max_rad = 0.95*R0*R0;
@@ -1037,15 +1037,12 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 			p->data.strengthbody.vonMises = (float)vonMises;
 			
 			//p->data.strengthbody.is_strength = has_strength (*p);
-			/* eventually, this is done at the beginning in main */
-			setconst2 (&mat);
 			/* calculate pressure, sound speed */
             rho_d = (double)p->rho_est;
             u_d = (double)p->u;
-			tillotson_eos (rho_d, u_d, &mat, &(pr_d), &(cs_d));
+			tillotson_eos (rho_d, u_d, &(params.material), &(pr_d), &(cs_d));
             p->pr = (float)pr_d;
             p->vsound = (float)cs_d;
-            p->padding = p->vsound;
 			if (p->pr != 0.0) {
             //    printf ("pr not zero: %g\n",pr_d);
 			//	p->pr = 0.0;

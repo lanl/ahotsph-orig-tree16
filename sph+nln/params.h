@@ -1,5 +1,6 @@
 #include "SDF.h"
 #include "ndim.h"
+#include "eos.h"
 
 #ifndef MAXCOEF
 #define MAXCOEF 16
@@ -102,13 +103,6 @@ typedef struct {
     float nbrcut_fac;
     float Gamma;
     float courant_number;
-	float G_shear; /* shear modulus for strength module */
-	float YieldStr; /* "material dependent yield stress" */
-	float E_Young; /* Young's modulus */
-	float K_bulk; /* bulk modulus, calculated */
-	float umelt; /* melting temperature, expressed as u */
-	float material_m; /* 'm' for Weibull distribution */
-	float material_k; /* 'k' for Weibull distribution */
     float fmassCF;
     float flenCF;
     float ftimeCF;
@@ -117,6 +111,7 @@ typedef struct {
     double kernel_coef1[MAXCOEF];
     double kernel_coef2[MAXCOEF];
     float drag_coeff;
+    Material_t material;
 } setup_params_t;
 
 typedef struct{
@@ -134,3 +129,4 @@ void read_initial_ctl (SDF *sdfp, setup_params_t *params);
 void print_initial_ctl (setup_params_t params);
 void read_absorb_bndry (SDF *sdfp, bndry_t *bndry);
 void print_absorb_bndry (bndry_t bndry);
+void set_material (SDF *sdfp, Material_t *mat);

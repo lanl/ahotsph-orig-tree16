@@ -329,7 +329,6 @@ main(int argc, char *argv[])
 					} else if (params.do_strength) {
 						sdfp = SPHRead_strength(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 								params.set_id, params.setpvel, params.new_h, params.new_u);
-						setconst2(&mat);
 					} else {
 					    sdfp = SPHRead(iname, csdfp, &SPHbtab, &SPHgnobj, &SPHnobj,
 							   params.set_id, params.setpvel, params.new_h, params.new_u);
@@ -466,13 +465,13 @@ main(int argc, char *argv[])
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
 
-	if (params.do_strength) {
-		G_shear = params.G_shear * ivmassCF * lenCF * timeCF2; /* to code units */
-		E_Young = params.E_Young * ivmassCF * lenCF * timeCF2; /* to code units */
-		K_bulk = params.K_bulk * ivmassCF * lenCF * timeCF2; /* to code units */
-		YieldStr = params.YieldStr * ivmassCF * lenCF * timeCF2; /* to code units */
-		u_melt = params.umelt * ivmassCF * ivlenCF2 * timeCF2; /* to code units */
-	}
+//	if (params.do_strength) {
+//		G_shear = params.material.G_shear * ivmassCF * lenCF * timeCF2; /* to code units */
+//		E_Young = params.material.E_Young * ivmassCF * lenCF * timeCF2; /* to code units */
+//		K_bulk = params.material.K_bulk * ivmassCF * lenCF * timeCF2; /* to code units */
+//		YieldStr = params.material.YieldStr * ivmassCF * lenCF * timeCF2; /* to code units */
+//		u_melt = params.material.umelt * ivmassCF * ivlenCF2 * timeCF2; /* to code units */
+//	}
 
     singlPrintf("float params.dt = %g;\n", params.dt);
     singlPrintf("int iter = %d;\n", iter);
@@ -542,7 +541,7 @@ main(int argc, char *argv[])
 	    }
 		MPMY_Combine(&vol, &vol, 1, MPMY_DOUBLE, MPMY_SUM);
 		vol = 4. / 3. * M_PI * vol * lenCF2 * lenCF; /* cgs */
-		vol_scaling = pow(vol, 1./params.material_m);
+		vol_scaling = pow(vol, 1./params.material.material_m);
 		vol_scaling = 1./vol_scaling;
 		singlPrintf("Total volume is: %g, scaling factor is: %g\n", vol, vol_scaling);
 	} else {
@@ -647,9 +646,8 @@ main(int argc, char *argv[])
 			 * to make sure each ranks sees the same data.
 			 * Better: let each rank calculate a chunk in the tables, then send to all
 			 * other ranks. */
-			/* set Vol = 1 for now, scale flaw_actv thresholds later by Vol^(-1/m) */
 			if (MPMY_Procnum() == 0) {
-				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material_k, params.material_m);
+				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material.material_k * params.material.rho0, params.material.material_m);
 				sprintf(params.defects_file, "%s_flaws.sdf", params.outnamebase);
 				write_defects_table(params.defects_file, SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
 			}

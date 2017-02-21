@@ -68,45 +68,45 @@ double murnaghan_eos(double k_bulk, double n_M, double eta) {
 }
 
 /* possibly basalt? */
- void setconst1(Material_t *m) {
-	m->rho0 = 2.86;
-    m->A = 1.80e11;
-	m->B = 1.80e11;
-    m->a = 0.5;
-    m->b = 1.3;
-    m->alpha = 5.;
-    m->beta = 5.;
-    m->u0 = 1.60e11;
-    m->Eiv = 3.50e10; /* E. of incipient vaporization */
-    m->Ecv = 1.80e11; /* E. of complete vaporizaton */
-    m->mu = 2.5e11;
-    m->umelt = 3.0e10;
-    m->yield = 3.5e10;
-    m->pweib = 6.2;
-    m->cweib = 1.e27;
-}
+// void setconst1(Material_t *m) {
+//	m->rho0 = 2.86;
+//    m->A = 1.80e11;
+//	m->B = 1.80e11;
+//    m->a = 0.5;
+//    m->b = 1.3;
+//    m->alpha = 5.;
+//    m->beta = 5.;
+//    m->u0 = 1.60e11;
+//    m->Eiv = 3.50e10; /* E. of incipient vaporization */
+//    m->Ecv = 1.80e11; /* E. of complete vaporizaton */
+//    m->mu = 2.5e11;
+//    m->umelt = 3.0e10;
+//    m->yield = 3.5e10;
+//    m->pweib = 6.2;
+//    m->cweib = 1.e27;
+//}
 
 /* possibly iron? */
-  void setconst2(Material_t *m)
-{
-    //m->rho0 = 7.86;
-    m->rho0 = 8.05;
-    m->A = 1.28e12;
-    m->B = 1.05e12;
-    m->a = 0.5; /* like (gamma - 1.) term ?? */
-    m->b = 1.5;
-    m->alpha = 5.;
-    m->beta = 5.;
-    //m->u0 = 9.50e10;
-    m->u0 = 1.50e09;
-    m->Eiv = 1.42e10;
-    m->Ecv = 8.45e10;
-    m->mu = 0.0;
-    m->umelt = 1.0e10;
-    m->yield = 6.0e9;
-    m->pweib = 9.0;
-    m->cweib = 0.0;
-}
+//  void setconst2(Material_t *m)
+//{
+//    //m->rho0 = 7.86;
+//    m->rho0 = 8.05;
+//    m->A = 1.28e12;
+//    m->B = 1.05e12;
+//    m->a = 0.5; /* like (gamma - 1.) term ?? */
+//    m->b = 1.5;
+//    m->alpha = 5.;
+//    m->beta = 5.;
+//    //m->u0 = 9.50e10;
+//    m->u0 = 1.50e09;
+//    m->Eiv = 1.42e10;
+//    m->Ecv = 8.45e10;
+//    m->mu = 0.0;
+//    m->umelt = 1.0e10;
+//    m->yield = 6.0e9;
+//    m->pweib = 9.0;
+//    m->cweib = 0.0;
+//}
 
 void tillotson_eos (double rho, double u, Material_t *m, double *pressure, double *cs) {
 	double PC = 0.; /* pressure, current */
