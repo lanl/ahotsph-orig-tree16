@@ -534,23 +534,10 @@ main(int argc, char *argv[])
             SPHCofmFromDaugh, (cellfromcofm_t)SPHCellFromCofm);
 
 	vol = 0.0;
-	if (params.do_strength) {
-	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
-	        q->dt = q->dt_next = dt;
-	        q->tacc = -1e30;
-			vol += q->h*q->h*q->h;
-	    }
-		MPMY_Combine(&vol, &vol, 1, MPMY_DOUBLE, MPMY_SUM);
-		vol = 4. / 3. * M_PI * vol * lenCF2 * lenCF; /* cgs */
-		vol_scaling = pow(vol, 1./params.material.material_m);
-		vol_scaling = 1./vol_scaling;
-		singlPrintf("Total volume is: %g, scaling factor is: %g\n", vol, vol_scaling);
-	} else {
-	    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
-	        q->dt = q->dt_next = params.dt;
-	        q->tacc = -1e30;
-	    }
-	}
+    for (q = SPHbtab; q < SPHbtab+SPHnobj; q++) {
+        q->dt = q->dt_next = params.dt;
+        q->tacc = -1e30;
+    }
 
     dt_last = params.dt;
     SPH_setup(NDIM, params.kernel_ncoef1, params.kernel_coef1, params.kernel_ncoef2, params.kernel_coef2);
