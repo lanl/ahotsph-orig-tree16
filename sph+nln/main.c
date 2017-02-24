@@ -1033,8 +1033,8 @@ main(int argc, char *argv[])
                     q->udot = (float)0.0;
                     q->nbrs = 0;
                     q->nterms = 0;
-            //        VS(q->acc, = 0.0);
-                   // VS(q->lvel, = 0.0);
+                    VS(q->acc, = 0.0);
+                    VS(q->lvel, = 0.0);
 				//	VS(q->vel, = 0.0);
 					//for (i = 0; i < SRTERMS; i++)
 					//	q->data.strengthbody.strain[i] = 0.0;
