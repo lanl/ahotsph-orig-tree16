@@ -7,6 +7,6 @@ void deviator_(float *xmui, float *sxxi, float *syyi, float *szzi, float *sxyi, 
 
 void strengthforce_(float *grpmj, float *rhoij, float *sxxi, float *syyi, float *szzi, float *sxyi, float *sxzi, float *syzi, float *sxxj, float *syyj, float *szzj, float *sxyj, float *sxzj, float *syzj, float *dmi, float *dmj, float *dx, float *dy, float *dz, float *dfxi, float *dfyi, float *dfzi);
 
-void fracture_(float *sxxi, float *syyi, float *szzi, float *sxyi, float *sxzi, float *syzi, float *pri, float *dmi, int *nflawi, int *ifrac, float *youngi, float *epsmini, float *xmi, float *acoefi, float *ddmi);
+void fracture_(float *sxxi, float *syyi, float *szzi, float *sxyi, float *sxzi, float *syzi, float *pri, float *dmi, int *nflawi, int *ifrac, float *youngi, float *epsmini, float *xmi, float *acoefi, float *ddmi, float *stmax);
 
 void strengthdu_(float *rhoi, float *sxxi, float *syyi, float *szzi, float *sxyi, float *sxzi, float *syzi, float *epsxxi, float *epsyyi, float *epsxyi, float *epsxzi, float *epsyzi, float *epszzi, float *dmi, float *dudt);

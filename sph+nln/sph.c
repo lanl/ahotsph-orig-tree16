@@ -782,6 +782,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	float xmi, crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
 	float epsmini, eyoung;
 	float iv_Weibull_m = 1./params.material.material_m;
+    float stress_max;
     int decr,notprinted;
     long cycles=0, countc; 
     static long cycled = 0;
@@ -859,8 +860,11 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 			dmg = (double)p->data.strengthbody.dmg;
 			rho_i = (double)p->rho;
 			if (params.make_brittle) {
-				nflawi = flaw_actv_tbl_lookup[p->ident * 2 + 1];
-				epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
+				nflawi = flaw_actv_tbl_lookup[ p->ident * 2 + 1 ];
+                if (p->data.strengthbody.actv_defects == 0) /* none activated yet */
+				    epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[ p->ident*2 ] ];
+                else /* get currently active epsmini */
+				    epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[ p->ident*2 ] + p->data.strengthbody.actv_defects - 1 ];
 				pr_i = (double)p->pr;
 				crack_len = 0.4 * sqrt ((params.material.A + 4. / 3. * params.material.G_shear)/params.material.rho0) / (2. * p->h);
                 p->data.strengthbody.crack_len = (float) crack_len;
@@ -879,8 +883,15 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 						&(epsmini),
 						&iv_Weibull_m,
 						&(crack_len),
-						&ddmgdt);
-                p->padding = ddmgdt;
+						&ddmgdt,
+                        &stress_max);
+                p->padding = (float) stress_max;
+                p->data.strengthbody.ddmgdt = (float) ddmgdt;
+                while (stress_max > (flaw_actv_tbl[flaw_actv_tbl_lookup[ p->ident * 2] +
+                        p->data.strengthbody.actv_defects]
+                        && p->data.strengthbody.actv_defects <= nflawi)) {
+                    p->data.strengthbody.actv_defects += 1;
+                }
 			}
 
 			strengthdu_(&(rho_i),

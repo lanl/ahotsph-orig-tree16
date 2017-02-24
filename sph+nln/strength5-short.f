@@ -221,7 +221,7 @@ c     extend to full 3D, also, is there a typo on the 2nd line?
       return
       end
       subroutine fracture(sxxi,syyi,szzi,sxyi,sxzi,syzi,pri,dmi,nflawi,
-     $     ifrac,youngi,epsmini,xmi,acoefi,ddmi)
+     $     ifrac,youngi,epsmini,xmi,acoefi,ddmi,stmax)
 c************************************************************************
 c This code determines the initiation of fraction and evolves           *
 c the damage.                                                           *
@@ -288,7 +288,7 @@ c
 
 c         print *, sxxi,syyi,sxyi,syzi,sxzi,pri,redi
 c         print *, sxxip,syyip,szzip,sxyip,sxzip,syzip
-c         print *, sig1,sig2,sig3
+c         print *, "stress axis: ", sig1,sig2,sig3
 c         print *, ifrac,youngi,stmax,epsmini,xmi
 c
 c--tensile failure (Weibull)
