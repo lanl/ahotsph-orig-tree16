@@ -276,6 +276,7 @@ main(int argc, char *argv[])
 	SDF *defects_sdfp = NULL;
 	Material_t mat;
 	float rad;
+    float acc_0 = 1.e8;
 
 /*
     argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -596,11 +597,14 @@ main(int argc, char *argv[])
 			}
 			rad = sqrt(q->pos[0] * q->pos[0] + q->pos[1] * q->pos[1] + q->pos[2] * q->pos[2]);
             if (q->pos[2] < 1.0) {
-                q->vel[1] = 1.0e+1;
-            } else if (q->pos[2] > 1.5 && q->pos[2] < 2.5) { 
-                q->vel[1] = -1.0e+1;
+                q->acc[2] = -acc_0;
+                //q->vel[1] = 1.0e+2;
+            //} else if (q->pos[2] > 1.5 && q->pos[2] < 2.5) { 
+            //    q->acc[1] = -1.0e+4;
+                //q->vel[1] = -1.0e+2;
             } else if (q->pos[2] > 3.0) {
-                q->vel[1] = 1.0e+1;
+                q->acc[2] = acc_0;
+                //q->vel[1] = 1.0e+2;
             }
 			/* hopefully equil stress terms? */
 			/* diag. terms = normal stresses, off-diag. terms = shear stresses */
@@ -1043,11 +1047,18 @@ main(int argc, char *argv[])
                     q->nbrs = 0;
                     q->nterms = 0;
             //        VS(q->acc, = 0.0);
-                    VS(q->lvel, = 0.0);
+                   // VS(q->lvel, = 0.0);
 				//	VS(q->vel, = 0.0);
 					//for (i = 0; i < SRTERMS; i++)
 					//	q->data.strengthbody.strain[i] = 0.0;
                 }
+            if (q->pos[2] < 1.0) {
+                q->acc[2] = -acc_0;
+            //} else if (q->pos[2] > 1.5 && q->pos[2] < 2.5) { 
+            //    q->acc[1] += -1.0e+4;
+            } else if (q->pos[2] > 3.0) {
+                q->acc[2] = acc_0;
+            }
             }
 
             WalkInit(&SPHtree, sinkptr, sizeof(SinkSPH), 
