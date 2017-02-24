@@ -200,8 +200,9 @@ void set_material (SDF *sdfp, Material_t *mat) {
     SDFgetdoubleOrDie (sdfp, "E_Young", &(mat->E_Young));
     SDFgetfloatOrDie (sdfp, "material_k", &(mat->material_k));
     SDFgetfloatOrDie (sdfp, "material_m", &(mat->material_m));
-	mat->A = mat->E_Young * mat->G_shear / 
-		(9. * mat->G_shear - 3. * mat->E_Young);
+//	mat->A = mat->E_Young * mat->G_shear / 
+//		(9. * mat->G_shear - 3. * mat->E_Young);
+    mat->E_Young = 9. * mat->A * mat->G_shear / (3. * mat->A + mat->G_shear);
 }
 
 
