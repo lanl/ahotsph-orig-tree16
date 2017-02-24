@@ -862,7 +862,8 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 				nflawi = flaw_actv_tbl_lookup[p->ident * 2 + 1];
 				epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[p->ident*2] + p->data.strengthbody.actv_defects ];
 				pr_i = (double)p->pr;
-				crack_len = (double)p->data.strengthbody.crack_len;
+				crack_len = 0.4 * sqrt ((params.material.A + 4. / 3. * params.material.G_shear)/params.material.rho0) / (2. * p->h);
+                p->data.strengthbody.crack_len = (float) crack_len;
 				eyoung = (double)params.material.E_Young;
 				fracture_(&stress[0],
 						&stress[4],
