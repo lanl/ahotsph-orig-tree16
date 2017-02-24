@@ -647,7 +647,7 @@ main(int argc, char *argv[])
 			 * Better: let each rank calculate a chunk in the tables, then send to all
 			 * other ranks. */
 			if (MPMY_Procnum() == 0) {
-				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material.material_k * params.material.rho0, params.material.material_m);
+				init_defects_table(SPHgnobj, params.Nflaws, &flaw_actv_tbl, &flaw_actv_tbl_lookup, params.material.material_k * params.material.Vol0, params.material.material_m);
 				sprintf(params.defects_file, "%s_flaws.sdf", params.outnamebase);
 				write_defects_table(params.defects_file, SPHgnobj, params.Nflaws, flaw_actv_tbl, flaw_actv_tbl_lookup);
 			}
