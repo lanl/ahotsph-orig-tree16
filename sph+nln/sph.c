@@ -596,9 +596,9 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 	        temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
 		} else {
 		    /* Calculate temperature from u, then "create" photons (a*T^4) */
-		    eos_n = (double)(p->rho_est) * ivlenCF3 * massCF;
-			eos_n /= (double) MH;
-		    eos_u = ((double)(p->u))*((double)(p->rho_est));
+		    eos_n = (double)(p->rho) * ivlenCF3 * massCF;
+			eos_n /= (double) 28 * MH;
+		    eos_u = ((double)(p->u))*((double)(p->rho));
 			eos_u *= massCF * ivlenCF * ivtimeCF2; 
 	
 		    /* Figure out good upper and lower limits for temp */
@@ -653,7 +653,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 		else {
 		    /* Calculate temperature from u, then "create" photons (a*T^4) */
 		    eos_n = (double)(p->rho_est) * ivlenCF3 * massCF;
-			eos_n /= (double) MH;
+			eos_n /= (double) 28 * MH;
 		    eos_u = ((double)(p->u))*((double)(p->rho_est));
 			eos_u *= massCF * ivlenCF * ivtimeCF2; 
 	
