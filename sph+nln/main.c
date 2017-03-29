@@ -1033,9 +1033,9 @@ main(int argc, char *argv[])
                 }
                 else {
 					if (params.do_cooling || params.do_burning)
-					    SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
-					else
 					    SPHOutputA(SPHbtab, SPHnobj, params.outnamebase, iter);
+					else
+					    SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
 				}
             }
             if (params.has_grav_data) Output(btab, nobj, params.outnamebase, iter);
@@ -2111,7 +2111,7 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
         te += p->mass * p->u;
         pe += (float)0.5 * p->mass * p->phi;
     }
-    output_btab = Malloc(output_nobj * sizeof(SPHoutbody));
+    output_btab = Malloc(output_nobj * sizeof(SPHoutbody_NW));
     for(i=0; i<output_nobj; i++){
         output_btab[i].mass = btab[i].mass;
         VV(output_btab[i].pos, = btab[i].pos);
