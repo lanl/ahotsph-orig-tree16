@@ -2145,7 +2145,7 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
     Msgf(("Doing output of %d bodies\n", output_nobj));
     singlPrintf("Trying to sort output\n");
     pqsortsetup_order(&outputsort, output_btab, output_nobj,
-            sizeof(SPHoutbody), 0.1F, 1, Realloc_f);
+            sizeof(SPHoutbody_NW), 0.1F, 1, Realloc_f);
     output_btab = pqsort(&outputsort, UnityCost, (pq_keyproto)SPHOutIdentKey);
     output_nobj = outputsort.nobj;
     /*     Msg("output", ("After pqsort, %d outbodies\n", output_nobj)); */
