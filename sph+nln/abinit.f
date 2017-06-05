@@ -41,7 +41,7 @@ c cie: nscr should have N=nucpg elements?
       logical tobe
 
 c..default values for new network; used to reset abundances
-      data zpop/0.01886d0/,zhyd/0.70683d0/
+      data zpop/0.01542d0/,zhyd/0.7095d0/
 
 c..special nuclei to be used in diagnostics and i/o
       data nspz/ 1, 2, 6, 7, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 26, 
@@ -104,25 +104,25 @@ c..naag is the "mass number" A=Z+N, not the mass in amu
          enddo
 c..   determine which nuclei are stable
 c..   chose them for pgplot.f and for dout3.f
-         do j = 1, nucpg
-            nucp(j) = 0
-         enddo
+c         do j = 1, nucpg
+c            nucp(j) = 0
+c         enddo
 c..   always choose H1 and He4
-         nucp(1) = netsize-1
-         nucp(2) = netsize
-         j = 2
-         do n = 1, netsize
-            if( xx(n) .gt. 0.0d0 .and. j+1 .le. nucpg )then
-               j = j+1
-               nucp(j) = n
+c         nucp(1) = netsize-1
+c         nucp(2) = netsize
+c         j = 2
+c         do n = 1, netsize
+c            if( xx(n) .gt. 0.0d0 .and. j+1 .le. nucpg )then
+c               j = j+1
+c               nucp(j) = n
 c               if(irank.eq.0) write(*,'(5i5,a5,1p8e12.3)')
 c     1              j,n,nucp(j),lz(n),ln(n),
 c     1              cnuc(n),xx(n)
-            endif
-         enddo
+c            endif
+c         enddo
 
 c..   number of nonradioactive nuclei
-         mnucpg = j
+c         mnucpg = j
 
 
 c..force values if new network (ag88m)
@@ -240,12 +240,12 @@ c..   net.rc is consistent
          read(lun,'(10i5)')nucp
 
 c..   determine nonzero entries
-         mnucpg = 0
-         do j = 1, nucpg
-            if( nucp(j) .ne. 0 )then
-               mnucpg = mnucpg + 1
-            endif
-         enddo
+c         mnucpg = 0
+c         do j = 1, nucpg
+c            if( nucp(j) .ne. 0 )then
+c               mnucpg = mnucpg + 1
+c            endif
+c         enddo
 
 c..define solar metallicity from solar tables for consistency
          zsol = 0.0d0
@@ -261,145 +261,140 @@ c..define solar metallicity from solar tables for consistency
       endif
 
 c..   define Ye
-      do k = 2, kk
-         x(netsize+1,k) = 0.0d0
+c      do k = 2, kk
+         xa(netsize+1) = 0.0d0
          do n = 1, netsize
-            x(netsize+1,k) = x(netsize+1,k) + x(n,k)*dble(lz(n))
+            xa(netsize+1) = xa(netsize+1) + xa(n)*dble(lz(n))
          enddo
-         if( x(netsize+1,k) .lt. 0.0d0 
-     1        .or. x(netsize+1,k) .gt. 1.0d0)then
+         if( xa(netsize+1) .lt. 0.0d0 
+     1        .or. xa(netsize+1) .gt. 1.0d0)then
             if(irank.eq.0) write(*,*)
-     1         ' abinit: Ye error, k ', x(netsize+1,k), k
+     1         ' abinit: Ye error, k ', xa(netsize+1)
             stop'abinit: Ye error'
          endif
-      enddo
+c      enddo
 
 c..adjust nucp array to control which nuclei are monitored.............
 
 c..find special nuclei
-      j = 0
-      do i = 1, nsp
-         do n = 1, netsize
-            if( nspz(i) .eq. lz(n) .and. nspn(i) .eq. ln(n) )then
-               nucp(i) = n
-               j = j + 1
-               go to 110
-            endif
-         enddo
-         if(irank.eq.0) write(*,'(a8,i5,a3,i5,a3,i5,a15)')'nucleus',i,
-     1        'Z',nspz(i),'N',nspn(i),'not found'
- 110     continue
-      enddo
-      if(irank.eq.0) write(*,*)j
-      if( j .eq. nsp )then
-         do i = 1, nsp
-               if(irank.eq.0) write(*,'(3i5,a5,1p8e12.3)')
-     1            i,nspz(i),nspn(i),
-     1              cnuc(nucp(i))
-         enddo
-         if(irank.eq.0) write(*,*)'ABINIT: All special nuclei found'
-      else
-         if(irank.eq.0) write(*,*)
-     1      'ABINIT: ',nsp-mnucpg,'  special nuclei NOT found'
-      endif
+c      j = 0
+c      do i = 1, nsp
+c         do n = 1, netsize
+c            if( nspz(i) .eq. lz(n) .and. nspn(i) .eq. ln(n) )then
+c               nucp(i) = n
+c               j = j + 1
+c               go to 110
+c            endif
+c         enddo
+c         if(irank.eq.0) write(*,'(a8,i5,a3,i5,a3,i5,a15)')'nucleus',i,
+c     1        'Z',nspz(i),'N',nspn(i),'not found'
+c 110     continue
+c      enddo
+c      if(irank.eq.0) write(*,*)j
+c      if( j .eq. nsp )then
+c         do i = 1, nsp
+c               if(irank.eq.0) write(*,'(3i5,a5,1p8e12.3)')
+c     1            i,nspz(i),nspn(i),
+c     1              cnuc(nucp(i))
+c         enddo
+c         if(irank.eq.0) write(*,*)'ABINIT: All special nuclei found'
+c      else
+c         if(irank.eq.0) write(*,*)
+c     1      'ABINIT: ',nsp-mnucpg,'  special nuclei NOT found'
+c      endif
 
 c      j = mnucpg
 c..   j is number of special nuclei which were found
-      do n = 1, netsize
-         if( solarx(n) .gt. 0.0d0 .and. j+1 .le. nucpg )then
-            do i = 1, j
-               if( nucp(i) .eq. n )then
+c      do n = 1, netsize
+c         if( solarx(n) .gt. 0.0d0 .and. j+1 .le. nucpg )then
+c            do i = 1, j
+c               if( nucp(i) .eq. n )then
 c..   avoid duplication
-                  go to 120
-               endif
-            enddo
-            j = j+1
-            nucp(j) = n
-         endif
- 120     continue
-      enddo
+c                  go to 120
+c               endif
+c            enddo
+c            j = j+1
+c            nucp(j) = n
+c         endif
+c 120     continue
+c      enddo
 c..j has been increased to include some stable isotopes, up to nucpg=60
-      if(irank.eq.0) write(*,*)j,' nuclei chosen'
-      if(irank.eq.0) write(*,'(20a6)')(cnuc(nucp(i)),i=1, j)
+c      if(irank.eq.0) write(*,*)j,' nuclei chosen'
+c      if(irank.eq.0) write(*,'(20a6)')(cnuc(nucp(i)),i=1, j)
 
 c..reorder by charge and atomic number
-      if(irank.eq.0) write(*,*)'begin reordering'
-      do n = 1, j
-         nscr(n) = nucp(n)
-      enddo
-      do n = j+1, ndim
-         nscr(n) = -1
-      enddo
+c      if(irank.eq.0) write(*,*)'begin reordering'
+c      do n = 1, j
+c         nscr(n) = nucp(n)
+c      enddo
 
 c      do j = 1, nucpg !cie: why is this nucpg?? lz/ln are declared in
 cburn to have ndim elements
       do j = 1, ndim
          itno = 0
 c         do n = 1, nucpg-1
-         do n = 1, ndim-1
-            if( lz(nscr(n)) .gt. lz(nscr(n+1)) )then
+c            if( lz(nscr(n)) .gt. lz(nscr(n+1)) )then
 c..switch n and n+1 in nscr (index array)
-               iscr = nscr(n)
-               nscr(n) = nscr(n+1)
-               nscr(n+1)   = iscr
-               itno = itno + 1
-            endif
-         enddo
-         if( itno .le. 0 )then
-            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
-            goto 130
-         endif
+c               iscr = nscr(n)
+c               nscr(n) = nscr(n+1)
+c               nscr(n+1)   = iscr
+c               itno = itno + 1
+c            endif
+c         enddo
+c         if( itno .le. 0 )then
+c            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
+c            goto 130
+c         endif
       enddo
- 130  continue
-      jz = j-1
-      if(irank.eq.0) write(*,*)'reordered in Z in ',jz,' steps'
+c 130  continue
+c      jz = j-1
+c      if(irank.eq.0) write(*,*)'reordered in Z in ',jz,' steps'
 
-c cie: ditto, see ~20l above      
-      do j = 1, ndim
-         itno = 0
-         do n = 1, ndim-1
-            if(  lz(nscr(n))   + ln(nscr(n)) .gt. 
-     1           lz(nscr(n+1)) + ln(nscr(n+1)) .and.
-     2           lz(nscr(n)) .eq. lz(nscr(n+1)))then
+c      do j = 1, nucpg
+c         itno = 0
+c         do n = 1, nucpg-1
+c            if(  lz(nscr(n))   + ln(nscr(n)) .gt. 
+c     1           lz(nscr(n+1)) + ln(nscr(n+1)) .and.
+c     2           lz(nscr(n)) .eq. lz(nscr(n+1)))then
 c..switch n and n+1 in nscr (index array)
-               iscr = nscr(n)
-               nscr(n) = nscr(n+1)
-               nscr(n+1)   = iscr
-               itno = itno + 1
-            endif
-         enddo
+c               iscr = nscr(n)
+c               nscr(n) = nscr(n+1)
+c               nscr(n+1)   = iscr
+c               itno = itno + 1
+c            endif
+c         enddo
 
-         if( itno .le. 0 )then
-            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
-            goto 140
-         endif
-      enddo
- 140  continue
-      ja = j-1
-      if(irank.eq.0) write(*,*)'reordered in A in ',ja,' steps'
+c         if( itno .le. 0 )then
+c            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
+c            goto 140
+c         endif
+c      enddo
+c 140  continue
+c      ja = j-1
+c      if(irank.eq.0) write(*,*)'reordered in A in ',ja,' steps'
 
-      do n = 1, nucpg
-         nucp(n) = nscr(n)
-      enddo
-      if(irank.eq.0) write(*,*)'replaced original by reordered index'
+c      do n = 1, nucpg
+c         nucp(n) = nscr(n)
+c      enddo
+c      if(irank.eq.0) write(*,*)'replaced original by reordered index'
 c..   reordering finished
 
-      if( jz .ne. 0 .or. ja .ne. 0 )then
+c      if( jz .ne. 0 .or. ja .ne. 0 )then
 c..   redefine net.rc values
-         open(lun,file=trim(netrcfile))
-         do j = 1, netsize
-            read(lun,'(3i5,a5,0pf10.4,1pe12.4)')
-     1           i,nz(j),nn(j),xid(j),qex(j),solarx(j)
-         enddo
+c         open(lun,file=trim(netrcfile))
+c         do j = 1, netsize
+c            read(lun,'(3i5,a5,0pf10.4,1pe12.4)')
+c     1           i,nz(j),nn(j),xid(j),qex(j),solarx(j)
+c         enddo
 c..   overwrite array, including zeros, for ease in reading
 c..   by many routines
-         do j = 1, nucpg, 10
-            write(lun,'(10i5)')(nucp(i),i=j,j+9)
-         enddo
-         close(lun)
-         if(irank.eq.0) write(*,*) trim(netrcfile),
-     1      ' adjusted for new nucp index array'
-      endif
+c         do j = 1, nucpg, 10
+c            write(lun,'(10i5)')(nucp(i),i=j,j+9)
+c         enddo
+c         close(lun)
+c         if(irank.eq.0) write(*,*) trim(netrcfile),
+c     1      ' adjusted for new nucp index array'
+c      endif
 
       if(irank.eq.0) write(*,*)'LEAVING ABINIT'
       return

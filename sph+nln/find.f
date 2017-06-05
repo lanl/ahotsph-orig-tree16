@@ -2,7 +2,7 @@
       implicit none
 
       integer*4 niso, n, id
-      parameter(niso = 5410)
+      parameter(niso = 7852)
       character*5 name
       character*5 inam(niso),blank
 c-----------------------------------------------------

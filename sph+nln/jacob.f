@@ -13,6 +13,7 @@ c..   specify array elements of matrix a for ax = b
       integer*4 k1,k2, i1,i2,i3,i4,i5,i6
       real*8    sigk,y2sig,y1sig
       real*8    y12sig,y23sig,y13sig
+      real*8    y123sig,y124sig,y134sig,y234sig
 c---------------------------------------------------------------
       do i=1,itot
          do j=1,itot
@@ -171,6 +172,34 @@ c..   and  i + j + k ---> l + m
             i2 = nrr(2,k)
             i3 = nrr(3,k)
             i4 = nrr(4,k)
+            y12sig   = y(i1)*y(i2)      *sig(k)
+            y13sig   = y(i1)      *y(i3)*sig(k)
+            y23sig   =       y(i2)*y(i3)*sig(k)
+            a(i1,i1) = a(i1,i1) + y23sig
+            a(i1,i2) = a(i1,i2) + y13sig
+            a(i1,i3) = a(i1,i3) + y12sig
+            a(i2,i1) = a(i2,i1) + y23sig
+            a(i2,i2) = a(i2,i2) + y13sig
+            a(i2,i3) = a(i2,i3) + y12sig
+            a(i3,i1) = a(i3,i1) + y23sig
+            a(i3,i2) = a(i3,i2) + y13sig
+            a(i3,i3) = a(i3,i3) + y12sig
+            a(i4,i1) = a(i4,i1) - y23sig
+            a(i4,i2) = a(i4,i2) - y13sig
+            a(i4,i3) = a(i4,i3) - y12sig
+         enddo
+      endif
+
+c----------------------------------------------------------
+c..   deck 9: exchange, i + j + k ---> l + m
+      k1 = k1deck(9)
+      k2 = k2deck(9)
+      if( k1 .ne. 0 .and. k2 .ne. 0 )then
+         do k = k1,k2
+            i1 = nrr(1,k)
+            i2 = nrr(2,k)
+            i3 = nrr(3,k)
+            i4 = nrr(4,k)
             i5 = nrr(5,k)
             y12sig   = y(i1)*y(i2)      *sig(k)
             y13sig   = y(i1)      *y(i3)*sig(k)
@@ -187,22 +216,73 @@ c..   and  i + j + k ---> l + m
             a(i4,i1) = a(i4,i1) - y23sig
             a(i4,i2) = a(i4,i2) - y13sig
             a(i4,i3) = a(i4,i3) - y12sig
-            if( i5 .ne. 0 )then
-               a(i5,i1) = a(i5,i1) - y23sig
-               a(i5,i2) = a(i5,i2) - y13sig
-               a(i5,i3) = a(i5,i3) - y12sig
-            endif
+            a(i5,i1) = a(i5,i1) - y23sig
+            a(i5,i2) = a(i5,i2) - y13sig
+            a(i5,i3) = a(i5,i3) - y12sig
          enddo
       endif
-      
-c      do i=1,itot
-c         do j=1,itot
-c            if((i .eq. 135) .or. (j .eq. 135))then
-c               write(*,*)i,j,a(i,j),a(j,i)
-c            endif
-c         enddo
-c      enddo
 
+c-------------------------------------------------------------------
+c..   deck 10: exchange, i + j + k + l ---> m + n
+      k1 = k1deck(10)
+      k2 = k2deck(10)
+      if( k1 .ne. 0 .and. k2 .ne. 0 )then
+         do k = k1,k2
+            i1 = nrr(1,k)
+            i2 = nrr(2,k)
+            i3 = nrr(3,k)
+            i4 = nrr(4,k)
+            i5 = nrr(5,k)
+            i6 = nrr(6,k)
+            y123sig   = y(i1)*y(i2)*y(i3)      *sig(k)
+            y134sig   = y(i1)      *y(i3)*y(i4)*sig(k)
+            y124sig   = y(i1)*y(i2)      *y(i4)*sig(k)
+            y234sig   =       y(i2)*y(i3)*y(i4)*sig(k)
+            a(i1,i1) = a(i1,i1) + y234sig
+            a(i1,i2) = a(i1,i2) + y134sig
+            a(i1,i3) = a(i1,i3) + y124sig
+            a(i1,i4) = a(i1,i4) + y123sig
+            a(i2,i2) = a(i2,i2) + y134sig
+            a(i2,i1) = a(i2,i1) + y234sig
+            a(i2,i3) = a(i2,i3) + y124sig
+            a(i2,i4) = a(i2,i4) + y123sig
+            a(i3,i3) = a(i3,i3) + y124sig
+            a(i3,i1) = a(i3,i1) + y234sig
+            a(i3,i2) = a(i3,i2) + y134sig
+            a(i3,i4) = a(i3,i4) + y123sig
+            a(i4,i4) = a(i4,i4) + y123sig
+            a(i4,i1) = a(i4,i1) + y234sig
+            a(i4,i2) = a(i4,i2) + y134sig
+            a(i4,i3) = a(i4,i3) + y124sig
+            a(i5,i1) = a(i5,i1) - y234sig
+            a(i5,i2) = a(i5,i2) - y134sig
+            a(i5,i3) = a(i5,i3) - y124sig
+            a(i5,i4) = a(i5,i4) - y123sig
+            a(i6,i1) = a(i6,i1) - y234sig
+            a(i6,i2) = a(i6,i2) - y134sig
+            a(i6,i3) = a(i6,i3) - y124sig
+            a(i6,i4) = a(i6,i4) - y123sig
+         enddo
+      endif
+c----------------------------------------------------
+c..   deck 11: dissociations, i ---> j + k + l + m
+      k1 = k1deck(11)
+      k2 = k2deck(11)
+      if( k1 .ne. 0 .and. k2 .ne. 0 )then
+         do k = k1,k2
+            i1 = nrr(1,k)
+            i2 = nrr(2,k)
+            i3 = nrr(3,k)
+            i4 = nrr(4,k)
+            i4 = nrr(5,k)
+            sigk =       sig(k)
+            a(i1,i1) = a(i1,i1) + sigk
+            a(i2,i1) = a(i2,i1) - sigk
+            a(i3,i1) = a(i3,i1) - sigk
+            a(i4,i1) = a(i4,i1) - sigk
+            a(i5,i1) = a(i5,i1) - sigk
+         enddo
+      endif
       return
       end
 
