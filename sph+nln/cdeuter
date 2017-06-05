@@ -23,7 +23,7 @@ c..xidlo is identifier of nuclei
 c..idlo is index of nucleus in solven list
 c..loz  is Z and lon is N for nucleus
       integer*4 idlo(lodim),loz(lodim),lon(lodim)
-      integer*4 l1deck(8),l2deck(8)
+      integer*4 l1deck(11),l2deck(11)
 
 c..rates
 c..lnreac is number of reactions
@@ -31,14 +31,15 @@ c..lorr is vector of indices for solven list of reactions
 c..lodeck is vector of deck indices for reactions
 c..lonrr is matrix (6,lrdim) of entrance and exit channel id numbers
       integer*4 lnreac, lorr(lrdim),lodeck(lrdim),lonrr(6,lrdim)
+      integer*4 loirev(lrdim), lopf(lodim), loec(lrdim)
 
 c..lorlkh is reaction type flag
       character*4	lorlkh(lrdim)
 
       common/ccdeuter/ aa,bb,locoef,ylo,
      1                 idlo,loz,lon, lnreac,lorr,lodeck,lonrr,l1deck,
-     1	               l2deck,
-     1                 xidlo, lorlkh
+     1	               l2deck,loirev,lopf,
+     1                 xidlo, lorlkh, loec
 
 
 

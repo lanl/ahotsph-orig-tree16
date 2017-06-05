@@ -12,9 +12,9 @@ c..adapted for sparse solver (pay 1/6/05)
      1          enuarray(wkreac,tsize,rhosize),signue(nreac)
       real*8    sparse_dfdy(nreac),sparseu,sparsew(nnuc)
 
-      integer*4 nz(ndim),nn(ndim),ideck(nreac),ndeck(8),nrr(6,nreac),
-     1          k1deck(8),k2deck(8), wkideck(nreac)
-      integer*4 irev(nreac),iline(nreac),iffn(nreac),jnb
+      integer*4 nz(ndim),nn(ndim),ideck(nreac),ndeck(11),nrr(6,nreac),
+     1          k1deck(11),k2deck(11), wkideck(nreac)
+      integer*4 irev(nreac),iline(nreac),iffn(nreac),ec(nreac),jnb
       integer*4 nvecs,nlinks,iloc(nreac),jloc(nreac),
      1          ivect(nreac),jvect(nreac),ikeep(nnuc,5),iw(nnuc,8)
     
