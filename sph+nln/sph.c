@@ -40,7 +40,8 @@ static float offset[NDIM];
 static float voffset[NDIM];
 static void (*bodyfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 static void (*cellfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
-
+float newtraph_tlo = 1.0e0;
+float newtraph_thi = 2.5e11;
 //extern int do_diffusion;
 //extern int do_cooling;
 //extern int do_burning;
@@ -593,7 +594,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
 		if (!params.poly_eos) {
         /************* update T, eos_n, eos_u *************/
 		if (params.do_cooling || params.do_burning) {
-	        temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
+	        temp_ok = prep_cool_burn(p, newtraph_tlo, newtraph_thi, Gridpts, Nel, 0);
 		} else {
 		    /* Calculate temperature from u, then "create" photons (a*T^4) */
 		    eos_n = (double)(p->rho) * ivlenCF3 * massCF;
@@ -645,7 +646,7 @@ update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float d
 
         /* keep these in cgs-units */
 		if (params.do_cooling || params.do_burning) 
-	        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
+	        temp_ok = prep_cool_burn(p, newtraph_tlo, newtraph_thi, Gridpts, Nel, 1);
 		else if (params.poly_eos) {
 			p->pr = POLY_EOS_K * pow (p->rho_est, POLY_EOS_GAMMA);
 			p->vsound = sqrtf_fast (p->pr / p->rho_est);
