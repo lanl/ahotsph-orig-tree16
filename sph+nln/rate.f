@@ -836,7 +836,7 @@ c..   set up constants
             z53(k)  = 0.0d0
             z43(k)  = 0.0d0
             z23(k)  = 0.0d0
- 0       enddo
+        enddo
 c..deck 4 a + b ---> c
 c..deck 5 a + b ---> c + d
 c..deck 6 a + b ---> c + d + e
