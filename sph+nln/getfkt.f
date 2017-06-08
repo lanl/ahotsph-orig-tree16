@@ -59,7 +59,7 @@ c      write(*,'(a5,2i4)')inam(i),isoz(i),ison(i)
 11    continue
       i = i-1
       if (i .ne. niso) then
-          write(*,*)"ERROR: i ne niso: ", i, niso
+          write(*,*)"ERROR: i .ne. niso: ", i, niso
           call exit(1)
       endif
       if(irank.eq.0) write(*,*)'isotope.lib read,',i,' isotopes'
