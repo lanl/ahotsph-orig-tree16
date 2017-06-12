@@ -15,7 +15,7 @@ c---------------------------------------------------------------
       integer*4 irank
 
 c..these values apply to latest reaclib
-      parameter(niso = 7852)
+      parameter(niso = 7854)
       parameter(nzmax = 112, nnmax =233)
 c      parameter(niso = 5410)
 c      parameter( nzmax=112,nnmax=225)
