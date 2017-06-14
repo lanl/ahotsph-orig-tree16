@@ -746,13 +746,13 @@ c         endif
          nnucleon = ncharge
      1            + inr(4) - inr(3) - inr(2) - inr(1)
          if( nbug .ne. 0 )then
-          if(irank.eq.0)write(*,'(5(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
+          if(irank.eq.0)write(*,'(4(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
      1        rnam(4),izr(4),inr(4),id(4),
      1        ncharge,nnucleon,lkh,nr,vw
-          if(irank.eq.0)write(3,'(5(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
+          if(irank.eq.0)write(3,'(4(a5,2i3,i4,3x),2i5,2x,a4,2a1)')
      1        rnam(1),izr(1),inr(1),id(1),
      1        rnam(2),izr(2),inr(2),id(2),
      1        rnam(3),izr(3),inr(3),id(3),
