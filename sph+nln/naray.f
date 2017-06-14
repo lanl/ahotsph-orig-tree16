@@ -111,6 +111,10 @@ c..1-->1 reaction (deck=1)
         do j = 1,2
           do i = 1,2
              nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
              iloc_tmp(nvecs) = nrr(j,k)
              jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -142,6 +146,10 @@ c..1-->2 reaction (deck=2)
         do j = 1,3
           do i = 1,3
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -174,6 +182,10 @@ c..1-->3 reaction (deck=3)
         do j = 1,4
           do i = 1,4
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -207,6 +219,10 @@ c..2-->1 reaction (deck=4)
         do j = 1,3
           do i = 1,3
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -240,6 +256,10 @@ c..2-->2 reaction (deck=5)
         do j = 1,4
           do i = 1,4
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -272,6 +292,10 @@ c..2-->3 reaction (deck=6)
         do j = 1,5
           do i = 1,5
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -307,6 +331,10 @@ c..2-->4 reaction (deck=7)
         do j = 1,6
           do i = 1,6
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -342,6 +370,10 @@ c..3-->1 reaction (deck=8)
         do j = 1,4
           do i = 1,4
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -377,6 +409,10 @@ c..3-->2 reaction (deck=9)
         do j = 1,5
           do i = 1,5
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -412,6 +448,10 @@ c..4-->2 reaction (deck=10)
         do j = 1,6
           do i = 1,6
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -447,6 +487,10 @@ c..1-->4 reaction (deck=11)
         do j = 1,5
           do i = 1,5
             nvecs = nvecs+1
+             if (nvecs .gt. nreac) then
+                 write(*,*)"nvecs too large, adjust nreac"
+                 call exit(1)
+             endif
             iloc_tmp(nvecs) = nrr(j,k)
             jloc_tmp(nvecs) = nrr(i,k)
           enddo
@@ -465,6 +509,10 @@ c..1-->4 reaction (deck=11)
       endif
 
       
+      if (nvecs .gt. nreac) then
+          write(*,*)"nvecs too large, adjust nreac"
+          call exit(1)
+      endif
       nlinks = 0
       do j = 1,nvecs
          sparse_tmp(j) = 1.0d0
