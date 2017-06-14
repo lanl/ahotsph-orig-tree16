@@ -31,6 +31,8 @@ c      parameter(nzmax = 112, nnmax =233)
 
       logical tobe
 
+      integer*4 arrshape1(1), arrshape2(2)
+
       include 'crate'
       include 'comcsolve'
 
@@ -68,6 +70,12 @@ c      write(3,*)'isotope.lib read,',i,' isotopes'
 
 
 c..read thielemann coef.s
+      arrshape2 = shape (rname)
+      if (arrshape2(1) .gt. 7 .or. arrshape2(2) .gt. nreac) then
+          write(*,*)"rname has wrong dimensions. expected ",
+     1          7, nreac, " got ", arrshape2
+          call exit(22)
+      endif
 
       open(5,file='netsu')
 c..friedel-style format
@@ -90,6 +98,10 @@ c        write(*,*)'deck is ',ktype
       else
 c..store values in arrays for rate subroutine
         kk = kk+1
+        if (kk .gt. nreac) then
+            write(*,*)"max value for kk exceeded, resize nreac:", kk
+            call exit(22)
+        endif
         do j = 1,6
           rname(j,kk) = nam(j)
         enddo
