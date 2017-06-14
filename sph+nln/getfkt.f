@@ -15,10 +15,10 @@ c---------------------------------------------------------------
       integer*4 irank
 
 c..these values apply to latest reaclib
-      parameter(niso = 7854)
-      parameter(nzmax = 112, nnmax =233)
-c      parameter(niso = 5410)
-c      parameter( nzmax=112,nnmax=225)
+c      parameter(niso = 7854)
+c      parameter(nzmax = 112, nnmax =233)
+      parameter(niso = 5410)
+      parameter( nzmax=112,nnmax=225)
       integer*4 ncharge
       dimension p(7)
       character*5 lkh
