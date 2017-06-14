@@ -7,12 +7,12 @@
       include 'comcsolve'
 
       integer*4 irank
-      integer*4 idebug, i, j, k, k1, k2, inv, iflag,nnuc2
-      parameter (nnuc2 = nnuc*nnuc)
+      integer*4 idebug, i, j, k, k1, k2, inv, iflag
       character*5 blank
 
-      real*8 sparse_tmp(nnuc2)
-      integer*4 iloc_tmp(nnuc2),jloc_tmp(nnuc2)
+      real*8 sparse_tmp(nreac)
+      integer*4 iloc_tmp(nreac),jloc_tmp(nreac)
+      integer*4 arrshape1(1), arrshape2(2)
 c..set up interger identification of reactants
 
 c..1-->1 reaction (deck=1)
@@ -27,13 +27,61 @@ c..3-->1 (and 2) reaction (deck=8)
       data blank/'     '/
 c--------------------------------------------------------------
 c..zero nrr array and write nonzero indexes for real reactants
+      arrshape2 = shape (nrr)
+      if ((arrshape2(1) .ne. 6) .or. (arrshape2(2) .lt. ireac)) then
+          write(*,*)"nrr has wrong dimensions. expected ", 
+     1          6, ireac, " got ", arrshape2
+          call exit(1)
+      endif
       do k = 1, ireac
         do j = 1, 6
           nrr(j,k) = 0
         enddo
       enddo
       
-      do j = 1, nreac
+      arrshape1 = shape (iloc)
+      if (arrshape1(1) .ne. nreac) then
+          write(*,*)"iloc has wrong dimensions. expected ", 
+     1          nreac, " got ", arrshape1
+          call exit(1)
+      endif
+
+      arrshape1 = shape (iloc_tmp)
+      if (arrshape1(1) .ne. nreac) then
+          write(*,*)"iloc_tmp has wrong dimensions. expected ", 
+     1          nreac, " got ", arrshape1
+          call exit(1)
+      endif
+
+      arrshape1 = shape (jloc)
+      if (arrshape1(1) .ne. nreac) then
+          write(*,*)"jloc has wrong dimensions. expected ", 
+     1          nreac, " got ", arrshape1
+          call exit(1)
+      endif
+
+      arrshape1 = shape (jloc_tmp)
+      if (arrshape1(1) .ne. nreac) then
+          write(*,*)"jloc has wrong dimensions. expected ", 
+     1          nreac, " got ", arrshape1
+          call exit(1)
+      endif
+
+      arrshape1 = shape (sparse_dfdy)
+      if (arrshape1(1) .ne. nreac) then
+          write(*,*)"sparse_dfdy has wrong dimensions. expected ", 
+     1          nreac, " got ", arrshape1
+          call exit(1)
+      endif
+
+      arrshape1 = shape (sparse_tmp)
+      if (arrshape1(1) .ne. nreac) then
+          write(*,*)"sparse_tmp has wrong dimensions. expected ", 
+     1          nreac, " got ", arrshape1
+          call exit(1)
+      endif
+
+      do j = 1, nreac, 1
           iloc(j) = 0
           iloc_tmp(j) = 0
           jloc(j) = 0
