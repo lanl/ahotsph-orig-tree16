@@ -15,6 +15,8 @@ c..   defined in dimenfile      parameter(tsize = 13, rhosize = 11)
       real*8 ratin(tsize,rhosize), 
      1       enuin(tsize,rhosize)
       
+      integer*4 arrshape2(2), arrshape3(3)
+
       character*72 cdumblong
       character*64 cdumbshort
       character*5 ci1,ci2
@@ -23,12 +25,44 @@ c-----------------------------------------------------------------
 
       kup = k1deck(1)
       klo = k2deck(2)
+c checking array bounds
+      arrshape2 = shape (ratin)
+      if (arrshape2(1) .gt. tsize .or. arrshape2(2) .gt. rhosize) then
+          write(*,*)"Error: ratin has wrong dimensions. Expected ",
+     1       tsize, rhosize, " got ", arrshape2
+          call exit(22)
+      endif
+      arrshape2 = shape (enuin)
+      if (arrshape2(1) .gt. tsize .or. arrshape2(2) .gt. rhosize) then
+          write(*,*)"Error: enuin has wrong dimensions. Expected ",
+     1       tsize, rhosize, " got ", arrshape2
+          call exit(22)
+      endif
+      arrshape3 = shape (ratarray)
+      if (arrshape3(1) .gt. wkreac .or. arrshape3(2) .gt. tsize .or.
+     1    arrshape3(3) .gt. rhosize) then
+          write(*,*)"Error: ratarray has wrong dimensions. Expected ",
+     1         wkreac , rhosize, tsize, " got ", arrshape3
+          call exit(22)
+      endif
+      arrshape3 = shape (enuarray)
+      if (arrshape3(1) .gt. wkreac .or. arrshape3(2) .gt. tsize .or.
+     1    arrshape3(3) .gt. rhosize) then
+          write(*,*)"Error: enuarray has wrong dimensions. Expected ",
+     1         wkreac , rhosize, tsize, " got ", arrshape3
+          call exit(22)
+      endif
       do k = kup, klo
 c..loop over decks 1 and 2 which have weak rates
          if( iffn(k) .gt. 0 )then
 
 c..   location in netweak data set
             rloc = iffn(k) 
+            if (rloc .gt. wkreac) then
+                write(*,*)"Error: rloc exceeded wkreac: ", rloc, " > ",
+     1                 wkreac
+                call exit(22)
+            endif
             if(irank.eq.0) write(*,*)"about to open netweak"
 c..   open file starts at the beginning
             open(19,file='netweak')
