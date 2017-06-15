@@ -67,7 +67,7 @@ c      write(*,*) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
       my_n(i) = n(i)
       read (12,4) (p(j),j=1,24)
     2 format (a5,4x,f9.3,i3,1x,i3,2x,f5.1,2x,f7.3)
-    4 format(8f9.2)
+    4 Format(8f9.2)
 
 c cie: something seems to be stomping on the memory of some of these
 c      arrays as or some time after they are read in (precise timing
@@ -93,6 +93,11 @@ c..     All nuclei read
 
 c..construct binding energy from mass excesses
 c..use mass excesses
+      if (itot .ne. nnuc) then
+          write(*,*)"Error: inconsistency between itot and nnuc: ",
+     1      itot, " vs ", nnuc
+          call exit(22)
+      endif
       do i = 1, itot
          qq(i) = mxcess(i)
       enddo
