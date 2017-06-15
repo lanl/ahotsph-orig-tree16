@@ -330,8 +330,8 @@ c      enddo
 
 c      do j = 1, nucpg !cie: why is this nucpg?? lz/ln are declared in
 cburn to have ndim elements
-      do j = 1, ndim
-         itno = 0
+c      do j = 1, ndim
+c         itno = 0
 c         do n = 1, nucpg-1
 c            if( lz(nscr(n)) .gt. lz(nscr(n+1)) )then
 c..switch n and n+1 in nscr (index array)
@@ -345,7 +345,7 @@ c         if( itno .le. 0 )then
 c            if(irank.eq.0) write(*,'(20a6)')(cnuc(nscr(i)),i=1, nucpg)
 c            goto 130
 c         endif
-      enddo
+c      enddo
 c 130  continue
 c      jz = j-1
 c      if(irank.eq.0) write(*,*)'reordered in Z in ',jz,' steps'
