@@ -40,6 +40,8 @@ c cie: nscr should have N=nucpg elements?
 
       logical tobe
 
+      integer*4 arrshape1(1), arrshape2(2)
+
 c..default values for new network; used to reset abundances
       data zpop/0.01542d0/,zhyd/0.7095d0/
 
@@ -63,6 +65,24 @@ c..   resource file for analysis programs
          newnet = 1
       endif
 
+      arrshape1 = shape (cnuc)
+      if (arrshape1(1) .lt. ndim) then
+          write(*,*)"Error: cnuc has wrong dimensions. Expected ",
+     1        ndim, " got ", arrshape1
+          call exit(22)
+      endif
+      arrshape1 = shape (lz)
+      if (arrshape1(1) .lt. ndim) then
+          write(*,*)"Error: lz has wrong dimensions. Expected ",
+     1        ndim, " got ", arrshape1
+          call exit(22)
+      endif
+      arrshape1 = shape (ln)
+      if (arrshape1(1) .lt. ndim) then
+          write(*,*)"Error: ln has wrong dimensions. Expected ",
+     1        ndim, " got ", arrshape1
+          call exit(22)
+      endif
       if( newnet .ne. 0 )then
 
          if(irank.eq.0) write(*,*)
@@ -99,6 +119,12 @@ c..naag is the "mass number" A=Z+N, not the mass in amu
                endif
             enddo
          enddo
+         arrshape1 = shape (solarx)
+         if (arrshape1(1) .lt. netsize) then
+             write(*,*)"Error: solarx has wrong dimensions. Expected ",
+     1         netsize, " got ", arrshape1
+             call exit (22)
+         endif
          do n = 1, netsize
             solarx(n) = xx(n)
          enddo
