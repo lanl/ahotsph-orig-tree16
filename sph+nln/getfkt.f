@@ -1137,6 +1137,25 @@ c..do not count alpha as nucleus
       inuc = number
       ireac = kk
 
+c check 'number' against array sizes
+      arrshape1 = shape (xid)
+      if (arrshape1(1) .lt. number+4) then
+          write(*,*)"Error: xid has wrong dimensions. Expected ", 
+     1       number + 4, " got ", arrshape1
+          call exit(22)
+      endif
+      arrshape1 = shape (nz)
+      if (arrshape1(1) .lt. number+3) then
+          write(*,*)"Error: nz has wrong dimensions. Expected ", 
+     1       number + 3, " got ", arrshape1
+          call exit(22)
+      endif
+      arrshape1 = shape (nn)
+      if (arrshape1(1) .lt. number+3) then
+          write(*,*)"Error: nn has wrong dimensions. Expected ", 
+     1       number + 3, " got ", arrshape1
+          call exit(22)
+      endif
 
 c..setup nz,nn,xid vectors for burn
       l = 0
@@ -1178,6 +1197,13 @@ c electrons are in number + 4 = ndim usually
       endif
 c
 c..count number of reactions of each type (deck)
+c check that ndeck has the correct size
+      arrshape1 = shape (ndeck)
+      if (arrshape1(1) .lt. 11) then
+          write(*,*)"Error: ndeck has wrong dimensions. Expected ",
+     1        11, " got ", arrshape1
+          call exit(22)
+      endif
       do j = 1, 11
         ndeck(j) = 0
       enddo
