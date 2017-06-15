@@ -330,8 +330,8 @@ c      enddo
 
 c      do j = 1, nucpg !cie: why is this nucpg?? lz/ln are declared in
 cburn to have ndim elements
-      do j = 1, ndim
-         itno = 0
+c      do j = 1, ndim
+c         itno = 0
 c         do n = 1, nucpg-1
 c            if( lz(nscr(n)) .gt. lz(nscr(n+1)) )then
 c..switch n and n+1 in nscr (index array)
