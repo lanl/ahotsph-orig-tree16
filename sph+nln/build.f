@@ -30,6 +30,11 @@ c..from reaction rates available
 c..actual size of network (number of nuclei)
       itot = nnuc
       netsize = itot
+      if (netsize + 1 > ndim) then
+          write(*,*)"Error: netsize is too large: ", netsize, 
+     1      " > ", ndim
+          call exit(22)
+      endif
 c      filenm = 'net.rc.1'
       call abinit(irank,filenm_orig)
       
