@@ -1120,6 +1120,8 @@ c..do not count alpha as nucleus
           endif
         enddo
       enddo
+c itot (from comcsolve common block) is elsewhere set to nnuc.
+c is this inconsistent? is this bad? cie
       itot = number + 3
 
       if(irank.eq.0)write(*,*)itot,' nuclei',nzmax,nnmax
