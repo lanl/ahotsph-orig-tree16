@@ -60,6 +60,7 @@ c..   xxeq = nucleon fraction in nse
       data plus /'  +  '/,goes/' <-> '/
 
       integer*4 icall, iachain
+      integer*4 arrshape1(1)
       data icall/0/,iachain/1/
 
 c..   icall flags first call for initiation
@@ -160,6 +161,10 @@ c            stop
 c         endif
          nfe56  = 0
          do i = 1, itot
+            if (yeq(i) .ne. yeq(i)) then
+                write(*,*)"Error: yeq is nan at i= ", i
+                call exit(2)
+            endif
             yeqold(i) = yeq(i)
             if( nz(i) .eq. 26 .and.  nn(i) .eq. 30 )then
                nfe56 = i
@@ -237,8 +242,52 @@ c..   uses u(ia) = u + m here, so it is "mu" not "u"
 c..   save first guesses for convergence diagnostics
          uhat0 = uhat
          uaaa0 = uaaa
+         if (uaaa0 .ne. uaaa0) then
+             write(*,*)"Error: uaaa0 is nan."
+             call exit(1)
+         endif
+         if (uhat0 .ne. uhat0) then
+             write(*,*)"Error: uhat0 is nan."
+             call exit(1)
+         endif
 
 c..   interate for nucleon number (sum Xi = 1).....................
+         arrshape1 = shape (ww)
+         if (arrshape1(1) .lt. itot) then
+             write(*,*)"Error: ww has wrong dimensions. Expected ",
+     1            itot, " got ", arrshape1
+             call exit(22)
+         endif
+         arrshape1 = shape (nn)
+         if (arrshape1(1) .lt. itot) then
+             write(*,*)"Error: nn has wrong dimensions. Expected ",
+     1            itot, " got ", arrshape1
+             call exit(22)
+         endif
+         arrshape1 = shape (nz)
+         if (arrshape1(1) .lt. itot) then
+             write(*,*)"Error: nz has wrong dimensions. Expected ",
+     1            itot, " got ", arrshape1
+             call exit(22)
+         endif
+         arrshape1 = shape (yeq)
+         if (arrshape1(1) .lt. itot) then
+             write(*,*)"Error: yeq has wrong dimensions. Expected ",
+     1            itot, " got ", arrshape1
+             call exit(22)
+         endif
+         arrshape1 = shape (xeq)
+         if (arrshape1(1) .lt. itot) then
+             write(*,*)"Error: xeq has wrong dimensions. Expected ",
+     1            itot, " got ", arrshape1
+             call exit(22)
+         endif
+         arrshape1 = shape (ww)
+         if (arrshape1(1) .lt. itot) then
+             write(*,*)"Error: ww has wrong dimensions. Expected ",
+     1            itot, " got ", arrshape1
+             call exit(22)
+         endif
          do n = 1, nloop
 c..   generate trial nse abundance values
             do i = 1, itot  
@@ -266,6 +315,12 @@ c..   complete sum for all nucleons
                dydmu = yeq(i) / tk * dudmu
                dxdmu = dxdmu + aa*dydmu
                zz    =  nz(i) 
+               if (xeqm .ne. xeqm) then
+                   write(*,*)"Error: xeqm is nan.",
+     1               " nz(",i,")", nz(i), " nn(",i,")", nn(i), 
+     1               " yeq(",i,")", yeq(i)
+                   call exit(2)
+               endif
                if( nz(i) .ne. nn(i) )then
 c..   Z .ne. N sum for neutron excesses
                   etai  = aa - 2.0d0*zz
@@ -275,6 +330,12 @@ c..   Z .ne. N sum for neutron excesses
                   dydmh = yeq(i) / tk * dudmh
                   dxdmh = dxdmh + aa  *dydmh
                   dedmh = dedmh + etai*dydmh
+                  if (etaq .ne. etaq) then
+                      write(*,*)"Error, etaq is nan. aa ", aa,
+     1                  " zz", zz, " xeqm", xeqm, 
+     1                  " yeq(",i,")", yeq(i)
+                      call exit(2)
+                  endif
                endif
             enddo 
             det    = dxdmu*dedmh - dxdmh*dedmu
