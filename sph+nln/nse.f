@@ -190,7 +190,7 @@ c         u(ia) = qq(nnuc) + tk*(etanuc(nnuc,k)-dlog(ww(nnuc)))
 c cie: due to a bug in masses.f (somthing stomping over the memory of 
 c      nz/n when or after those are read in), the last three elements
 c      in 'ww' can be zero, which gives an 'inf' when taking the log
-         if (ww (nnuc-1) .gt. 0.0) then
+         if (ww (nnuc) .gt. 0.0) then
              dlog_ww_a = dlog (ww (nnuc))
          else 
              dlog_ww_a = 0.0
