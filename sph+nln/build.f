@@ -133,13 +133,38 @@ c..   iline is the ordering number for subrates of a given reaction
 c..   (this includes nonresonant and resonant rates)
 c..   isum  is a dummy variable for counting
       integer*4 isum
+      integer*4 arrshape1(1)
 
 c---------------------------------------------------------------
 c..set up A=Z+N in double precision
+      arrshape1 = shape (anuc)
+      if (arrshape1(1) .lt. itot) then
+          write(*,*)"Error: anuc has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1(1)
+          call exit(22)
+      endif
+      arrshape1 = shape (nn)
+      if (arrshape1(1) .lt. itot) then
+          write(*,*)"Error: nn has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1(1)
+          call exit(22)
+      endif
+      arrshape1 = shape (nz)
+      if (arrshape1(1) .lt. itot) then
+          write(*,*)"Error: nz has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1(1)
+          call exit(22)
+      endif
       do i = 1, itot
          anuc(i) = dble( nz(i) + nn(i) )
       enddo
 c..find multiple lines
+      arrshape1 = shape (iline)
+      if (arrshape1(1) .lt. nreac) then
+          write(*,*)"Error: iline has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1(1)
+          call exit(22)
+      endif
       do k = 1, nreac
          iline(k) = 0
       enddo
@@ -147,6 +172,16 @@ c..find multiple lines
      1     'INVERSES: finding rates with more than one reaction line'
 
 c..deck 1: 1-->1
+      if (k1deck(1) .gt. nreac) then
+          write(*,*)"Error: k1deck(1) exceeds nreac: ", k1deck(1),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(1) .gt. nreac) then
+          write(*,*)"Error: k2deck(1) exceeds nreac: ", k2deck(1),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(1)) = 1
       do k = k1deck(1)+1,k2deck(1)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -166,6 +201,16 @@ c     1           iline(k),iffn(k),rlkh(k),qval(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 1'
 
 c..deck 2: 1-->2
+      if (k1deck(2) .gt. nreac) then
+          write(*,*)"Error: k1deck(2) exceeds nreac: ", k2deck(2),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(2) .gt. nreac) then
+          write(*,*)"Error: k2deck(2) exceeds nreac: ", k2deck(2),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(2)) = 1
       do k = k1deck(2)+1,k2deck(2)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -185,6 +230,16 @@ c     1        iline(k)
       enddo
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 2'
 c..deck 3: 1-->3
+      if (k1deck(3) .gt. nreac) then
+          write(*,*)"Error: k1deck(3) exceeds nreac: ", k2deck(3),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(3) .gt. nreac) then
+          write(*,*)"Error: k2deck(3) exceeds nreac: ", k2deck(3),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(3)) = 1
       do k = k1deck(3)+1,k2deck(3)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -207,6 +262,16 @@ c     1        rname(4,k),iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 3'
 
 c..deck 4: 2-->1
+      if (k1deck(4) .gt. nreac) then
+          write(*,*)"Error: k1deck(4) exceeds nreac: ", k2deck(4),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(4) .gt. nreac) then
+          write(*,*)"Error: k2deck(4) exceeds nreac: ", k2deck(4),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(4)) = 1
       do k = k1deck(4)+1,k2deck(4)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -228,6 +293,16 @@ c     1        iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 4'
 
 c..deck 5: 2-->2
+      if (k1deck(5) .gt. nreac) then
+          write(*,*)"Error: k1deck(5) exceeds nreac: ", k2deck(5),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(5) .gt. nreac) then
+          write(*,*)"Error: k2deck(5) exceeds nreac: ", k2deck(5),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(5)) = 1
       do k = k1deck(5)+1,k2deck(5)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -251,6 +326,16 @@ c     1        rname(4,k),iline(k)
 
 
 c..deck 6: 2-->3
+      if (k1deck(6) .gt. nreac) then
+          write(*,*)"Error: k1deck(6) exceeds nreac: ", k2deck(6),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(6) .gt. nreac) then
+          write(*,*)"Error: k2deck(6) exceeds nreac: ", k2deck(6),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(6)) = 1
       do k = k1deck(6)+1,k2deck(6)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -274,6 +359,16 @@ c     1        rname(4,k),rname(5,k),iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 6'
 
 c..deck 7: 2-->4
+      if (k1deck(7) .gt. nreac) then
+          write(*,*)"Error: k1deck(7) exceeds nreac: ", k2deck(7),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(7) .gt. nreac) then
+          write(*,*)"Error: k2deck(7) exceeds nreac: ", k2deck(7),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(7)) = 1
       do k = k1deck(7)+1,k2deck(7)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -298,6 +393,16 @@ c     1        rname(4,k),rname(5,k),rname(6,k),iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 7'
 
 c..deck 8: 3-->1 
+      if (k1deck(8) .gt. nreac) then
+          write(*,*)"Error: k1deck(8) exceeds nreac: ", k2deck(8),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(8) .gt. nreac) then
+          write(*,*)"Error: k2deck(8) exceeds nreac: ", k2deck(8),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(8)) = 1
       do k = k1deck(8)+1,k2deck(8)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -321,6 +426,16 @@ c     1        rname(4,k),rname(5,k),iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 8'
 
 c..deck 9: 3-->2 
+      if (k1deck(9) .gt. nreac) then
+          write(*,*)"Error: k1deck(9) exceeds nreac: ", k2deck(9),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(9) .gt. nreac) then
+          write(*,*)"Error: k2deck(9) exceeds nreac: ", k2deck(9),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(9)) = 1
       do k = k1deck(9)+1,k2deck(9)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -345,6 +460,16 @@ c     1        rname(4,k),rname(5,k),iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 9'
 
 c..deck 10: 4-->2 
+      if (k1deck(10) .gt. nreac) then
+          write(*,*)"Error: k1deck(10) exceeds nreac: ", k2deck(10),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(10) .gt. nreac) then
+          write(*,*)"Error: k2deck(10) exceeds nreac: ", k2deck(10),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(10)) = 1
       do k = k1deck(10)+1,k2deck(10)
          if( rname(1,k) .eq. rname(1,k-1) .and.
@@ -370,6 +495,16 @@ c     1        rname(4,k),rname(5,k),iline(k)
       if(irank .eq. 0)write(*,*)isum,' multiline rates in deck 10'
 
 c..deck 11: 1-->4 
+      if (k1deck(11) .gt. nreac) then
+          write(*,*)"Error: k1deck(11) exceeds nreac: ", k2deck(11),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
+      if (k2deck(11) .gt. nreac) then
+          write(*,*)"Error: k2deck(11) exceeds nreac: ", k2deck(11),
+     1         " .gt. ", nreac
+          call exit(22)
+      endif
       iline(k1deck(11)) = 1
       do k = k1deck(11)+1,k2deck(11)
          if( rname(1,k) .eq. rname(1,k-1) .and.
