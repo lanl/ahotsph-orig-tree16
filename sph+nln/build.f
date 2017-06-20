@@ -18,6 +18,7 @@ c..and echo to standard i/o
       integer*4 idebug,n,i,j
       character*20 filenm_orig
       character*20 filenm
+      integer*4 arrshape1(1)
 
 c---------------------------------------------------------------
 c..get friedel's reaction rate parameters, build network inferred
@@ -61,6 +62,24 @@ c     .weak interaction data
       call weakread(irank)
 
 c..set up identification for nuclei to use in tycho timestep control
+      arrshape1 = shape (xa)
+      if (arrshape1(1) .lt. itot) then
+          write(*,*)"Error: xa has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1
+          call exit(22)
+      endif
+      arrshape1 = shape (nucz)
+      if (arrshape1(1) .lt. itot) then
+          write(*,*)"Error: nucz has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1
+          call exit(22)
+      endif
+      arrshape1 = shape (nuca)
+      if (arrshape1(1) .lt. itot) then
+          write(*,*)"Error: nuca has wrong dimensions. Expected ",
+     1        itot, " got ", arrshape1
+          call exit(22)
+      endif
       do j = 1, itot
 c..define nucleon number  for each isotope 
 c        xa(j) = nz(j) + nn(j)
