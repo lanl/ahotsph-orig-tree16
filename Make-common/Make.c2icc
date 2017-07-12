@@ -6,17 +6,23 @@
 defaultCC:=icc
 defaultFC:=ifort -nofor_main 
 
-CC_SPECIFIC:=-g -DLONG_LONG_KEYS 
-#-march=core2 -mcpu=core2
-FC_SPECIFIC:=-g -fpp -warn alignments 
+CC_SPECIFIC:=-DLONG_LONG_KEYS 
+C_OPTIMIZE:=-O3
+FC_SPECIFIC:=-fpp \
+			-warn alignments \
+			-align nocommons
+F_OPTIMIZE:=-O0
 #-names as_is -assume nounderscore -assume no2underscore
-#-cm -w95 -80
-ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC -D_FILE_OFFSET_BITS=64 -DYY_SKIP_YYWRAP 
+ARCH_SPECIFIC:=-D__iX86__=686 \
+			-D__ICC__ \
+			-DUSE_SYSTEM_MALLOC \
+			-D_FILE_OFFSET_BITS=64 \
+			-DYY_SKIP_YYWRAP 
 # ARCH_SPECIFIC:=-D__iX86__=686 -D__ICC__ -DUSE_SYSTEM_MALLOC
 
 # ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC
 
-override OPTIMIZE=-O3 -static -no-prec-div -xSSE3
+#override OPTIMIZE=-O0 -static -no-prec-div -xSSE3
 override AGGRESSIVE_OPT=
 #LDFLAGS:=-L$(FORTHOME)/lib
 #LDFLAGS:=-L/packages/intel/fce/10.1.015/lib
