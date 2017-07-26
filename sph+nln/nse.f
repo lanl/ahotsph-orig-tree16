@@ -236,6 +236,10 @@ c      in 'ww' can be zero, which gives an 'inf' when taking the log
          un = qq(nnuc-2) + tk*(dlog(yeq(nnuc-2))+chemfak+chemcon
      1   - dlog(2.0d0) - dlog_ww_n)
          uhat = (un - up)/1.0d0
+         if (uhat .ne. uhat) then
+             write(*,*)"Error: uhat is nan. un=", un, " up=", up
+             call exit(2)
+         endif
          uaaa = 2.0*(un + up)/1.0d0
 c..   uses u(ia) = u + m here, so it is "mu" not "u"
          uaaa = u(ia)
@@ -298,6 +302,13 @@ c..   generate trial nse abundance values
      1              + (aa*0.50d0 - zz) * uhat
      2              - qq(i)
                yeq(i) = arat * exp( ueff / tk )
+               if (yeq(i) .ne. yeq(i)) then
+                   write(*,*)"Error: yeq is nan at i= ", i, " n=", n
+     1              , " nz(i)=", nz(i), " nn(i)=", nn(i), " theta=",
+     1               theta, " ww(i)=", ww(i), " ueff=", ueff, " tk=",
+     1               tk, " qq(i)=", qq(i), " uaaa=", uaaa, "uhat=", uhat
+                   call exit(2)
+               endif
                xeq(i) = yeq(i)*aa
             enddo
 c..   generate Ye and sum Xi, and their derivatives for Newton-Raphson
@@ -405,6 +416,10 @@ c..   energy relative to C12 nuclei
          pnc  = pnc * rho
          gam4 = pnc/(enc * rho) + 1.0d0
 c         write(*,*)'gam4',gam4,k
+         if (yeeq .ne. yeeq) then
+             write(*,*)"Error: yeeq is nan."
+             call exit(2)
+         endif
          yeq(ndim) = yeeq
 
 c..   sum n-rich,alpha,p-rich isotopes
@@ -503,6 +518,10 @@ c..   generate trial yeq values
                arat   = aa**1.5d0 * w(i) / theta
                ueff   = aa*0.25d0 * uaaa - qeq(i)
                yeq(i) = arat * exp( ueff / tk )
+               if (yeq(i) .ne. yeq(i)) then
+                   write(*,*)"Error: yeq is nan at i= ", i, " n=", n
+                   call exit(2)
+               endif
                xeq(i) = yeq(i)*aa
             enddo
             xeqm  = -1.0d0
