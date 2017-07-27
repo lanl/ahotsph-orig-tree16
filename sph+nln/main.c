@@ -1033,9 +1033,9 @@ main(int argc, char *argv[])
                 }
                 else {
 					if (params.do_cooling || params.do_burning)
-					    SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
-					else
 					    SPHOutputA(SPHbtab, SPHnobj, params.outnamebase, iter);
+					else
+					    SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
 				}
             }
             if (params.has_grav_data) Output(btab, nobj, params.outnamebase, iter);
