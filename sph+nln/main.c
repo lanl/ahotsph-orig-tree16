@@ -652,6 +652,7 @@ main(int argc, char *argv[])
             MPMY_Combine(&newr, &newr, 1, MPMY_FLOAT, MPMY_MIN);
             MPMY_Combine(newp, newp, 3, MPMY_FLOAT, MPMY_SUM);
             MPMY_Combine(newl, newl, 3, MPMY_FLOAT, MPMY_SUM);
+			MPMY_Combine(&bndry.acc, &bndry.acc, 3, MPMY_FLOAT, MPMY_SUM);
 
             bndry.mass += totnewmass;
             bndry.r = newr;
@@ -1104,6 +1105,7 @@ main(int argc, char *argv[])
              * bndry.vel under consideration from absorbed (linear, +angular?) momentum?
              */
             UpdateX(bndry.pos, sizeof(bndry_t), bndry.vel, sizeof(bndry_t), 1, dt, dt_last);
+            UpdateX(bndry.vel, sizeof(bndry_t), bndry.acc, sizeof(bndry_t), 1, dt, dt_last);
         }
         /* One must be careful with this integration scheme, since v */
         /* is a derived variable.  To really adjust v, change pos_last */

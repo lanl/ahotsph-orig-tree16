@@ -108,6 +108,7 @@ typedef struct {
 typedef struct{
     float pos[NDIM];
     float vel[NDIM];
+	float acc[NDIM];
     float p[NDIM];
     float l[NDIM];
     float mass;
