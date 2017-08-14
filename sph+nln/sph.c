@@ -575,7 +575,7 @@ update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int 
             ( (params.do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
               : 0.0 );
 
-        if (!finite(p->udot)) 
+        if (!isfinite(p->udot)) 
             Error("%d Bad value for udot: drho/dt=%.4E pr=%.4E rho=%.4E\n",
                     p->ident,p->drho_dt,p->pr,p->rho);
 

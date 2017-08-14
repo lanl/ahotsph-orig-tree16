@@ -1020,12 +1020,12 @@ update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low,
 
 #endif
 	}
-	if (!finite(p->udot)) {
+	if (!isfinite(p->udot)) {
 	    SeriousWarning("Bad value for udot\n%s\n", PrintSPHBodyContents(p));
 	    p->udot = 0.0;
 	}
 	p->udot2 /= p->temp;
-	if (!finite(p->udot2)) {
+	if (!isfinite(p->udot2)) {
 	    Error("Bad value for udot2\n%s\n", PrintSPHBodyContents(p));
 	}
 
@@ -1579,19 +1579,19 @@ update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit
 	p->dunu = Neut_out->dunu;
 	dtrapnue += Nutrap->dtrapnue;
 	dtrapnueb += Nutrap->dtrapnueb;
-	if (!finite(p->dunue)) {
+	if (!isfinite(p->dunue)) {
 	    SeriousWarning("Bad dunue\n%s\n", PrintSPHBodyContents(p));
 	    p->dunue = 0.0;
 	}
-	if (!finite(p->dynue)) {
+	if (!isfinite(p->dynue)) {
 	    SeriousWarning("Bad dynue\n%s\n", PrintSPHBodyContents(p));
 	    p->dynue = 0.0;
 	}
-	if (!finite(p->dunu)) {
+	if (!isfinite(p->dunu)) {
 	    SeriousWarning("Bad dunu\n%s\n", PrintSPHBodyContents(p));
 	    p->dunu = 0.0;
 	}
-	if (!finite(p->dye)) {
+	if (!isfinite(p->dye)) {
 	    SeriousWarning("Bad dye\n%s\n", PrintSPHBodyContents(p));
 	    p->dye = 0.0;
 	}
