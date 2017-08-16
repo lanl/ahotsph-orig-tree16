@@ -368,9 +368,9 @@ AdjustBtab4(SPHbody **SPHbtabp, int *nobj, bndry_t b, float *newmass,
             Msgf(("dt: %g: #%d: m: %g; x: %g; y: %g; z: %g; vx: %g; vy: %g; vz: %g\n", dt, p->ident, p->mass, p->pos[0], p->pos[1], p->pos[2], p->vel[0], p->vel[1], p->vel[2]));
         } else { /* dont eat particle*/
 			/* particle-acc updated in update_point_SPHmass_bndry */
-			b.acc[0] += G * p->mass * r_vec[0] / (r2 * r1);
-			b.acc[1] += G * p->mass * r_vec[1] / (r2 * r1);
-			b.acc[2] += G * p->mass * r_vec[2] / (r2 * r1);
+			b.acc[0] -= G * p->mass * r_vec[0] / (r2 * r1);
+			b.acc[1] -= G * p->mass * r_vec[1] / (r2 * r1);
+			b.acc[2] -= G * p->mass * r_vec[2] / (r2 * r1);
             q = StkPush(&s, sizeof(SPHbody));
             *q = *p;
             if (r1 < minb2) minb2 = r1;
