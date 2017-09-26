@@ -10,8 +10,7 @@ CC_SPECIFIC:=-DLONG_LONG_KEYS \
             -Wno-pointer-to-int-cast \
             -Wno-int-conversion
 C_OPTIMIZE:=-O3
-FC_SPECIFIC:=-ff2c \
-            -fno-align-commons
+FC_SPECIFIC:=-ff2c 
 F_OPTIMIZE:=-O0
 ARCH_SPECIFIC:=-DUSE_SYSTEM_MALLOC \
             -D_FILE_OFFSET_BITS=64 \
