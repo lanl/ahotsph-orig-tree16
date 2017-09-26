@@ -9,3 +9,7 @@ sph*.g5sh
 sph*.x86_64*
 neuttest
 sph*.ofedq*
+*exe
+*out
+*dSYM
+*DS_Store
