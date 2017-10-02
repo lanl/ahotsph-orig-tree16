@@ -209,6 +209,8 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     if (params->do_drag) {
         SDFgetfloatOrDie(sdfp, "drag_coeff", &(params->drag_coeff));
     }
+
+    SDFgetintOrDefault (sdfp, "limit_dt_on_acc", &(params->limit_dt_on_acc), 0);
 }
 
 void print_initial_ctl(setup_params_t params) {

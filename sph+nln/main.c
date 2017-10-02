@@ -2537,8 +2537,8 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
             if (tx < dti) dti = tx;
             tx = p->u/fabs(p->udot);
             if (tx < dti) dti = tx;
-			tx = sqrt (svel2 / sacc2);
-			if (tx < dti) dti = tx;
+			tx = sqrt (svel2 / sacc2) * (float)params.limit_dt_on_acc;
+			if (params.limit_dt_on_acc && tx < dti) dti = tx;
             dti *= params.courant_number;
             if (p->min_nbr_dt == 1e30) { 
                 /* This could happen if there are no nbrs. */
