@@ -4,9 +4,9 @@ c..must follow dimenfile
 c..see also file cnetrc
 c..dlibeb is flag for light element burning; automatically inferred
 c..from network
-      real*8    xa(ndim)
+      real*8    xa(ndim),nucz(ndim),nuca(ndim)
       integer*4 iburnop,ncytot,netsize,dlibeb
-      common/cburn/xa,iburnop,ncytot,netsize,dlibeb
+      common/cburn/xa,nucz,nuca,iburnop,ncytot,netsize,dlibeb
 
       integer*4   lz(ndim), ln(ndim), newnet, nucpg
 c..limit of margins in pgplot for nuclei id's

@@ -1104,6 +1104,7 @@ main(int argc, char *argv[])
             /* to get central velocity from particle absorption, need to Update 
              * bndry.vel under consideration from absorbed (linear, +angular?) momentum?
              */
+            UpdateX(bndry.vel, sizeof(bndry_t), bndry.acc, sizeof(bndry_t), 1, dt, dt_last);
             UpdateX(bndry.pos, sizeof(bndry_t), bndry.vel, sizeof(bndry_t), 1, dt, dt_last);
             UpdateX(bndry.vel, sizeof(bndry_t), bndry.acc, sizeof(bndry_t), 1, dt, dt_last);
         }
@@ -2060,6 +2061,9 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
             "bndry_vx", SDF_FLOAT, bndry.vel[0],
             "bndry_vy", SDF_FLOAT, bndry.vel[1],
             "bndry_vz", SDF_FLOAT, bndry.vel[2],
+			"bndry_ax", SDF_FLOAT, bndry.acc[0],
+			"bndry_ay", SDF_FLOAT, bndry.acc[1],
+			"bndry_az", SDF_FLOAT, bndry.acc[2],
             "bndry_px", SDF_FLOAT, bndry.p[0],
             "bndry_py", SDF_FLOAT, bndry.p[1],
             "bndry_pz", SDF_FLOAT, bndry.p[2],
@@ -2199,6 +2203,9 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
             "bndry_vx", SDF_FLOAT, bndry.vel[0],
             "bndry_vy", SDF_FLOAT, bndry.vel[1],
             "bndry_vz", SDF_FLOAT, bndry.vel[2],
+			"bndry_ax", SDF_FLOAT, bndry.acc[0],
+			"bndry_ay", SDF_FLOAT, bndry.acc[1],
+			"bndry_az", SDF_FLOAT, bndry.acc[2],
             "bndry_px", SDF_FLOAT, bndry.p[0],
             "bndry_py", SDF_FLOAT, bndry.p[1],
             "bndry_pz", SDF_FLOAT, bndry.p[2],
@@ -2483,7 +2490,7 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
     float max_h, min_h, max_rho, min_rho, max_u, min_u;
     float rho_err, rms_rho_err2, max_rho_err;
     float min_dt;
-    float sacc2;
+    float sacc2,svel2;
     float tx;
     float dti;
     int min_nbrs, max_nbrs;
@@ -2515,6 +2522,7 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
             VV(comv, += p->mass*p->vel);
             VV(force, += p->mass*p->acc);
             sacc2 = Dot(p->acc, p->acc);
+			svel2 = Dot(p->vel, p->vel);
             acc2 += sacc2;
             mtot += p->mass;
             gnterms += p->nterms;
@@ -2529,6 +2537,8 @@ SPHDiags(SPHbody *btab, int nobj, double ke, double pe, double te, double *etot,
             if (tx < dti) dti = tx;
             tx = p->u/fabs(p->udot);
             if (tx < dti) dti = tx;
+			tx = sqrt (svel2 / sacc2) * (float)params.limit_dt_on_acc;
+			if (params.limit_dt_on_acc && tx < dti) dti = tx;
             dti *= params.courant_number;
             if (p->min_nbr_dt == 1e30) { 
                 /* This could happen if there are no nbrs. */

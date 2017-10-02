@@ -15,6 +15,7 @@ c..searches for n,p,alpha and puts at end of list
 
       integer*4 itot, i, j, inuc, ih1, in1, ia4
       integer*4 nt(24), nz(nnuc), n(nnuc)
+      integer*4 my_nz(nnuc), my_n(nnuc)
       real*8    p(nnuc), a(nnuc), qq(nnuc+1),w(nnuc+1)
 
       real*8     dum(nnuc),dumw(nnuc)
@@ -50,13 +51,23 @@ cccccccccccccccccccccccccccccccccccccccccc?????????????????????????
 
 c..     Start reading
 
+      do i = 1, nnuc
+         a(i) = -1
+         nz(i) = -1
+         n(i) = -1
+         w(i) = -1
+         mxcess(i) = -1
+      enddo
+
       i = 1
  1000 continue
-      read (12,*,end=2000) nuc(i), a(i), nz(i), n(i), w(i), mxcess(i)
+      read (12,2,end=2000) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
 c      write(*,*) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
+      my_nz(i) = nz(i)
+      my_n(i) = n(i)
       read (12,4) (p(j),j=1,24)
     2 format (a5,4x,f9.3,i3,1x,i3,2x,f5.1,2x,f7.3)
-    4 format(8f9.2)
+    4 Format(8f9.2)
 
 c cie: something seems to be stomping on the memory of some of these
 c      arrays as or some time after they are read in (precise timing
@@ -64,6 +75,8 @@ c      varies). So this is observed in the first couple of elements
 c      of either 'n' or 'nz'. Don't know what's causing this. But,
 c      this results in a bug in the reordering done below that results
 c      in 'w' containing zeros in its last three elements. 
+c      attempted workaround: copy values from nz and n into my_nz and
+c      my_n.
 
 c..     update count for reading next line
       i = i+1
@@ -71,11 +84,20 @@ c..     update count for reading next line
 
 c..     All nuclei read
  2000 inuc = i-1
+      if (inuc .ne. nnuc) then
+          write(*,*)"ERROR: inuc .ne. nnuc: ", inuc, nnuc
+          call exit(1)
+      endif
 
       if(irank.eq.0) print *,'MASSES:', inuc, ' nuclei found'
 
 c..construct binding energy from mass excesses
 c..use mass excesses
+      if (itot .ne. nnuc) then
+          write(*,*)"Error: inconsistency between itot and nnuc: ",
+     1      itot, " vs ", nnuc
+          call exit(22)
+      endif
       do i = 1, itot
          qq(i) = mxcess(i)
       enddo
@@ -99,13 +121,21 @@ c..find them
       in1 = 0
       ia4 = 0
       do i = 1, itot
-        if( nz(i) .eq. 0 .and. n(i) .eq. 1 )then
+        if (my_nz(i) .lt. 0 .or. my_nz(i) .gt. 1000) then
+            write(*,*) "Error: my_nz = ", my_nz(i), " at i = ", i
+            call exit(1)
+        endif
+        if (my_n(i) .lt. 0 .or. my_n(i) .gt. 1000) then
+            write(*,*) "Error: my_n = ", my_n(i), " at i = ", i
+            call exit(1)
+        endif
+        if( my_nz(i) .eq. 0 .and. my_n(i) .eq. 1 )then
            in1 = i
         endif
-        if( nz(i) .eq. 1 .and. n(i) .eq. 0 )then
+        if( my_nz(i) .eq. 1 .and. my_n(i) .eq. 0 )then
            ih1 = i
         endif
-        if( nz(i) .eq. 2 .and. n(i) .eq. 2 )then
+        if( my_nz(i) .eq. 2 .and. my_n(i) .eq. 2 )then
            ia4 = i
         endif
       enddo

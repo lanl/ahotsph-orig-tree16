@@ -65,6 +65,7 @@ typedef struct {
     int kernel_ncoef1;
     int kernel_ncoef2;
 	int poly_eos;
+    int limit_dt_on_acc;
     float new_h;
     float new_u;
     float r_inner;
