@@ -3,7 +3,7 @@
 #include "verify.h"
 #include "mpmy.h"
 #include "gc.h"
-#include "key.h"
+//#include "key.h"
 #include "vop.h"
 
 #ifndef FLT_MAX

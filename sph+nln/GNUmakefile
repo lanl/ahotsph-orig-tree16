@@ -242,15 +242,6 @@ $(objdir)/sphplus$(objsuf): $(treedir)/include/chn.h $(treedir)/include/Assert.h
 $(objdir)/sphplus$(objsuf): ndim.h $(treedir)/include/physics_generic.h physics_sph.h
 $(objdir)/sphplus$(objsuf): $(treedir)/include/vop.h
 $(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
-$(objdir)/SDFreadf$(objsuf):
 $(objdir)/SDFreadf$(objsuf): $(treedir)/include/mpmy.h
 $(objdir)/SDFreadf$(objsuf): $(treedir)/include/timers.h $(treedir)/include/SDF.h $(treedir)/include/Assert.h
 $(objdir)/SDFreadf$(objsuf): $(treedir)/include/error.h $(treedir)/include/gccextensions.h

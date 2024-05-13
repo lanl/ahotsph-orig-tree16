@@ -179,6 +179,9 @@ int WalkFlushFreq(int flush_freq);
 /* are in tree.c */
 
 #undef INLINE
+//#if (__STDC_VERSION__ >= 199901L) && !defined (TREEdotC)
+//#define INLINE inline
+//#else
 #if defined (__GNUC__) && !defined (TREEdotC)
 #define INLINE extern __inline__
 #elif defined (__ICC__) && !defined (TREEdotC)
@@ -186,8 +189,9 @@ int WalkFlushFreq(int flush_freq);
 #else
 #define INLINE
 #endif
+//#endif
 
-#if defined(__GNUC__) || defined(TREEdotC)
+#if defined(TREEdotC)
 
 
 /* This version of Find is improved in two ways:

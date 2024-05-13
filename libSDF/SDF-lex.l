@@ -9,7 +9,7 @@
 */
 #include <stdlib.h>
 /* This define means we don't have to link with the lex library! */
-#define yywrap() 1
+//#define yywrap() 1
 
 /* This one is ugly.  
    Lex's output contains fprintf(yyout,  of various error messages.  
@@ -47,6 +47,7 @@ void SDFlexprepare(void){
 void SDFlexprepare(void){}
 #endif
 %}
+%option noyywrap
 White [ \f\t\n]
 Dig [0-9]
 Alpha [A-Za-z_]

@@ -57,6 +57,7 @@ typedef struct {
 extern "C"{
 #endif /* __cplusplus */
 extern char *PrintKey(Key_t key);
+/*
 extern int KeyGT(Key_t key1, Key_t key2);
 extern int KeyLT(Key_t key1, Key_t key2);
 extern int KeyGE(Key_t key1, Key_t key2);
@@ -80,16 +81,21 @@ extern Key_t KeyAddInt(Key_t key1, int i);
 extern int TreeLevel(Key_t key, int ndim);
 extern int CommonLev(Key_t bkey1, Key_t bkey2, int ndim);
 extern int KeyContained(Key_t outer, Key_t key, int ndim);
+*/
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
 #if (defined(__GNUC__) || defined(__ICC__)) || defined(KEYdotC)
 
+#if (__STDC_VERSION__ >= 199901L) && !defined (KEYdotC)
+#define INLINE inline
+#else
 #if (defined (__GNUC__) || defined(__ICC__)) && !defined (KEYdotC)
 #define INLINE extern __inline__
 #else
 #define INLINE
+#endif
 #endif
 
 #if NK==1

@@ -28,6 +28,7 @@ typedef struct {
     Key_t hikey, lokey;
     Key_t splitkey[MAXDOC];
     int keep_above[MAXDOC];
+    int method; // Added by CIE. Was this just forgotten?
 } sortresult_t;
 
 #ifdef __cplusplus

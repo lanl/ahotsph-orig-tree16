@@ -48,17 +48,19 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-extern void *ChnAlloc(Chn *id);
-extern void ChnFree(Chn *id, void *p);
 extern void ChnInit(Chn *new, int sz, int nalloc, 
 	     void *(*realloc_like)(void *, size_t));
 extern void ChnTerminate(Chn *id);
 extern void ChnFreeAll(Chn *id);
 extern int ChnCheck(Chn *id);
+extern int ChnMoreMem(Chn *id);
+#if !(__STDC_VERSION__ >= 199901L)
+extern void *ChnAlloc(Chn *id);
+extern void ChnFree(Chn *id, void *p);
 extern int ChnFreeCnt(Chn *id);
 extern int ChnAllocCnt(Chn *id);
-extern int ChnMoreMem(Chn *id);
 extern size_t ChnUnitSz(Chn *id);
+#endif
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
@@ -66,12 +68,16 @@ extern size_t ChnUnitSz(Chn *id);
 #if defined(__GNUC__) || defined(CHNdotC)
 
 #undef INLINE
+#if (__STDC_VERSION__ >= 199901L) && !defined (CHNdotC)
+#define INLINE inline
+#else
 #if defined (__GNUC__) && !defined (CHNdotC)
 #define INLINE extern __inline__
 #elif defined (__ICC__) && !defined (CHNdotC)
 #define INLINE extern __inline
 #else
 #define INLINE
+#endif
 #endif
 
 #if defined(ChnNext) || defined(ChnMagic) || defined(ChnMAGIC)

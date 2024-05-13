@@ -28,9 +28,6 @@ extern "C"{
 extern void StkInit(struct stk *s, int initial_sz, 
 	void *(*realloc_like)(void *, size_t), unsigned int alignment);
 
-/* StkInitEz chooses reasonable defaults. */
-extern void StkInitEz(struct stk *s);
-
 /* StkInitWithData starts with the given DATA ptr */
 void StkInitWithData(struct stk *s, int initial_sz,
 		     void *(*realloc_like)(void *, size_t), void *data,
@@ -41,6 +38,10 @@ void StkCopy(struct stk *to, const struct stk *from);
 
 /* StkTerminate frees the space and forget about it forever */
 extern void StkTerminate(struct stk *s);
+
+#if !(__STDC_VERSION__ >= 199901L)
+/* StkInitEz chooses reasonable defaults. */
+extern void StkInitEz(struct stk *s);
 
 /* StkPush returns a pointer to room for nbytes at the top of the */
 /* stack.  It's up to you to put something there. */
@@ -80,13 +81,15 @@ extern void *StkTop(const struct stk *s);
 /* StkClear is equivalent to StkPop(s, StkSz(s)), but it returns void */
 extern void StkClear(struct stk *s);
 
+extern int StkAlign(const struct stk *s, unsigned int nbytes);
+
+#endif
+
 /* StkCrunch realloc's the stack so it doesn't use any more space */
 /* than necessary.  Use it if you know you've reached the high-water-mark */
 extern void *StkCrunch(struct stk *s);
 
 /* Discover the alignment of a given stack.  I.e., how would it  */
-extern int StkAlign(const struct stk *s, unsigned int nbytes);
-
 /* StkGrow adds at least nbytes to the available space in the stack. */
 /* FOR INTERNAL USE ONLY */
 extern void StkGrow(Stk *s, int nbytes);
@@ -114,12 +117,16 @@ extern void StkGrow(Stk *s, int nbytes);
 #if defined(__GNUC__) || defined(STKdotC)
 
 #undef INLINE
+#if (__STDC_VERSION__ >= 199901L) && !defined (STKdotC)
+#define INLINE inline
+#else
 #if defined (__GNUC__) && !defined (STKdotC)
 #define INLINE extern __inline__
 #elif defined (__ICC__) && !defined (STKdotC)
 #define INLINE extern __inline
 #else
 #define INLINE
+#endif
 #endif
 
 INLINE int StkAlign(const struct stk *s, unsigned int nbytes){

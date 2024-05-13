@@ -19,7 +19,8 @@ all: All
 # spell them a little differently in this file...
 include Make-common/Make.generic
 
-subdirs:= libsw libSDF libtree libmpmy sph+nln WVTInitial
+subdirs:= libsw libSDF libtree libmpmy sph+nln 
+#WVTInitial
 #snsphforgabe snevolbrna 
 #subdirs:= sph+nln
 
