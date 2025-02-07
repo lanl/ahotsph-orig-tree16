@@ -21,99 +21,85 @@ c
       subroutine eos3(rhoi,ui,u2i,yei,tempi,ifleosi,abari,xpi,xni,
      $     xpfi, p2i, p3i, p4i,temprev,rhoprev,
      $     xpprev,xnprev,yeprev,ufreezi)
-c*************************************************************
-c
-c     compute pressures and temperatures with the    
-c     Ocean eos assuming NSE
-c
-c************************************************************
-c
-      double precision umass, uinput
-      double precision rhoi, ui, u2i, tempi, yei, ptot, pri, cs, etai, 
-     $     abari, xpi, xni, xai, xhi, yehi, rhoold, yeold,
-     $     xpfi, p2i, p3i, p4i, ufreezi, xmuhi, stot,vsoundi,
-     $     temprev,rhoprev,xpprev,xnprev,yeprev,xmuei,xmuhati,
-     $     xalphai,xheavyi
-c
-      common /output/ vsoundi,pri,etai,yehi,xmuei,xmuhati,xalphai,
-     $     xheavyi
-c
-      common /konst/ gg, clight, arad, bigr, xsecnn, xsecne
-      common /units/ umass, udist, udens, utime, uergg, uergcc
-      common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg
-      common /typef/ ieos
-c
-      if (yei.lt.0.) then
-         print *,'yei',yei
-         stop
-      endif
-c
-c--assume chemical freeze-out
-c
-      if (tempi.gt.500.0) print *,'HOT particle',ifleosi,rhoi,
-     $     tempi,ui,u2i
-      call eosfl(rhoi,pri,
-     $     ui,u2i,yei,tempi,ifleosi,abari,
-     $     xpi,xni,xpfi,p2i,p3i,p4i,ufreezi,
-     $     xmuei,xmuhi,etai,temprev,
-     $     yeprev,xpprev,xnprev)
-      if (ifleosi.eq.1) then
-         call rootemp2(rhoi,ui,tempi,yei,abari,
-     1        ptot,cs,etai,stot)
-         xpi=0.
-         xni=0.
-         xmuei=etai*tempi
-         xmuhati=0.0
-         xalphai=0.0
-         xheavyi=1.
-         yehi=yei
-c
-c--ocean eos + nse
-c
-      elseif (ifleosi.eq.2) then
-         rhoold=rhoprev*udens
-         yeold=yeprev
-         call rootemp3(rhoi,ui,temprev,yei,rhoold,yeold,
-     $        ptot,cs,etai,xpprev,xnprev,xai,xhi,yehi,
-     $        abari,stot)
-         xalphai=xai
-         xheavyi=xhi
-         xmuei=etai*tempi
-         xmuhati=0.0
-         pri=ptot
-c
-c--Swesty and Lattimer eos
-c
-      else
-         if (ieos.eq.4) then
-            uinput=u2i
-         end if
-         call rootemp4(rhoi,uinput,yei,tempi,xpfi,p2i,p3i,p4i,
-     $        ptot,cs,etai,xpi,xni,xai,xhi,yehi,abari,xmuhi,stot)
-c-- assume all dissociated, this could be changed in the future
-         xalphai=xai
-         xheavyi=xhi
-         xmuei=etai*tempi
-         xmuhati=xmuhi
-      endif
-c
-c--store values
-c
-      if (xpi.le.1d-15) xpi=0.
-      if (xni.le.1d-15) xni=0.
-      vsoundi=min(cs,0.3333*dble(clight))
-      pri=ptot
-      temprev=tempi
-      rhoprev=rhoi
-      xnprev=xni
-      xpprev=xpi
-      yeprev=yei
-c         
-      return
-      end
-c
-      subroutine rootemp2(rhoi,ui,tempi,yei,
-     1                    abar,ptot,cs,eta,stot)
+      c *************************************************************c c compute
+          pressures and temperatures with the c Ocean eos assuming NSE c c *************************
+              ***********************************c double precision umass,
+          uinput double precision rhoi, ui, u2i, tempi, yei, ptot, pri, cs, etai, $ abari, xpi, xni,
+          xai, xhi, yehi, rhoold, yeold, $ xpfi, p2i, p3i, p4i, ufreezi, xmuhi, stot, vsoundi,
+          $ temprev, rhoprev, xpprev, xnprev, yeprev, xmuei, xmuhati, $ xalphai,
+          xheavyi c common / output / vsoundi, pri, etai, yehi, xmuei, xmuhati, xalphai,
+          $ xheavyi c common / konst / gg, clight, arad, bigr, xsecnn,
+          xsecne common / units / umass, udist, udens, utime, uergg, uergcc common / unit2 / utemp,
+          utmev, ufoe, umevnuc, umeverg common / typef / ieos c if (yei.lt .0.) then print *, 'yei',
+          yei stop endif c c-- assume chemical freeze - out c if (tempi.gt .500.0) print *,
+          'HOT particle', ifleosi, rhoi, $ tempi, ui,
+          u2i call eosfl(rhoi,
+                         pri,
+                         $ ui,
+                         u2i,
+                         yei,
+                         tempi,
+                         ifleosi,
+                         abari,
+                         $ xpi,
+                         xni,
+                         xpfi,
+                         p2i,
+                         p3i,
+                         p4i,
+                         ufreezi,
+                         $ xmuei,
+                         xmuhi,
+                         etai,
+                         temprev,
+                         $ yeprev,
+                         xpprev,
+                         xnprev) if (ifleosi.eq .1) then call
+          rootemp2(rhoi, ui, tempi, yei, abari, 1 ptot, cs, etai, stot) xpi
+          = 0. xni = 0. xmuei = etai *tempi xmuhati = 0.0 xalphai = 0.0 xheavyi = 1. yehi
+          = yei c c-- ocean eos + nse c elseif(ifleosi.eq .2) then rhoold = rhoprev *udens yeold
+          = yeprev call rootemp3(rhoi,
+                                 ui,
+                                 temprev,
+                                 yei,
+                                 rhoold,
+                                 yeold,
+                                 $ ptot,
+                                 cs,
+                                 etai,
+                                 xpprev,
+                                 xnprev,
+                                 xai,
+                                 xhi,
+                                 yehi,
+                                 $ abari,
+                                 stot) xalphai
+          = xai xheavyi = xhi xmuei = etai *tempi xmuhati = 0.0 pri
+          = ptot c c-- Swesty and Lattimer eos c else if (ieos.eq .4) then uinput
+          = u2i end if call rootemp4(rhoi,
+                                     uinput,
+                                     yei,
+                                     tempi,
+                                     xpfi,
+                                     p2i,
+                                     p3i,
+                                     p4i,
+                                     $ ptot,
+                                     cs,
+                                     etai,
+                                     xpi,
+                                     xni,
+                                     xai,
+                                     xhi,
+                                     yehi,
+                                     abari,
+                                     xmuhi,
+                                     stot) c-- assume all dissociated,
+               this could be changed in the future xalphai = xai xheavyi = xhi xmuei
+               = etai *tempi xmuhati = xmuhi endif c c-- store values c if (xpi.le .1d - 15) xpi
+               = 0. if (xni.le .1d - 15) xni = 0. vsoundi = min(cs, 0.3333 * dble(clight)) pri
+               = ptot temprev = tempi rhoprev = rhoi xnprev = xni xpprev = xpi yeprev = yei c
+               return end c subroutine rootemp2(rhoi, ui, tempi, yei, 1 abar, ptot, cs, eta, stot)
 c*****************************************************************
 c                                                                *
 c  Given rho, u, ye and an initial T, this                       *
@@ -310,230 +296,157 @@ c
          abar2=zbar/yei
          call nados(t9,rho,zbar,abar2,pel,eel,sel,
      1              ptot,etot,stot,dpt,det,dpd,ded,gamm,eta)
-c
-         ediss=ubind/uergg*uou1
-         dediss=dubind/uergg*uou1
-         ures=(etot+ediss+ucoul)-u
-         dut=det+dediss
-         if (ures.lt.0.d0) then
-            t9l=t9
-         else
-            t9h=t9
-         endif
-      enddo
-c
-c--did not converge, print out error message and stop
-c
-      print *,'rootemp3: no convergence for part. i,rho(cgs)',
-     1         rhoi
-      stop
-c
-c--iteration sucessful, transform back in code units 
-c
-   20 continue
-      tempi=t9*uotemp
-      ptot=ptot*uopr+pcoul
-      cs=dsqrt(gamm*ptot/rhoi)
-      stot=stot*uotemp1/uou1
-c
-      return
-      end
-c
-      subroutine rootemp4(rhoi,ui,yei,tempi,xpfi,p2i,p3i,p4i,
-     1                   press,cs,eta,yp,yn,xa,xh,yeh,abar,xmuhi,stot)
-c**************************************************************
-c
-c     This subroutine computes the temperature
-c     with Doug Swesty's eos using
-c     a Newton-Raphson procedure coupled with
-c     bissection to prevent convergence problems.
-c
-c******************************************************
-      implicit double precision (a-h,o-z)
-c
-      parameter(itmax=80)
-      parameter(dtol=1d-2)
-c
-      real utemp, utmev, ufoe, umevnuc, umeverg
-      common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg
-      common/uswest/ usltemp, uslrho, uslu, uslp, u2slu
-c
-      double precision inpvar(4)
-c
-      templ=.1d0
-      temph=1d3
-      dtemp=dabs(temph-templ)
-c-- all the u's in this routine will be MeV/baryons
-c-- all the u's in this routine will be kB/baryons
-      u=ui*uslu
-      temp=tempi*usltemp
-      inpvar(1)=temp
-      inpvar(2)=p2i
-      inpvar(3)=p3i
-      inpvar(4)=p4i
-      pprev=xpfi
-      brydns=rhoi*uslrho
-      call slwrap(inpvar,yei,brydns,pprev,
-     1      psl,usl,dusl,gamsl,eta,yp,yn,xa,xh,yeh,abar,xmuh,u2sl)
-      ures=usl-u
-      do 10 k=1,itmax
-         dtempold=dtemp
-         if (((temp-temph)*dusl-ures)*
-     1      ((temp-templ)*dusl-ures).ge.0.d0.or.
-     2      dabs(2.d0*ures).gt.dabs(dtempold*dusl)) then
-            dtemp=0.5d0*(temph-templ)
-            temp=templ+dtemp
-         else
-            dtemp=ures/dusl
-            temp=temp-dtemp
-         endif
-         if (dabs(dtemp/temp).lt.dtol) goto 20
-         inpvar(1)=temp
-         call slwrap(inpvar,yei,brydns,pprev,
-     1            psl,usl,dusl,gamsl,eta,yp,yn,xa,xh,yeh,abar,xmuh,u2sl)
-         ures=usl-u
-         if (ures.lt.0.0d0) then
-            templ=temp
-         else
-            temph=temp
-         endif
-   10 continue
-      print *,'rootemp4: no convergence for particle i, rho',
-     1         rhoi
-   20 continue
-      p2i=inpvar(2)
-      p3i=inpvar(3)
-      p4i=inpvar(4)
-      xpfi=pprev
-c-- convert back to code units
-      press=psl/uslp
-      tempi=temp/usltemp
-      if (gamsl.gt.0.0) then
-         cs=dsqrt(gamsl*press/rhoi)
-      else
-         write (*,*) 'gamsl is ', gamsl
-         cs = 1e30
-      endif
-c--xmuhat is eta*T with T in code units
-      xmuhi=xmuh/utmev
-      stot=u2sl/u2slu
-      return
-      end
-c
-      subroutine coulomb(rhoi,zbar,ye,ucoul,pcoul)
-c***********************************************************
-c
-c  compute Coulomb corrections as given in Shapiro 
-c  and Teukolsky. p. 31 (2.4.9) and (2.4.11)
-c  in cgs:
-c        ucoul=-1.45079*e**2*avo**4/3*ye**4/3*rho**1/3*Z**2/3
-c             =-1.70e13 Ye**4/3 * rho**1/3 * Z**2/3
-c  code units: mulitply by udens**1/3 / uergg 
-c
-c        pcoul=-0.4836*e**2*avo**4/3*Ye**4/3*rho**4/3*Z**2/3
-c             =-5.67e12 Ye**4/3 * rho**4/3 * Z**2/3
-c  code units: mulitply by udens**4/3 / uergcc 
-c
-c***********************************************************
-c
-      implicit double precision (a-h,o-z)
-c
-      parameter(ufac=-0.214d0)
-      parameter(pfac=-0.0714d0)
-c    
-      rho13=rhoi**0.333333333333d0
-      rho43=rho13*rhoi
-      ye2=ye*ye
-      y43z23=(ye2*zbar)**0.66666666666d0 
-      ucoul=ufac*rho13*y43z23
-      pcoul=pfac*rho43*y43z23
-c
-      return
-      end
-c
-      subroutine nserho(rhoold,yeold,rho,ye,t9,yp,yn,
-     1                  xa,xh,yeh,zbar,abar,ubind,dubind)
-c*************************************************************
-c
-c this subroutine figures out the NSE eq. assuming that yp
-c and yn were previously known at different density and ye,
-c but SAME temperature
-c
-c**************************************************************
-c
-      implicit double precision(a-h,o-z)
-      parameter (tolnse=1d-5,kmax=10)
-c
-c
-      common /testnse/ testk,testzy,testay,testyp,testyn
-c
-c--finding zero point of binding energy
-c
-      ider=2
-      call nsesolv(ider,t9,rhoold,yeold,yp,yn,kit,kmax,ubind0,
-     &             xa,xh,yeh,zbar,abar)
-c
-      If(kit.ge.kmax) Then
-          write(*,*) 'NSE mis-stored entering nserho'
-          write(*,*) 'T9, rho, ye',t9,rhoold,yeold
-          write(*,*) 'inconsistent with yp, yn',yp,yn
-      Endif
-      ypold=yp
-      ynold=yn
-      delye=ye-yeold
-      rhovar=rho-rhoold
-      ider=0
-c
-c--If delye small, skip ye variation.
-c
-      If(delye.eq.0.) GOTO 50
-      yelast=yeold
-      Do 40 i=1,100
-          delye=dsign(min(abs(ye-yelast),abs(delye)),delye)
-          yetmp=yelast+delye
-          call nsesolv(ider,t9,rhoold,yetmp,yp,yn,kit,kmax,ubind,
-     &                 xa,xh,yeh,zbar,abar)
-          If (dabs(yetmp-ye).le.tolnse.and.kit.lt.kmax) goto 50
-          If (kit.ge.kmax) then
-             delye=0.5d0*delye
-             yp=ypold
-             yn=ynold
-          Elseif(kit.lt.4) Then
-             yelast=yetmp
-             delye=2.d0*delye
-             ypold=yp
-             ynold=yn
-          Else
-             yelast=yetmp
-             ypold=yp
-             ynold=yn
-          Endif
-   40 Continue
-      write(*,*)'Ye loop failure'
-      write(*,*)t9,rhoold,rho
-      write(*,*)yetmp,yelast,ye
-      write(*,*)yeold,delye,yp,yn
-      write(*,*)kit,zbar,abar
-      write(*,*)kmax,ubind
-      write(*,*)testk,testzy,testay,testyp,testyn
-   50 Continue
-c
-c--Begin rho iteration
-c
-      ypold=yp
-      ynold=yn
-      rholast=rhoold
-      If(dabs(rhovar).gt.1d7) Then
-          delrho=dsign(max(1d7,0.125d0*rhovar),rhovar)
-      Else
-          delrho=rhovar
-      Endif
-c
-      Do 60 i=1,500
-          delrho=dsign(min(abs(rho-rholast),abs(delrho)),delrho)
-          rhotmp=rholast + delrho
-          call nsesolv(ider,t9,rhotmp,ye,yp,yn,kit,kmax,ubind,
-     &                 xa,xh,yeh,zbar,abar)
+c ediss = ubind / uergg *uou1 dediss = dubind / uergg *uou1 ures = (etot + ediss + ucoul) - u dut
+    = det + dediss if (ures.lt .0.d0) then t9l = t9 else t9h
+    = t9 endif enddo c c-- did not converge,
+  print out error message and stop c print *, 'rootemp3: no convergence for part. i,rho(cgs)',
+  1 rhoi stop c c-- iteration sucessful,
+  transform back in code units c 20 continue tempi = t9 *uotemp ptot = ptot *uopr + pcoul cs
+  = dsqrt(gamm * ptot / rhoi) stot = stot * uotemp1
+                                     / uou1 c return end c subroutine rootemp4(rhoi,
+                                                                               ui,
+                                                                               yei,
+                                                                               tempi,
+                                                                               xpfi,
+                                                                               p2i,
+                                                                               p3i,
+                                                                               p4i,
+                                                                               1 press,
+                                                                               cs,
+                                                                               eta,
+                                                                               yp,
+                                                                               yn,
+                                                                               xa,
+                                                                               xh,
+                                                                               yeh,
+                                                                               abar,
+                                                                               xmuhi,
+                                                                               stot)
+c **************************************************************c c This subroutine computes the
+        temperature c with Doug Swesty's eos using c a Newton
+    - Raphson procedure coupled with c bissection to prevent convergence
+          problems.c c ******************************************************implicit double
+          precision(a - h, o - z) c parameter(itmax = 80) parameter(dtol = 1d - 2) c real utemp,
+    utmev, ufoe, umevnuc, umeverg common / unit2 / utemp, utmev, ufoe, umevnuc,
+    umeverg common / uswest / usltemp, uslrho, uslu, uslp,
+    u2slu c double precision inpvar(4) c templ = .1d0 temph = 1d3 dtemp
+    = dabs(temph - templ) c-- all the u's in this routine will be MeV/baryons c
+    -- all the u's in this routine will be kB/baryons u
+    = ui *uslu temp = tempi * usltemp inpvar(1) = temp inpvar(2) = p2i inpvar(3) = p3i inpvar(4)
+    = p4i pprev = xpfi brydns = rhoi
+                                * uslrho call slwrap(inpvar,
+                                                     yei,
+                                                     brydns,
+                                                     pprev,
+                                                     1 psl,
+                                                     usl,
+                                                     dusl,
+                                                     gamsl,
+                                                     eta,
+                                                     yp,
+                                                     yn,
+                                                     xa,
+                                                     xh,
+                                                     yeh,
+                                                     abar,
+                                                     xmuh,
+                                                     u2sl) ures
+    = usl - u do 10 k = 1,
+                                         itmax dtempold
+                                         = dtemp if (((temp - temph) * dusl - ures)
+                                                     * 1((temp - templ) * dusl - ures)
+                                                           .ge .0.d0.or. 2 dabs(2.d0 * ures)
+                                                           .gt.dabs(dtempold * dusl)) then dtemp
+                                         = 0.5d0 * (temph - templ) temp = templ + dtemp else dtemp
+                                         = ures / dusl temp
+                                         = temp
+                                           - dtemp endif
+                                           if (dabs(dtemp / temp).lt.dtol) goto 20 inpvar(1)
+                                         = temp call slwrap(inpvar,
+                                                            yei,
+                                                            brydns,
+                                                            pprev,
+                                                            1 psl,
+                                                            usl,
+                                                            dusl,
+                                                            gamsl,
+                                                            eta,
+                                                            yp,
+                                                            yn,
+                                                            xa,
+                                                            xh,
+                                                            yeh,
+                                                            abar,
+                                                            xmuh,
+                                                            u2sl) ures
+                                         = usl - u if (ures.lt .0.0d0) then templ = temp else temph
+                                         = temp endif 10 continue print *,
+                                         'rootemp4: no convergence for particle i, rho',
+                                         1 rhoi 20 continue p2i = inpvar(2) p3i = inpvar(3) p4i
+                                         = inpvar(4) xpfi
+                                         = pprev c-- convert back to code units press
+                                         = psl / uslp tempi
+                                         = temp / usltemp if (gamsl.gt .0.0) then cs
+                                         = dsqrt(gamsl * press / rhoi) else write(*, *) 'gamsl is ',
+                                         gamsl cs = 1e30 endif c
+                                         -- xmuhat is eta *T with T in code units xmuhi
+                                         = xmuh / utmev stot = u2sl
+                                                               / u2slu return end c subroutine
+                                                               coulomb(rhoi, zbar, ye, ucoul, pcoul)
+c*********************************************************** c c compute Coulomb corrections
+        as given in Shapiro c and Teukolsky.p.31(2.4.9)
+    and (2.4.11) c in cgs : c ucoul
+    = -1.45079 * e** 2 * avo** 4 / 3 * ye** 4 / 3 * rho** 1 / 3 * Z** 2 / 3 c
+    = -1.70e13 Ye** 4 / 3 * rho** 1 / 3 * Z** 2 / 3 c code units : mulitply by udens** 1 / 3
+                                                                   / uergg c c pcoul
+    = -0.4836 * e** 2 * avo** 4 / 3 * Ye** 4 / 3 * rho** 4 / 3 * Z** 2 / 3 c
+    = -5.67e12 Ye * *4 / 3 * rho * *4 / 3 * Z * *2
+      / 3 c code units
+    : mulitply by udens
+      * *4
+      / 3
+      / uergcc c c
+      * **********************************************************c implicit
+                                                                 double precision(a - h, o - z) c
+                                                                 parameter(ufac = -0.214d0)
+                                                                     parameter(pfac
+                                                                               = -0.0714d0) c rho13
+    = rhoi** 0.333333333333d0 rho43 = rho13* rhoi ye2 = ye* ye y43z23
+    = (ye2 * zbar) ** 0.66666666666d0 ucoul = ufac* rho13* y43z23 pcoul
+    = pfac * rho43
+      * y43z23 c return end c subroutine
+      nserho(rhoold, yeold, rho, ye, t9, yp, yn, 1 xa, xh, yeh, zbar, abar, ubind, dubind)
+c *************************************************************c c this subroutine figures out the
+    NSE eq.assuming that yp c and yn were previously known at different density and ye,
+    c but SAME temperature c c **************************************************************c
+            implicit double
+            precision(a - h, o - z) parameter(tolnse = 1d - 5, kmax = 10) c c common
+        / testnse / testk,
+    testzy, testay, testyp,
+    testyn c c-- finding zero point of binding energy c ider
+    = 2 call nsesolv(ider, t9, rhoold, yeold, yp, yn, kit, kmax, ubind0, &xa, xh, yeh, zbar, abar)
+c If(kit.ge.kmax) Then write(*, *) 'NSE mis-stored entering nserho' write(*, *) 'T9, rho, ye', t9,
+    rhoold, yeold write(*, *) 'inconsistent with yp, yn', yp,
+    yn Endif ypold
+    = yp ynold = yn delye = ye - yeold rhovar = rho - rhoold ider = 0 c c-- If delye small,
+         skip ye variation.c If(delye.eq .0.) GOTO 50 yelast = yeold Do 40 i = 1,
+         100 delye = dsign(min(abs(ye - yelast), abs(delye)), delye) yetmp
+         = yelast
+           + delye call
+           nsesolv(ider, t9, rhoold, yetmp, yp, yn, kit, kmax, ubind, &xa, xh, yeh, zbar, abar)
+               If(dabs(yetmp - ye).le.tolnse.and.kit.lt.kmax) goto 50 If(kit.ge.kmax) then delye
+         = 0.5d0 *delye yp = ypold yn = ynold Elseif(kit.lt .4) Then yelast = yetmp delye
+         = 2.d0 *delye ypold = yp ynold = yn Else yelast = yetmp ypold = yp ynold
+         = yn Endif 40 Continue write(*, *) 'Ye loop failure' write(*, *) t9,
+         rhoold, rho write(*, *) yetmp, yelast, ye write(*, *) yeold, delye, yp, yn write(*, *) kit,
+         zbar, abar write(*, *) kmax, ubind write(*, *) testk, testzy, testay, testyp,
+         testyn 50 Continue c c-- Begin rho iteration c ypold = yp ynold = yn rholast
+         = rhoold If(dabs(rhovar).gt .1d7) Then delrho
+         = dsign(max(1d7, 0.125d0 * rhovar), rhovar) Else delrho = rhovar Endif c Do 60 i = 1,
+         500 delrho = dsign(min(abs(rho - rholast), abs(delrho)), delrho) rhotmp
+         = rholast
+           + delrho call
+           nsesolv(ider, t9, rhotmp, ye, yp, yn, kit, kmax, ubind, &xa, xh, yeh, zbar, abar)
 c         write(*,90)'nserho: rhotmp,yp,yn,kit',rhotmp,yp,yn,kit
           If(dabs((rhotmp-rho)/rho).lt.tolnse.and.kit.lt.kmax) goto 70
           If (kit.ge.kmax) Then
@@ -598,25 +511,15 @@ c
 c 
       subroutine nsetemp(t9old,rho,ye,t9,yp,yn,
      1                   xa,xh,yeh,zbar,abar,ubind,dubind)
-c*************************************************************
-c
-c this subroutine figures out the NSE eq. assuming that yp
-c and yn were previously know at the SAME density and ye,
-c but different temperature
-c
-c**************************************************************
-c
-c
-      implicit double precision(a-h,o-z)
-      parameter (tolnse=1d-5,kmax=10)
-c
-      common /testnse/ testk,testzy,testay,testyp,testyn
-c
-c--finding zero point of binding energy
-c
-      ider=2
-      call nsesolv(ider,t9old,rho,ye,yp,yn,kit,kmax,ubind0,
-     &             xa,xh,yeh,zbar,abar)
+c *************************************************************c c this subroutine figures out the
+    NSE eq.assuming that yp c and yn were previously know at the SAME density and ye,
+    c but different temperature c c **************************************************************c
+            c implicit double
+            precision(a - h, o - z) parameter(tolnse = 1d - 5, kmax = 10) c common
+        / testnse / testk,
+    testzy, testay, testyp,
+    testyn c c-- finding zero point of binding energy c ider
+    = 2 call nsesolv(ider, t9old, rho, ye, yp, yn, kit, kmax, ubind0, &xa, xh, yeh, zbar, abar)
 c
       If(kit.ge.kmax) Then
           write(*,*) 'NSE mis-stored entering nsetemp'
@@ -716,18 +619,25 @@ c--step back in T9, in order to calculate dUbind/dT9
 c
 c     call nsesolv(ider,t9last,rho,ye,ypold,ynold,kit,kmax,ubindlast,
 c    &                   xa,xh,yeh,zbar,abar)
-c     If(kit.ge.kmax) Then
-c         write(*,*) 'NSEtemp failed for deriv T9last' 
-c         write(*,*) kit,t9,t9tmp
-c         STOP
-c     Endif
-c     dubind=(ubindlast-ubind)/(t9last-t9)
-      Return
-      End
-c     
-      subroutine slwrap(inpvar,yesl,brydns,pprev,
-     1                  psl,usl,dusl,gamsl,etasl,
-     2                  ypsl,ynsl,xasl,xhsl,yehsl,abar,xmuh,u2sl)
+c If(kit.ge.kmax) Then c write(*, *) 'NSEtemp failed for deriv T9last' c write(*, *) kit, t9,
+    t9tmp c STOP c Endif c dubind = (ubindlast - ubind)
+                                    / (t9last - t9) Return End c subroutine slwrap(inpvar,
+                                                                                   yesl,
+                                                                                   brydns,
+                                                                                   pprev,
+                                                                                   1 psl,
+                                                                                   usl,
+                                                                                   dusl,
+                                                                                   gamsl,
+                                                                                   etasl,
+                                                                                   2 ypsl,
+                                                                                   ynsl,
+                                                                                   xasl,
+                                                                                   xhsl,
+                                                                                   yehsl,
+                                                                                   abar,
+                                                                                   xmuh,
+                                                                                   u2sl)
 c******************************************************************
 c
 c  This is the wrapper routine for the swesty-lattimer eos.
@@ -817,10 +727,7 @@ c
 c--1) work out code units:
 c
 c--specifie mass unit (g)
-c
-      umass=2d33
-c
-c--specifie distance unit (cm)
+c umass = 2d33 c c-- specifie distance unit(cm)
 c
       udist=1e9
 c
@@ -948,104 +855,115 @@ c
      $     ynuei,ynuebi,ynuxi,unuei,unuebi,unuxi,
      $     rmaxnue,rmaxnueb,rmaxnux,
      $     ftrape,ftrapb,ftrapx,jtrape,jtrapb,jtrapx)
-c
-      double precision xheavyk,xalphak,yehk
-      real ftrape,ftrapb,ftrapx,jtrape,jtrapb,jtrapx
-      real rmaxnue,rmaxnueb,rmaxnux
-      integer ebetaeqi, pbetaeqi
-      common /beta/ ebetaeqi, pbetaeqi
-      common /neutout/ dyei,dynuei,dynuebi,dynuxi,
-     $     tempnuei,tempnuebi,tempnuxi,enueti,enuebti,enuxti,
-     $     dnuei,dnuebi,dnuxi,dunuei,dunuebi,dunuxi,dunui,
-     $     etanuei,etanuebi,etanuxi,prnui
-      common /nulums/ rlumnue, rlumnueb, rlumnux,
-     $     enue, enueb, enux, e2nue, e2nueb, e2nux,
-     $     enues, enuebs, enuxs, dee, deeb, dex
-      common /nuout/ rmxnue,rmxnueb,rmxnux
-c
-c     tempi is changed in nsesolv
-      tempi=tempk
-      xheavyi=real(xheavyk)
-      xalphai=real(xalphak)
-      yehi=real(yehk)
-      call nuinit(rhoi,yei,abari,xpi,xni,
-     $     tempi,etai,xalphai,xheavyi,yehi,
-     $     ynuei,ynuebi,ynuxi,unuei,unuebi,unuxi)
-      if (ri.lt.rmaxnux.and.abs(ynuxi).gt.10.) then 
-         write(*,100) ri,rmaxnux,ynuxi,dynuxi,unuxi,dunuxi
-      end if
-c
-      call nucheck(ri,hi,dnuei,dnuebi,dnuxi,
-     $     ynuei,ynuebi,ynuxi,unuei,unuebi,unuxi,
-     $     rmaxnue, rmaxnueb, rmaxnux,
-     $     ftrape,ftrapb,ftrapx,jtrape,jtrapb,jtrapx)
-c
-      call nupress(ri,rhoi,unuei,unuebi,unuxi,
-     $     prnui,rmaxnue,rmaxnueb,rmaxnux)
-c
-c--emission from electron/proton capture
-c
-      call nuecap(steps,tempi,rhoi,etai,xpi,xni,ri,gshifti,pmassi,yei,
-     $     rmaxnue,rmaxnueb,rmaxnux)
-c
-c--emission from pair/plasma effects
-c
-      call nupp(tempi,rhoi,etai,yei,ri,gshifti,pmassi,
-     $     rmaxnue,rmaxnueb,rmaxnux)
-c
-      call nusphere(steps,hi,ri,ynuei,ynuebi,ynuxi,
-     $     unuei,unuebi,unuxi,gshifti,pmassi,
-     $     rmaxnue,rmaxnueb,rmaxnux)
-c
-      if (ri.lt.rmaxnux.and.abs(ynuxi).gt.10.) then 
-         write(*,100) ri,rmaxnux,ynuxi,dynuxi,unuxi,dunuxi
-      end if
- 100  format(6(1pe12.3))
-      return
-c
-      return
-      end
-      subroutine eosfl(rhoi,pri,
-     $     ui,u2i,yei,tempi,ifleosi,abari,
-     $     xpi,xni,xpfi,p2i,p3i,p4i,ufreezi,
-     $     xmuei,xmuhi,etai,temprev,
-     $     yeprev,xpprev,xnprev)
+c double precision xheavyk, xalphak, yehk real ftrape, ftrapb, ftrapx, jtrape, jtrapb,
+    jtrapx real rmaxnue, rmaxnueb, rmaxnux integer ebetaeqi, pbetaeqi common / beta / ebetaeqi,
+    pbetaeqi common / neutout / dyei, dynuei, dynuebi, dynuxi, $ tempnuei, tempnuebi, tempnuxi,
+    enueti, enuebti, enuxti, $ dnuei, dnuebi, dnuxi, dunuei, dunuebi, dunuxi, dunui, $ etanuei,
+    etanuebi, etanuxi, prnui common / nulums / rlumnue, rlumnueb, rlumnux, $ enue, enueb, enux,
+    e2nue, e2nueb, e2nux, $ enues, enuebs, enuxs, dee, deeb, dex common / nuout / rmxnue, rmxnueb,
+    rmxnux c c tempi is changed in nsesolv tempi = tempk xheavyi = real(xheavyk) xalphai
+    = real(xalphak) yehi
+    = real(yehk) call nuinit(rhoi,
+                             yei,
+                             abari,
+                             xpi,
+                             xni,
+                             $ tempi,
+                             etai,
+                             xalphai,
+                             xheavyi,
+                             yehi,
+                             $ ynuei,
+                             ynuebi,
+                             ynuxi,
+                             unuei,
+                             unuebi,
+                             unuxi) if (ri.lt.rmaxnux.and.abs(ynuxi).gt .10.) then write(*, 100) ri,
+                                           rmaxnux, ynuxi, dynuxi, unuxi,
+                                           dunuxi end if c call nucheck(ri,
+                                                                        hi,
+                                                                        dnuei,
+                                                                        dnuebi,
+                                                                        dnuxi,
+                                                                        $ ynuei,
+                                                                        ynuebi,
+                                                                        ynuxi,
+                                                                        unuei,
+                                                                        unuebi,
+                                                                        unuxi,
+                                                                        $ rmaxnue,
+                                                                        rmaxnueb,
+                                                                        rmaxnux,
+                                                                        $ ftrape,
+                                                                        ftrapb,
+                                                                        ftrapx,
+                                                                        jtrape,
+                                                                        jtrapb,
+                                                                        jtrapx)
+c call nupress(ri, rhoi, unuei, unuebi, unuxi, $ prnui, rmaxnue, rmaxnueb, rmaxnux)
+c c-- emission from electron
+    / proton capture c call nuecap(
+        steps, tempi, rhoi, etai, xpi, xni, ri, gshifti, pmassi, yei, $ rmaxnue, rmaxnueb, rmaxnux)
+c c-- emission from pair
+    / plasma effects c call
+    nupp(tempi, rhoi, etai, yei, ri, gshifti, pmassi, $ rmaxnue, rmaxnueb, rmaxnux)
+c call nusphere(steps,
+                hi,
+                ri,
+                ynuei,
+                ynuebi,
+                ynuxi,
+                $ unuei,
+                unuebi,
+                unuxi,
+                gshifti,
+                pmassi,
+                $ rmaxnue,
+                rmaxnueb,
+                rmaxnux)
+c if (ri.lt.rmaxnux.and.abs(ynuxi).gt .10.) then write(*, 100) ri, rmaxnux, ynuxi, dynuxi, unuxi,
+    dunuxi end if 100 format(6(1pe12.3)) return c return end subroutine eosfl(rhoi,
+                                                                              pri,
+                                                                              $ ui,
+                                                                              u2i,
+                                                                              yei,
+                                                                              tempi,
+                                                                              ifleosi,
+                                                                              abari,
+                                                                              $ xpi,
+                                                                              xni,
+                                                                              xpfi,
+                                                                              p2i,
+                                                                              p3i,
+                                                                              p4i,
+                                                                              ufreezi,
+                                                                              $ xmuei,
+                                                                              xmuhi,
+                                                                              etai,
+                                                                              temprev,
+                                                                              $ yeprev,
+                                                                              xpprev,
+                                                                              xnprev)
 
-c****************************************************************
-c
-c this subroutine determines what kind of eos to use:
-c       eosflg = 1: freeze-out, just Ocean's eos + Coul corr.
-c       eosflg = 2: NSE with Raph's routines, + Ocean eos + Coul
-c       eosflg = 3: Swesty's eos
-c
-c**************************************************************
-c
-      implicit double precision (a-h,o-z)
-      parameter (avokb=6.02e23*1.381e-16)
-c
-      real  udist, udens, utime, uergg, uergcc
-      common /units/ umass, udist, udens, utime, uergg, uergcc
-      real  utemp,utmev,ufoe,umevnuc,umeverg
-      common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg
-      double precision uopr, uotemp, uorho1, uotemp1, uou1
-      common/uocean/ uopr, uotemp, uorho1, uotemp1, uou1
-      double precision usltemp, uslrho, uslu, uslp, u2slu
-      common/uswest/ usltemp, uslrho, uslu, uslp, u2slu
-      common /typef/ ieos
-      double precision inpvar(4)
-c
-      rhoswe=1.05d3
-c      rhoswe=2.05d3
-      t9nse=21.d0
-      tfreeze=t9nse-7.0d0
-c
-c--entropy conversion factor
-      sfac=avokb*utemp/uergg      
-c
-      rhocgs=rhoi*udens
-      if(ifleosi.eq.1.and.(tempi.gt.t9nse.or.rhoi.gt.4.0*rhoswe)) then
-c	 print *,tempi,rhocgs,yei,xpi,xni,t9nse
-         call nsestart(tempi,rhocgs,yei,xpi,xni)
+c**************************************************************** c c this subroutine determines
+    what kind of eos to use : c eosflg
+                              = 1 : freeze - out,
+    just Ocean's eos + Coul corr. c eosflg
+    = 2 : NSE with Raph's routines, + Ocean eos + Coul c eosflg
+          = 3
+    : Swesty's eos c c
+      * *************************************************************c implicit double precision(
+                a - h, o - z) parameter(avokb = 6.02e23 * 1.381e-16) c real udist,
+    udens, utime, uergg, uergcc common / units / umass, udist, udens, utime, uergg,
+    uergcc real utemp, utmev, ufoe, umevnuc, umeverg common / unit2 / utemp, utmev, ufoe, umevnuc,
+    umeverg double precision uopr, uotemp, uorho1, uotemp1, uou1 common / uocean / uopr, uotemp,
+    uorho1, uotemp1, uou1 double precision usltemp, uslrho, uslu, uslp,
+    u2slu common / uswest / usltemp, uslrho, uslu, uslp,
+    u2slu common / typef / ieos double precision inpvar(4) c rhoswe
+    = 1.05d3 c rhoswe = 2.05d3 t9nse = 21.d0 tfreeze
+    = t9nse - 7.0d0 c c-- entropy conversion factor sfac = avokb* utemp / uergg c rhocgs
+    = rhoi * udens if (ifleosi.eq .1.and.(tempi.gt.t9nse.or.rhoi.gt .4.0 * rhoswe)) then c print*,
+               tempi, rhocgs, yei, xpi, xni, t9nse call nsestart(tempi, rhocgs, yei, xpi, xni)
 c
 c--for NSE, add in the nuclear component to the thermal
 c--energy to get the total available internal energy
@@ -1100,28 +1018,43 @@ c--at present rho, ye, T
       elseif(ifleosi.eq.3.and.rhoi.lt.rhoswe) then
 c-- switch back to internal energy variable of state
          call nsestart(tempi,rhocgs,yei,xpi,xni)
-         call nsetemp(tempi,rhocgs,yei,tempi,xpi,xni,
-     $        xai,xhi,yehi,zbari,abari,ubind,dubind)
-         dens=rhoi*uorho1
-         abar2=zbari/yei
-         call nados(tempi,dens,zbari,abar2,pel,eel,sel,
-     $        ptot,etot,stot,dpt,det,dpd,ded,gamsl,etai)
-         dens=rhoi
-         call coulomb(dens,zbari,yei,ucoul,pcoul)
-         ui=ucoul+ubind/uergg+etot/uou1
-         ifleosi=2
-         xnprev=xni
-         xpprev=xpi
-         yeprev=yei
-         temprev=tempi
-      endif
-c
-      return
-      end
-c
-      subroutine nuinit(rhoi,yei,abari,xpi,xni,
-     $     tempi,etai,xalphai,xheavyi,yehi,
-     $     ynuei,ynuebi,ynuxi,unuei,unuebi,unuxi)
+call nsetemp(
+    tempi, rhocgs, yei, tempi, xpi, xni, $ xai, xhi, yehi, zbari, abari, ubind, dubind) dens
+    = rhoi* uorho1 abar2 = zbari
+                           / yei call nados(tempi,
+                                            dens,
+                                            zbari,
+                                            abar2,
+                                            pel,
+                                            eel,
+                                            sel,
+                                            $ ptot,
+                                            etot,
+                                            stot,
+                                            dpt,
+                                            det,
+                                            dpd,
+                                            ded,
+                                            gamsl,
+                                            etai) dens
+    = rhoi call coulomb(dens, zbari, yei, ucoul, pcoul) ui
+    = ucoul + ubind / uergg + etot / uou1 ifleosi = 2 xnprev = xni xpprev = xpi yeprev = yei temprev
+    = tempi endif c return end c subroutine nuinit(rhoi,
+                                                   yei,
+                                                   abari,
+                                                   xpi,
+                                                   xni,
+                                                   $ tempi,
+                                                   etai,
+                                                   xalphai,
+                                                   xheavyi,
+                                                   yehi,
+                                                   $ ynuei,
+                                                   ynuebi,
+                                                   ynuxi,
+                                                   unuei,
+                                                   unuebi,
+                                                   unuxi)
 c*************************************************************
 c
 c  This subroutine zeroes out whatever is necessary for the
@@ -1390,28 +1323,18 @@ c
 
       subroutine nupress(ri,rhoi,unuei,unuebi,unuxi,
      $     prnui,rmaxnue,rmaxnueb,rmaxnux)
-c*******************************************************
-c
-c This subroutine coputes the energy trapped in the form
-c of neutrinos and derives a pressure from that
-c
-c******************************************************
-c
-c--gamma=4/3 since nus are always relativistic
-      rhoi3=0.3333333333333*rhoi
-      prnui=0.0
-      if (ri.lt.rmaxnue) prnui=prnui+rhoi3*unuei
-      if (ri.lt.rmaxnueb) prnui=prnui+rhoi3*unuebi
-      if (ri.lt.rmaxnux) prnui=prnui+rhoi3*unuxi
-      if (prnui.gt.1.e11) print *, 
-     $     ri,rhoi3,ynuei,unuei,unuebi,unuxi
-      prnui=0.0
-c
-      return
-      end
-c
-      subroutine nuecap(steps,tempi,rhoi,etai,xpi,xni,ri,
-     $     gshifti,pmassi,yei,rmaxnue,rmaxnueb,rmaxnux)
+c *******************************************************c c This subroutine coputes the energy
+    trapped in the form c of neutrinos and derives a pressure from that c
+        c ******************************************************c c-- gamma
+    = 4 / 3 since nus are always relativistic rhoi3
+    = 0.3333333333333 *rhoi prnui
+    = 0.0 if (ri.lt.rmaxnue) prnui
+    = prnui + rhoi3 * unuei if (ri.lt.rmaxnueb) prnui
+    = prnui + rhoi3 * unuebi if (ri.lt.rmaxnux) prnui
+    = prnui + rhoi3 * unuxi if (prnui.gt .1.e11) print *,
+    $ ri, rhoi3, ynuei, unuei, unuebi,
+    unuxi prnui = 0.0 c return end c subroutine nuecap(
+        steps, tempi, rhoi, etai, xpi, xni, ri, $ gshifti, pmassi, yei, rmaxnue, rmaxnueb, rmaxnux)
 c****************************************************
 c
 c this subroutine computes the neutrino production
@@ -1549,97 +1472,63 @@ c
 c
       subroutine nupp(tempi,rhoi,etai,yei,ri,gshifti,pmassi,
      $     rmaxnue,rmaxnueb,rmaxnux)
-c****************************************************
-c
-c this subroutine computes the neutrino production
-c by e+/e- capture on nucleons
-c Note: all neutrino energies are in MeV          
-c
-c****************************************************
-c
-      double precision umass,ugserg
-      double precision rhocgs, tempk, yek, deta
-      double precision dunuel,dunuxl,enuel,enuxl,enuel2,enuxl2
-c
-      common /neutout/ dyei,dynuei,dynuebi,dynuxi,
-     $     tempnuei,tempnuebi,tempnuxi,enueti,enuebti,enuxti,
-     $     dnuei,dnuebi,dnuxi,dunuei,dunuebi,dunuxi,dunui,
-     $     etanuei,etanuebi,etanuxi,prnui
-      common /nulums/ rlumnue, rlumnueb, rlumnux,
-     $     enue, enueb, enux, e2nue, e2nueb, e2nux,
-     $     enues, enuebs, enuxs, dee, deeb, dex
-      common /units/ umass, udist, udens, utime, uergg, uergcc
-      common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg
-c
-      ugserg=dble(utime/uergg)
-      uconv=1./umevnuc
-c
-c--compute pair plasma processes
-c  -----------------------------
-      if(tempi.ge.6.)then
-         rhocgs=rhoi*udens
-         tempk=utemp*tempi
-         deta=etai
-         yek=yei
-         call pppb(rhocgs,tempk,yek,deta,dunuel,dunuxl,
-     $        enuel,enuxl,enuel2,enuxl2)
-c
-c--supress rates by end state degeneracy
-c
-         tmev=tempi*utmev
-         expon=exp(amin1(real(enuel)/tempnuei-etanuei,50.))
-c--bnue: e-neutrino end-state blocking
-         bnue=expon/(1.+expon)
-         expon=exp(amin1(real(enuel)/tempnuebi-etanuebi,50.))
-c--bnueb: anti e-neutrino end-state blocking
-         bnueb=expon/(1.+expon)
-         expon=exp(amin1(real(enuxl)/tempnuxi-etanuxi,50.))
-c--bnux: x neutrino end-state blocking
-         bnux=expon/(1.+expon)
-         blocke=bnue*bnueb
-         blockx=bnux*bnux
-         dunuel=dunuel*ugserg*blocke
-         dunuxl=dunuxl*ugserg*blockx
-         dunui=dunui+dunuxl+dunuel
-         if (ri.lt.rmaxnue) then
-            facnue=0.5*uconv*dunuel/enuel
-            dynuei=dynuei+facnue
-            dunuei=dunuei+0.5*dunuel
-         else
-            rlnue=0.5*dunuel*pmassi*gshifti
-            rlumnue=rlumnue+rlnue
-            enue=enue+enuel*gshifti*rlnue
-            e2nue=e2nue+enuel2*gshifti*gshifti*rlnue
-         endif
-         if (ri.lt.rmaxnueb) then
-            facnue=0.5*uconv*dunuel/enuel
-            dynuebi=dynuebi+facnue
-            dunuebi=dunuebi+0.5*dunuel
-         else
-            rlnueb=0.5*dunuel*pmassi*gshifti
-            rlumnueb=rlumnueb+rlnueb
-            enueb=enueb+enuel*gshifti*rlnueb
-            e2nueb=e2nueb+enuel2*gshifti*gshifti*rlnueb
-         endif
-         if (ri.lt.rmaxnux) then
-            facnux=uconv*dunuxl/enuxl
-c-- 0.25 to divide the production among 4 nu species
-            dynuxi=dynuxi+0.25*facnux
-            dunuxi=dunuxi+dunuxl
-         else
-            rlnux=dunuxl*pmassi*gshifti
-            rlumnux=rlumnux+rlnux
-            enux=enux+enuxl*gshifti*rlnux
-            e2nux=e2nux+enuxl2*gshifti*gshifti*rlnux
-         endif
-      endif
-c
-      return 
-      end
-c
-      subroutine nusphere(steps,hi,ri,ynuei,ynuebi,ynuxi,
-     $     unuei,unuebi,unuxi,gshifti,
-     $     pmassi,rmaxnue,rmaxnueb,rmaxnux)
+c**************************************************** c c this subroutine computes the neutrino
+        production c by e
+    + / e
+    - capture on nucleons c Note
+    : all neutrino energies are in MeV c
+          c**************************************************** c double precision umass,
+    ugserg double precision rhocgs, tempk, yek, deta double precision dunuel, dunuxl, enuel, enuxl,
+    enuel2, enuxl2 c common / neutout / dyei, dynuei, dynuebi, dynuxi, $ tempnuei, tempnuebi,
+    tempnuxi, enueti, enuebti, enuxti, $ dnuei, dnuebi, dnuxi, dunuei, dunuebi, dunuxi, dunui,
+    $ etanuei, etanuebi, etanuxi, prnui common / nulums / rlumnue, rlumnueb, rlumnux, $ enue, enueb,
+    enux, e2nue, e2nueb, e2nux, $ enues, enuebs, enuxs, dee, deeb, dex common / units / umass,
+    udist, udens, utime, uergg, uergcc common / unit2 / utemp, utmev, ufoe, umevnuc,
+    umeverg c ugserg = dble(utime / uergg) uconv
+    = 1.
+      / umevnuc c c-- compute pair plasma processes
+          c-- -- -- -- -- -- -- -- -- -- -- -- -- -- -if (tempi.ge .6.) then rhocgs
+    = rhoi* udens tempk = utemp* tempi deta = etai yek
+    = yei call pppb(rhocgs, tempk, yek, deta, dunuel, dunuxl, $ enuel, enuxl, enuel2, enuxl2)
+c c-- supress rates by end state degeneracy c tmev = tempi* utmev expon
+    = exp(amin1(real(enuel) / tempnuei - etanuei, 50.)) c-- bnue : e - neutrino end
+                                                                   - state blocking bnue
+    = expon / (1. + expon) expon
+    = exp(amin1(real(enuel) / tempnuebi - etanuebi, 50.)) c-- bnueb : anti e - neutrino end
+                                                                      - state blocking bnueb
+    = expon / (1. + expon) expon
+    = exp(amin1(real(enuxl) / tempnuxi - etanuxi, 50.)) c-- bnux : x neutrino end
+                                                                   - state blocking bnux
+    = expon / (1. + expon) blocke = bnue* bnueb blockx = bnux* bnux dunuel
+    = dunuel* ugserg* blocke dunuxl = dunuxl* ugserg* blockx dunui
+    = dunui + dunuxl + dunuel if (ri.lt.rmaxnue) then facnue = 0.5 * uconv* dunuel / enuel dynuei
+    = dynuei + facnue dunuei = dunuei + 0.5 * dunuel else rlnue
+    = 0.5 * dunuel* pmassi* gshifti rlumnue = rlumnue + rlnue enue
+    = enue + enuel* gshifti* rlnue e2nue
+    = e2nue + enuel2 * gshifti * gshifti * rlnue endif if (ri.lt.rmaxnueb) then facnue
+    = 0.5 * uconv* dunuel / enuel dynuebi = dynuebi + facnue dunuebi
+    = dunuebi + 0.5 * dunuel else rlnueb = 0.5 * dunuel* pmassi* gshifti rlumnueb
+    = rlumnueb + rlnueb enueb = enueb + enuel* gshifti* rlnueb e2nueb
+    = e2nueb + enuel2 * gshifti * gshifti * rlnueb endif if (ri.lt.rmaxnux) then facnux
+    = uconv* dunuxl / enuxl c-- 0.25 to divide the production among 4 nu species dynuxi
+    = dynuxi + 0.25 * facnux dunuxi = dunuxi + dunuxl else rlnux = dunuxl* pmassi* gshifti rlumnux
+    = rlumnux + rlnux enux = enux + enuxl* gshifti* rlnux e2nux
+    = e2nux
+      + enuxl2 * gshifti * gshifti
+            * rlnux endif endif c return end c subroutine nusphere(steps,
+                                                                   hi,
+                                                                   ri,
+                                                                   ynuei,
+                                                                   ynuebi,
+                                                                   ynuxi,
+                                                                   $ unuei,
+                                                                   unuebi,
+                                                                   unuxi,
+                                                                   gshifti,
+                                                                   $ pmassi,
+                                                                   rmaxnue,
+                                                                   rmaxnueb,
+                                                                   rmaxnux)
 c************************************************************
 c
 c  This subroutine takes care of neutrino depletion from
@@ -1796,12 +1685,10 @@ c
 c         
       subroutine pppb(rho,temp,ye,eta,dunuel,dunuxl,
      1                enuel,enuxl,enuel2,enuxl2)
-c******************************************************
-c
-c Compute energy loss (ergs/g/s) via pair, photo, plasma and
-c bremsstahlung processes with formulae from:
-c Itoh et al. (1989), ApJ 339, p.354
-c Average energies (MeV) eyeballed from:
+c ******************************************************c c Compute energy loss(ergs / g
+                                                                                / s) via pair,
+    photo, plasma and c bremsstahlung processes with formulae from : c Itoh et al.(1989), ApJ 339,
+    p .354 c Average energies(MeV) eyeballed from:
 c Schinder et al. (1987) , ApJ 313, p.531
 c rho and temp should be in cgs
 c Note: I only implemented plasma and pair processes,
@@ -2444,72 +2331,41 @@ c
 c
       subroutine nuann(hi,rhoi,tempi,etai,ri,
      $     ynuei,ynuebi,ynuxi,rmaxnue,rmaxnueb,rmaxnux)
-c************************************************************
-c
-c  This subroutine computes the rate of neutrino anti neutrino
-c  annihilation into e+/e- pairs
-c  see Goodman, Dar, Nussinov, ApJ 314 L7
-c
-c*********************************************************
-c
-      parameter(sinw2=0.23)
-      parameter(fe=(1.+4.*sinw2+8.*sinw2*sinw2)/(6.*3.14159))
-      parameter(fx=(1.-4.*sinw2+8.*sinw2*sinw2)/(6.*3.14159))
-c-- cross section Gf / gram is 6.02e23*5.29e-44=3.2e-20
-      parameter(sigmae=fe*3.2e-20)
-      parameter(sigmax=fx*3.2e-20)
-c
-      double precision umass
-      common /units/ umass, udist, udens, utime, uergg, uergcc
-      common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg
-      common /neutout/ dyei,dynuei,dynuebi,dynuxi,
-     $     tempnuei,tempnuebi,tempnuxi,enueti,enuebti,enuxti,
-     $     dnuei,dnuebi,dnuxi,dunuei,dunuebi,dunuxi,dunui,
-     $     etanuei,etanuebi,etanuxi,prnui
-c
-c
-      double precision dsigcue, dsigcux
-c
-      dsigcue=dble(sigmae)*umass/dble(udist*udist)
-      dsigcux=dble(sigmax)*umass/dble(udist*udist)
-      sigcue=dsigcue
-      sigcux=dsigcux
-      uconv=1./umevnuc
-      tmev=utmev*tempi
-      h2i=2.*hi
-      if (ri.lt.rmaxnux.and.dnuxi.lt.h2i) then
-         expon=exp(amin1(enuxti/tmev-etai,50.))
-c--bel: electron end-state blocking
-         bel=expon/(1.+expon)
-         facx=sigcux*rhoi*ynuxi*ynuxi*bel
-         outnux=facx*enuxti*enuxti
-         dynuxi=dynuxi-outnux
-c--4 because 4 x neutrinos
-         facunux=umevnuc*4.*outnux*enuxti
-         dunuxi=dunuxi-facunux
-         dunui=dunui-facunux
-      endif
-      if (ipart.eq.1) print *, ri, rmaxnue,rmaxnueb,h2i,dnuei,dnuebi
-c--we require BOTH nue and nueb to be trapped
-      if (ri.lt.rmaxnue.and.ri.lt.rmaxnueb.and.
-     $     dnuei.lt.h2i.and.dnuebi.lt.h2i) then
-         expon=exp(amin1(0.5*(enueti+enuebti)/tmev-
-     $        etai,50.))
-c--bel: electron end-state blocking
-         bel=expon/(1.+expon)
-         face=sigcue*rhoi*ynuei*ynuebi*bel
-         if (ipart.eq.1) print *, 'inside', expon, tmev, etai, 
-     $        enueti,enuebti,bel,face,sigcue,rhoi,ynuei,ynuebi
-         outnue=face*enueti*enuebti
-         dynuei=dynuei-outnue
-         dynuebi=dynuebi-outnue
-         facunue=umevnuc*outnue*enueti
-         facunueb=umevnuc*outnue*enuebti
-         dunuei=dunuei-facunue
-         dunuebi=dunuebi-facunueb
-         dunui=dunui-facunue-facunueb
-      endif
-c
-      return
-      end
-c
+c ************************************************************c c This subroutine computes the rate
+        of neutrino anti neutrino c annihilation into e
+    + / e - pairs c see Goodman,
+    Dar, Nussinov,
+    ApJ 314 L7 c c *********************************************************c parameter(sinw2
+                                                                                        = 0.23)
+            parameter(fe = (1. + 4. * sinw2 + 8. * sinw2 * sinw2) / (6. * 3.14159))
+                parameter(fx = (1. - 4. * sinw2 + 8. * sinw2 * sinw2) / (6. * 3.14159)) c
+        -- cross section Gf
+        / gram is 6.02e23 * 5.29e-44
+    = 3.2e-20 parameter(sigmae = fe * 3.2e-20) parameter(sigmax = fx * 3.2e-20) c
+      double precision umass common
+      / units / umass,
+    udist, udens, utime, uergg, uergcc common / unit2 / utemp, utmev, ufoe, umevnuc,
+    umeverg common / neutout / dyei, dynuei, dynuebi, dynuxi, $ tempnuei, tempnuebi, tempnuxi,
+    enueti, enuebti, enuxti, $ dnuei, dnuebi, dnuxi, dunuei, dunuebi, dunuxi, dunui, $ etanuei,
+    etanuebi, etanuxi, prnui c c double precision dsigcue,
+    dsigcux c dsigcue = dble(sigmae) * umass / dble(udist * udist) dsigcux
+    = dble(sigmax) * umass / dble(udist * udist) sigcue = dsigcue sigcux = dsigcux uconv
+    = 1. / umevnuc tmev = utmev *tempi h2i = 2. * hi if (ri.lt.rmaxnux.and.dnuxi.lt.h2i) then expon
+    = exp(amin1(enuxti / tmev - etai, 50.)) c-- bel : electron end - state blocking bel
+    = expon / (1. + expon) facx = sigcux *rhoi *ynuxi *ynuxi *bel outnux
+    = facx *enuxti *enuxti dynuxi = dynuxi - outnux c-- 4 because 4 x neutrinos facunux
+    = umevnuc * 4. *outnux *enuxti dunuxi = dunuxi - facunux dunui
+    = dunui - facunux endif if (ipart.eq .1) print *,
+              ri, rmaxnue, rmaxnueb, h2i, dnuei,
+              dnuebi c-- we require BOTH nue and nueb to be trapped
+              if (ri.lt.rmaxnue.and.ri.lt.rmaxnueb.and.$ dnuei.lt.h2i.and.dnuebi.lt.h2i) then expon
+              = exp(amin1(0.5 * (enueti + enuebti) / tmev - $ etai, 50.)) c-- bel
+    : electron end
+      - state blocking bel
+              = expon / (1. + expon) face
+              = sigcue * rhoi * ynuei * ynuebi * bel if (ipart.eq .1) print *,
+              'inside', expon, tmev, etai, $ enueti, enuebti, bel, face, sigcue, rhoi, ynuei,
+              ynuebi outnue = face *enueti *enuebti dynuei = dynuei - outnue dynuebi
+              = dynuebi - outnue facunue = umevnuc *outnue *enueti facunueb
+              = umevnuc *outnue *enuebti dunuei = dunuei - facunue dunuebi
+              = dunuebi - facunueb dunui = dunui - facunue - facunueb endif c return end c

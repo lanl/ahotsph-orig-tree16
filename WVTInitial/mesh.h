@@ -5,7 +5,7 @@ typedef struct {
     double pos[NDIM];
     double rho;
     double u;
-/*     double nterms; */
+    /*     double nterms; */
     double T;
     double s;
     Key_t key;
@@ -40,7 +40,7 @@ typedef struct {
 
 
 #define MESHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double x, y, z;		/* position of body */\n\
     double rho;			/* density */\n\
     double u;                    /* specific internal energy */\n\
@@ -49,8 +49,8 @@ typedef struct {
 }"
 
 
-void MeshInit(Meshbody **btabp, int *gnobj, int *nobj, double min[NDIM], 
-	      double max[NDIM], int num[NDIM]);
+void MeshInit(
+    Meshbody **btabp, int *gnobj, int *nobj, double min[NDIM], double max[NDIM], int num[NDIM]);
 void MeshFixKeys(Meshbody *btab, int nobj, Key_t (*func)(const void *));
 double MeshGetCost(const Meshbody *ptr);
 Key_t MeshGetKeyFromStruct(const Meshbody *ptr);

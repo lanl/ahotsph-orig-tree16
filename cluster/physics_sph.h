@@ -2,9 +2,9 @@
  * Copyright 1996 Michael S. Warren and John K. Salmon.  All Rights Reserved.
  */
 
-#include "tree.h"
 #include "key.h"
 #include "timers.h"
+#include "tree.h"
 
 #define NDIM 3
 #define SPH_SAVE_ACC
@@ -20,22 +20,22 @@
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
-  /* double first for alignment */
-    double pos[NDIM];		/* position of body */
-    float mass;			/* mass of body */
+    /* double first for alignment */
+    double pos[NDIM]; /* position of body */
+    float mass;       /* mass of body */
 #else
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
 #endif
-    float vel[NDIM];		/* velocity of body */
-    float h;			/* smoothing length */
-    float rho;			/* density */
-    float pr;			/* pressure */
-    float vsound;		/* sound speed */
-    float rho_est;		/* estimated density */
-    float u;			/* internal energy */
-    float temp;                 /* temperature, used to enforce LTE */
-    float du;                   /* change in internal energy this timestep */
+    float vel[NDIM]; /* velocity of body */
+    float h;         /* smoothing length */
+    float rho;       /* density */
+    float pr;        /* pressure */
+    float vsound;    /* sound speed */
+    float rho_est;   /* estimated density */
+    float u;         /* internal energy */
+    float temp;      /* temperature, used to enforce LTE */
+    float du;        /* change in internal energy this timestep */
     float dt_next;
     /* Things declared above this line are communicated between processors */
     /* so they can be used in in the loop over nbrs in FindRho and ForceSPH */
@@ -44,9 +44,9 @@ typedef struct {
     float grav_acc[NDIM];
     float acc_last[NDIM];
     /* Do these need to go between nodes?  Can things above come down here? */
-    float u_r;                  /* radiation energy density */
-    float du_r;                 /* change in u_r this timestep */
-    float D;                    /* Diffusion coefficient */
+    float u_r;  /* radiation energy density */
+    float du_r; /* change in u_r this timestep */
+    float D;    /* Diffusion coefficient */
     float phi;
     Key_t key;
     unsigned int ident;
@@ -86,7 +86,7 @@ typedef struct {
     int dummy;
 } windbody;
 
-typedef struct {		/* don't need all of this info */
+typedef struct { /* don't need all of this info */
     float grav_acc[NDIM];
     float phi;
     int grav_nterms;
@@ -102,12 +102,12 @@ typedef struct {		/* don't need all of this info */
 /* assignment to the Output routine */
 typedef struct {
 #ifdef POS_IS_DOUBLE
-    double pos[NDIM];		/* position of body */
+    double pos[NDIM]; /* position of body */
 #else
-    float pos[NDIM];		/* position of body */
+    float pos[NDIM]; /* position of body */
 #endif
-    float mass;			/* mass of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float vel[NDIM]; /* velocity of body */
     float u;
     float h;
     float rho;
@@ -119,24 +119,24 @@ typedef struct {
     float phi;
     float dt;
 #endif
-    unsigned int nbrs; 
-    unsigned int ident;		/* unique? identifier */
+    unsigned int nbrs;
+    unsigned int ident; /* unique? identifier */
     unsigned int windid;
 } SPHoutbody;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
-    double pos[NDIM];		/* position of body */
+    double pos[NDIM]; /* position of body */
 #else
-    float pos[NDIM];		/* position of body */
+    float pos[NDIM]; /* position of body */
 #endif
-    float mass;			/* mass of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float vel[NDIM]; /* velocity of body */
     float u;
     float h;
     float rho;
-    unsigned int nbrs; 
-    unsigned int ident;		/* unique? identifier */
+    unsigned int nbrs;
+    unsigned int ident; /* unique? identifier */
     unsigned int windid;
 } SPHshortoutbody;
 
@@ -144,7 +144,7 @@ typedef struct {
 
 #ifdef SPH_SAVE_ACC
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double x, y, z;		/* position of body */\n\
     float mass;			/* mass of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -162,7 +162,7 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double x, y, z;           /* position of body */\n\
     float mass;                       /* mass of body */\n\
     float vx, vy, vz;         /* velocity of body */\n\
@@ -175,7 +175,7 @@ typedef struct {
 }"
 #else
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double x, y, z;		/* position of body */\n\
     float mass;			/* mass of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -189,7 +189,7 @@ typedef struct {
     unsigned int windid;        /* wind id */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double x, y, z;           /* position of body */\n\
     float mass;                       /* mass of body */\n\
     float vx, vy, vz;         /* velocity of body */\n\
@@ -203,7 +203,7 @@ typedef struct {
 #endif /* SPH_SAVE_ACC */
 
 #define WINDOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
 	double xwind, ywind, zwind;\n\
 	float vxwind, vywind, vzwind;\n\
 	float rhowind;\n\
@@ -223,7 +223,7 @@ typedef struct {
 
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     float mass;
     float pos[NDIM];
     float massinv;
@@ -234,7 +234,7 @@ typedef struct{
     int ndaughters;
 } SPHcofmdata;
 
-typedef struct{
+typedef struct {
     float extent;
     float pos[NDIM];
     float vel[NDIM];
@@ -292,9 +292,14 @@ char *PrintSPHBodyContentsLong(const SPHbody *vp);
 char *PrintSPHBranch(const SPHcofmdata *cmp);
 
 /* In sph.c */
-void SetSPH(float visc_alpha, float visc_beta, float visc_epsilon, 
-	    float heat_f1, float eos_gamma, int gnobj,  
-	    void bfunc(), void cfunc());
+void SetSPH(float visc_alpha,
+            float visc_beta,
+            float visc_epsilon,
+            float heat_f1,
+            float eos_gamma,
+            int gnobj,
+            void bfunc(),
+            void cfunc());
 void SPHgate(SinkSPH *sink, hcell **src_vec, int *result, int n);
 void nbrMAC(SinkSPH *sink, hcell **src_vec, int *result, int n);
 void macRho(SinkSPH *sink, hcell **source, int *result, int n);
@@ -310,17 +315,39 @@ void update_point_SPHmass2(SPHbody *btab, int nobj, float smooth2, float newt, f
 void update_point_SPHmass3(SPHbody *btab, int nobj, float smooth2, float newt, float mass, float b);
 
 /* In sphinit.c */
-void *DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
-void *SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
+void *DarkRead(
+    char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
+void *SPHRead(char *name,
+              void *csdfp,
+              SPHbody **btabp,
+              int *gnobjp,
+              int *nobjp,
+              int set_id,
+              int setpvel,
+              float new_h,
+              float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
-void *InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-	 SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 
-	 int set_id, int setpvel, float new_h, float new_u);
-void DarkSPHTestData(void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-		     SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 
-		     int periodic);
-void *WindRead(char *name, void *csdfp, windbody **btabp, int *gnobjp, 
-	       int *nobjp);
+void *InitRead(char *name,
+               void *csdfp,
+               void **btabp,
+               int *gnobjp,
+               int *nobjp,
+               SPHbody **SPHbtabp,
+               int *SPHgnobjp,
+               int *SPHnobjp,
+               int set_id,
+               int setpvel,
+               float new_h,
+               float new_u);
+void DarkSPHTestData(void *csdfp,
+                     void **btabp,
+                     int *gnobjp,
+                     int *nobjp,
+                     SPHbody **SPHbtabp,
+                     int *SPHgnobjp,
+                     int *SPHnobjp,
+                     int periodic);
+void *WindRead(char *name, void *csdfp, windbody **btabp, int *gnobjp, int *nobjp);
 
 /* In sphplus.c */
 void GravPlusSPH(void **btab, int *nobj, SPHbody *SPHbtab, int SPHnobj);
@@ -331,6 +358,4 @@ double uvst(double t);
 double duvst(double t);
 
 /* In newtraph.c */
-float newtraph(double xl, double xr, double prec, double (*f)(double x), 
-	     double (*df)(double x));
-
+float newtraph(double xl, double xr, double prec, double (*f)(double x), double (*df)(double x));

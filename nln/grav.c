@@ -1,18 +1,22 @@
 #define NO_MSGS
-#define NOTIMERS  /* Timers are a major performance hit on the delta */
-#include "physics.h"
-#include "vop.h"
-#include "tensop.h"
-#include "fastflpt.h"
+#define NOTIMERS /* Timers are a major performance hit on the delta */
 #include "Msgs.h"
-#include "timers.h"
+#include "fastflpt.h"
+#include "physics.h"
 #include "stk.h"
+#include "tensop.h"
+#include "timers.h"
+#include "vop.h"
 
 
-void 
-do_grav(const float *p, const float *end, const float *pos0, float *mass0, 
-	float *acc0, float *phi0, const float *eps2p, int *ncut)
-{
+void do_grav(const float *p,
+             const float *end,
+             const float *pos0,
+             float *mass0,
+             float *acc0,
+             float *phi0,
+             const float *eps2p,
+             int *ncut) {
     float dr2;
     Vxd(float r);
     float phii, mor3, mass;
@@ -25,34 +29,38 @@ do_grav(const float *p, const float *end, const float *pos0, float *mass0,
     VxV(a, = acc0);
 
     while (p < end) {
-	mass = *p++;
-	r0 = *p++;
-	r1 = *p++;
-	r2 = *p++;
-	VxVx(r, -= ppos);	/* 3 flops */
+        mass = *p++;
+        r0 = *p++;
+        r1 = *p++;
+        r2 = *p++;
+        VxVx(r, -= ppos); /* 3 flops */
 
-	dr2 = Dotx(r, r);	/* 5 flops */
-	dr2 += eps2;
+        dr2 = Dotx(r, r); /* 5 flops */
+        dr2 += eps2;
 
-	phii = recipsqrtf(dr2);	/* 8 flops */
-	
-	mor3 = phii * phii;	/* 5 flops */
-	phii *= mass;
-	total_mass += mass;
-	mor3 *= phii;
-	phi -= phii;
+        phii = recipsqrtf(dr2); /* 8 flops */
 
-	VxVx(a, += mor3 * r);	/* 6 flops */
+        mor3 = phii * phii; /* 5 flops */
+        phii *= mass;
+        total_mass += mass;
+        mor3 *= phii;
+        phi -= phii;
+
+        VxVx(a, += mor3 * r); /* 6 flops */
     }
     VVx(acc0, = a);
     *mass0 = total_mass;
     *phi0 = phi;
 }
 
-void 
-do_grav_u2(const float *p, const float *end, const float *pos0, float *mass0,
-	   float *acc0,	float *phi0, const float *eps2p, int *ncut)
-{
+void do_grav_u2(const float *p,
+                const float *end,
+                const float *pos0,
+                float *mass0,
+                float *acc0,
+                float *phi0,
+                const float *eps2p,
+                int *ncut) {
     float dr2a, dr2b;
     Vxd(float ra);
     Vxd(float rb);
@@ -68,40 +76,40 @@ do_grav_u2(const float *p, const float *end, const float *pos0, float *mass0,
     VxV(a, = acc0);
 
     while (p < end) {
-	massa = *p++;
-	ra0 = *p++;
-	ra1 = *p++;
-	ra2 = *p++;
+        massa = *p++;
+        ra0 = *p++;
+        ra1 = *p++;
+        ra2 = *p++;
 
-	massb = *p++;
-	rb0 = *p++;
-	rb1 = *p++;
-	rb2 = *p++;
+        massb = *p++;
+        rb0 = *p++;
+        rb1 = *p++;
+        rb2 = *p++;
 
-	VxVx(ra, -= ppos);
-	VxVx(rb, -= ppos);
+        VxVx(ra, -= ppos);
+        VxVx(rb, -= ppos);
 
-	dr2a = Dotx(ra, ra);
-	dr2b = Dotx(rb, rb);
+        dr2a = Dotx(ra, ra);
+        dr2b = Dotx(rb, rb);
 
-	dr2a += eps2;
-	dr2b += eps2;
+        dr2a += eps2;
+        dr2b += eps2;
 
-	phiia = recipsqrtf(dr2a);
-	phiib = recipsqrtf(dr2b);
-	
-	mor3a = phiia * phiia;
-	mor3b = phiib * phiib;
-	phiia *= massa;
-	phiib *= massb;
-	total_mass += massa + massb;
-	mor3a *= phiia;
-	mor3b *= phiib;
-	phi -= phiia;
-	phi -= phiib;
+        phiia = recipsqrtf(dr2a);
+        phiib = recipsqrtf(dr2b);
 
-	VxVx(a, += mor3a * ra);
-	VxVx(a, += mor3b * rb);
+        mor3a = phiia * phiia;
+        mor3b = phiib * phiib;
+        phiia *= massa;
+        phiib *= massb;
+        total_mass += massa + massb;
+        mor3a *= phiia;
+        mor3b *= phiib;
+        phi -= phiia;
+        phi -= phiib;
+
+        VxVx(a, += mor3a * ra);
+        VxVx(a, += mor3b * rb);
     }
     VVx(acc0, = a);
     *mass0 = total_mass;
@@ -114,10 +122,14 @@ do_grav_u2(const float *p, const float *end, const float *pos0, float *mass0,
 /* This does 38 actual flops per interaction */
 /* The approximate rsqrt uses 13 multiplies and 6 adds */
 
-void 
-do_cheb_u2(const float *p, const float *end, const float *pos0, float *mass0,
-	   float *acc0,	float *phi0, const float *eps2p, int *ncut)
-{
+void do_cheb_u2(const float *p,
+                const float *end,
+                const float *pos0,
+                float *mass0,
+                float *acc0,
+                float *phi0,
+                const float *eps2p,
+                int *ncut) {
     float dr2a, dr2b;
     Vxd(float ra);
     Vxd(float rb);
@@ -135,47 +147,46 @@ do_cheb_u2(const float *p, const float *end, const float *pos0, float *mass0,
     VxV(a, = acc0);
 
     while (p < end) {
-	massa = *p++;
-	ra0 = *p++;
-	ra1 = *p++;
-	ra2 = *p++;
+        massa = *p++;
+        ra0 = *p++;
+        ra1 = *p++;
+        ra2 = *p++;
 
-	massb = *p++;
-	rb0 = *p++;
-	rb1 = *p++;
-	rb2 = *p++;
+        massb = *p++;
+        rb0 = *p++;
+        rb1 = *p++;
+        rb2 = *p++;
 
-	VxVx(ra, -= ppos);
-	VxVx(rb, -= ppos);
+        VxVx(ra, -= ppos);
+        VxVx(rb, -= ppos);
 
-	dr2a = Dotx(ra, ra);
-	dr2b = Dotx(rb, rb);
-	dr2a += eps2;
-	dr2b += eps2;
+        dr2a = Dotx(ra, ra);
+        dr2b = Dotx(rb, rb);
+        dr2a += eps2;
+        dr2b += eps2;
 
-	ita = (*(FLOAT_PUN *)&dr2a) >> mbits;
-	itb = (*(FLOAT_PUN *)&dr2b) >> mbits; 
-	xa = dr2a*u[ita];
-	xb = dr2b*u[itb];
-	mor3a = g0 + xa*(g1 + xa*(g2 + xa*(g3 + xa*(g4 + xa*g5))));
-	mor3b = g0 + xb*(g1 + xb*(g2 + xb*(g3 + xb*(g4 + xb*g5))));
-	mor3a *= (float)1.5 - (float)0.5*xa*xa*xa*mor3a*mor3a;
-	mor3b *= (float)1.5 - (float)0.5*xb*xb*xb*mor3b*mor3b;
-	mor3a *= t[ita];
-	mor3b *= t[itb];
+        ita = (*(FLOAT_PUN *)&dr2a) >> mbits;
+        itb = (*(FLOAT_PUN *)&dr2b) >> mbits;
+        xa = dr2a * u[ita];
+        xb = dr2b * u[itb];
+        mor3a = g0 + xa * (g1 + xa * (g2 + xa * (g3 + xa * (g4 + xa * g5))));
+        mor3b = g0 + xb * (g1 + xb * (g2 + xb * (g3 + xb * (g4 + xb * g5))));
+        mor3a *= (float)1.5 - (float)0.5 * xa * xa * xa * mor3a * mor3a;
+        mor3b *= (float)1.5 - (float)0.5 * xb * xb * xb * mor3b * mor3b;
+        mor3a *= t[ita];
+        mor3b *= t[itb];
 
-	mor3a *= massa;
-	mor3b *= massb;
-	total_mass += massa + massb;
-	phi -= dr2a*mor3a;
-	phi -= dr2b*mor3b;
+        mor3a *= massa;
+        mor3b *= massb;
+        total_mass += massa + massb;
+        phi -= dr2a * mor3a;
+        phi -= dr2b * mor3b;
 
-	VxVx(a, += mor3a * ra);
-	VxVx(a, += mor3b * rb);
+        VxVx(a, += mor3a * ra);
+        VxVx(a, += mor3b * rb);
     }
     VVx(acc0, = a);
     *mass0 = total_mass;
     *phi0 = phi;
 }
 #endif
-

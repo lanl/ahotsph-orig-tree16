@@ -2,30 +2,30 @@
  * Copyright 1996 Michael S. Warren and John K. Salmon.  All Rights Reserved.
  */
 
-#include "tree.h"
 #include "key.h"
-#include "timers.h"
 #include "ndim.h"
+#include "timers.h"
+#include "tree.h"
 
 #define SPH_SAVE_ACC
 /* #define POS_IS_DOUBLE */
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
-  /* double first for alignment */
-    double pos[NDIM];		/* position of body */
-    float mass;			/* mass of body */
+    /* double first for alignment */
+    double pos[NDIM]; /* position of body */
+    float mass;       /* mass of body */
 #else
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
 #endif
-    float vel[NDIM];		/* velocity of body */
-    float h;			/* smoothing length */
-    float rho;			/* density */
-    float pr;			/* pressure */
-    float vsound;		/* sound speed */
-    float rho_est;		/* estimated density */
-    float u;			/* internal energy */
+    float vel[NDIM]; /* velocity of body */
+    float h;         /* smoothing length */
+    float rho;       /* density */
+    float pr;        /* pressure */
+    float vsound;    /* sound speed */
+    float rho_est;   /* estimated density */
+    float u;         /* internal energy */
     float abar;
     float temp;
     float ye;
@@ -94,7 +94,7 @@ typedef struct {
     short ebeta, pbeta;
 } SPHbody;
 
-typedef struct {		/* don't need all of this info */
+typedef struct { /* don't need all of this info */
     float grav_acc[NDIM];
     float phi;
     int grav_nterms;
@@ -109,13 +109,13 @@ typedef struct {		/* don't need all of this info */
 /* assignment to the Output routine */
 typedef struct {
 #ifdef POS_IS_DOUBLE
-    double pos[NDIM];		/* position of body */
-    float mass;			/* mass of body */
+    double pos[NDIM]; /* position of body */
+    float mass;       /* mass of body */
 #else
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
 #endif
-    float vel[NDIM];		/* velocity of body */
+    float vel[NDIM]; /* velocity of body */
     float u;
     float h;
     float rho;
@@ -140,7 +140,7 @@ typedef struct {
     float xni56n;
     float xco56n;
     float xfe56n;
-    int  ifleos;
+    int ifleos;
 #ifdef SPH_SAVE_ACC
     float acc[NDIM];
     float acc_last[NDIM];
@@ -148,16 +148,16 @@ typedef struct {
     float dt;
 #endif
     unsigned int nbrs;
-    unsigned int ident;		/* unique? identifier */
+    unsigned int ident; /* unique? identifier */
     unsigned int dummy;
 } SPHoutbody;
 
 /* This is the descriptor that goes into the SDF header. */
 
-#if NDIM==3
+#if NDIM == 3
 #ifdef SPH_SAVE_ACC
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -196,7 +196,7 @@ typedef struct {
 }"
 #else
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;		/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -233,7 +233,7 @@ typedef struct {
 #else  /* NDIM==2 */
 #ifdef SPH_SAVE_ACC
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -271,7 +271,7 @@ typedef struct {
 }"
 #else
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -316,7 +316,7 @@ typedef struct {
 
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     float mass;
     float pos[NDIM];
     float massinv;
@@ -327,7 +327,7 @@ typedef struct{
     int ndaughters;
 } SPHcofmdata;
 
-typedef struct{
+typedef struct {
     float extent;
     float pos[NDIM];
     float vel[NDIM];
@@ -351,7 +351,7 @@ typedef struct{
     float dt;
     float r;
     float gshift;
-    float xfac;			/* geometrical factor */
+    float xfac; /* geometrical factor */
 } SinkSPH;
 
 typedef struct {
@@ -400,9 +400,14 @@ char *PrintSPHBodyContentsLong(const SPHbody *vp);
 char *PrintSPHBranch(const SPHcofmdata *cmp);
 
 /* In sph.c */
-void SetSPH(float visc_alpha, float visc_beta, float visc_epsilon, 
-	    float heat_f1, float eos_gamma, int gnobj,  
-	    void bfunc(), void cfunc());
+void SetSPH(float visc_alpha,
+            float visc_beta,
+            float visc_epsilon,
+            float heat_f1,
+            float eos_gamma,
+            int gnobj,
+            void bfunc(),
+            void cfunc());
 void SPHaux(float rinner);
 void SPHgate(SinkSPH *sink, hcell **src_vec, int *result, int n);
 void nbrMAC(SinkSPH *sink, hcell **src_vec, int *result, int n);
@@ -418,18 +423,41 @@ void UnSetSPHOffset(void);
 void SetSPHRotate(float angle);
 void UnSetSPHRotate(void);
 void update_point_SPHmass(SPHbody *btab, int nobj, void *p, float smooth2, float newt);
-void update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, 
-				bndry_t bndry);
+void update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, bndry_t bndry);
 
 /* In sphinit.c */
-void *DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
-void *SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
+void *DarkRead(
+    char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
+void *SPHRead(char *name,
+              void *csdfp,
+              SPHbody **btabp,
+              int *gnobjp,
+              int *nobjp,
+              int set_id,
+              int setpvel,
+              float new_h,
+              float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
-void *InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-	 SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 
-	 int set_id, int setpvel, float new_h, float new_u);
-void DarkSPHTestData(void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-		SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, int periodic);
+void *InitRead(char *name,
+               void *csdfp,
+               void **btabp,
+               int *gnobjp,
+               int *nobjp,
+               SPHbody **SPHbtabp,
+               int *SPHgnobjp,
+               int *SPHnobjp,
+               int set_id,
+               int setpvel,
+               float new_h,
+               float new_u);
+void DarkSPHTestData(void *csdfp,
+                     void **btabp,
+                     int *gnobjp,
+                     int *nobjp,
+                     SPHbody **SPHbtabp,
+                     int *SPHgnobjp,
+                     int *SPHnobjp,
+                     int periodic);
 
 /* In sphplus.c */
 void GravPlusSPH(void **btab, int *nobj, SPHbody *SPHbtab, int SPHnobj);
@@ -439,28 +467,64 @@ void GravMinusSPH(void **btab, int *nobj, accbody **atab, int *anobj);
 void mmw(SPHbody *btab, int nobj);
 void eosaux_setup(SPHbody *btab, int nobj);
 void eos_prev(SPHbody *btab, int nobj);
-void movebound(SPHbody *btab, int nobj, float t, float rb, float *vb, 
-int *icore);
-void pghost(SPHbody *btab, int nobj, int *nghost, Stk *ghosts, 
-       float rb, float vb, float rbout, int iextf, int icore, float gg, 
-       float xmcore, float aleph);
+void movebound(SPHbody *btab, int nobj, float t, float rb, float *vb, int *icore);
+void pghost(SPHbody *btab,
+            int nobj,
+            int *nghost,
+            Stk *ghosts,
+            float rb,
+            float vb,
+            float rbout,
+            int iextf,
+            int icore,
+            float gg,
+            float xmcore,
+            float aleph);
 void remove_ghosts(SPHbody **btabp, int *nobjp);
-void sn_gravity(SPHbody *btab, int nobj, float xmcore, float xmtheo, float gg, 
-	   float clight, int icore, float rmin, float rmax);
+void sn_gravity(SPHbody *btab,
+                int nobj,
+                float xmcore,
+                float xmtheo,
+                float gg,
+                float clight,
+                int icore,
+                float rmin,
+                float rmax);
 
-/* In eos3.f */ 
+/* In eos3.f */
 void Fortran(eossetup)(void);
-void Fortran(eos3)(float *steps, float *mass, double *rhoi, double *ui, 
-                   double *udoti, 
-		   double *u2i, double *yei, 
-		   double *tempi, int *ifleosi, double *abari, double *xpi, 
-		   double *xni, double *xpfi, double *p2i, double *p3i, 
-		   double *p4i, double *temprev, double*rhoprev, 
-		   double *xpprev, double *xnprev, double *yeprev, 
-		   double *ufreez, double *xhe4n, double *xc12n,
-		   double *xo16n, double *xne20n, double *xmg24n,
-		   double *xsi28n, double *xni56n, double *xco56n, 
-		   double *xfe56n, double *dtbrn); 
+void Fortran(eos3)(float *steps,
+                   float *mass,
+                   double *rhoi,
+                   double *ui,
+                   double *udoti,
+                   double *u2i,
+                   double *yei,
+                   double *tempi,
+                   int *ifleosi,
+                   double *abari,
+                   double *xpi,
+                   double *xni,
+                   double *xpfi,
+                   double *p2i,
+                   double *p3i,
+                   double *p4i,
+                   double *temprev,
+                   double *rhoprev,
+                   double *xpprev,
+                   double *xnprev,
+                   double *yeprev,
+                   double *ufreez,
+                   double *xhe4n,
+                   double *xc12n,
+                   double *xo16n,
+                   double *xne20n,
+                   double *xmg24n,
+                   double *xsi28n,
+                   double *xni56n,
+                   double *xco56n,
+                   double *xfe56n,
+                   double *dtbrn);
 extern void *Fortran(output);
 extern void *Fortran(konst);
 extern void *Fortran(units);
@@ -468,44 +532,44 @@ extern void *Fortran(unit2);
 
 /* common /konst/ gg, clight, arad, bigr, xsecnn, xsecne */
 typedef struct {
-  float gg;
-  float clight;
-  float arad;
-  float bigr;
-  float xsecnn;
-  float xsecne;
+    float gg;
+    float clight;
+    float arad;
+    float bigr;
+    float xsecnn;
+    float xsecne;
 } konst_s;
 
 /* common /output/ vsoundi,pri,etai,yehi,xmuei,xmuhati,xalphai,
    $     xheavyi */
 typedef struct {
-  double vsound;
-  double pr;
-  double eta;
-  double yeh;
-  double xmue;
-  double xmuhat;
-  double xalpha;
-  double xheavy;
+    double vsound;
+    double pr;
+    double eta;
+    double yeh;
+    double xmue;
+    double xmuhat;
+    double xalpha;
+    double xheavy;
 } output_s;
 
 /* common /units/ umass, udist, udens, utime, uergg, uergcc */
 typedef struct {
-  double umass;
-  float udist;
-  float udens;
-  float utime;
-  float uergg;
-  float uergcc;
+    double umass;
+    float udist;
+    float udens;
+    float utime;
+    float uergg;
+    float uergcc;
 } units_s;
 
 /* common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg */
 typedef struct {
-  float utemp;
-  float utemv;
-  float ufoe;
-  float umevnuc;
-  float umeverg;
+    float utemp;
+    float utemv;
+    float ufoe;
+    float umevnuc;
+    float umeverg;
 } unit2_s;
 
 extern konst_s *konst;

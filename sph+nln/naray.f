@@ -1,4 +1,4 @@
-      subroutine naray(idebug,irank)
+subroutine naray(idebug, irank)
 
       implicit none
 
@@ -738,4 +738,3 @@ ccccccccccccccccccccccccc
 
       return
       end
-

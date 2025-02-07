@@ -10,59 +10,54 @@
 #define sdfprivateDOTh
 #include <stddef.h>
 #include <stdlib.h>
-#include "stdio.h"		/* from this directory!! */
+
 #include "obstack.h"
+#include "stdio.h" /* from this directory!! */
 
 /* Exact copy of declaration in SDF.h */
-enum SDF_type_enum{SDF_NOTYPE, 
-		       SDF_CHAR, 
-		       SDF_SHORT, 
-		       SDF_INT, 
-		       SDF_FLOAT, 
-		       SDF_DOUBLE, 
-		       SDF_STRING};
+enum SDF_type_enum { SDF_NOTYPE, SDF_CHAR, SDF_SHORT, SDF_INT, SDF_FLOAT, SDF_DOUBLE, SDF_STRING };
 
 extern char SDFerrstring[];
 
-enum toggle_param_enum{NOTHING};
+enum toggle_param_enum { NOTHING };
 
-enum value_param_enum{BYTEORDER};
+enum value_param_enum { BYTEORDER };
 
 /* How the lexical analyzer returns constants. */
-typedef struct{
+typedef struct {
     enum SDF_type_enum type;
-    union{
-	char charval;
-	short shortval;
-	int intval;
-	float floatval;
-	double doubleval;
-	char *stringval;
+    union {
+        char charval;
+        short shortval;
+        int intval;
+        float floatval;
+        double doubleval;
+        char *stringval;
     } u;
 } const_t;
 
-typedef struct{
+typedef struct {
     int nconst;
     struct obstack obs;
 } const_list_t;
 
-typedef struct{
+typedef struct {
     char *name;
     enum SDF_type_enum type;
     int arrcnt;
 } one_dcl_t;
 
-typedef struct{
+typedef struct {
     int ndcl;
     struct obstack obs;
 } dcl_list_t;
 
-typedef struct{
+typedef struct {
     dcl_list_t dcl_list;
     int Nrec;
 } declaration_t;
 
-typedef struct{
+typedef struct {
     char *name;
     enum SDF_type_enum type;
     int arrcnt;
@@ -71,14 +66,14 @@ typedef struct{
     int nread;
 } vec_descrip_t;
 
-typedef struct{
+typedef struct {
     int Nrec;
     int reclen;
     int inmem;
     int begin_offset;
 } blk_descrip_t;
 
-typedef struct{
+typedef struct {
     int nblks;
     struct obstack blks_obs;
     blk_descrip_t *blks;

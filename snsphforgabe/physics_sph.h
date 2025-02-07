@@ -2,10 +2,10 @@
  * Copyright 1996 Michael S. Warren and John K. Salmon.  All Rights Reserved.
  */
 
-#include "tree.h"
 #include "key.h"
-#include "timers.h"
 #include "ndim.h"
+#include "timers.h"
+#include "tree.h"
 
 #define SPH_SAVE_ACC
 #define POS_IS_DOUBLE
@@ -13,20 +13,20 @@
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
-  /* double first for alignment */
-    double pos[NDIM];		/* position of body */
-    float mass;			/* mass of body */
+    /* double first for alignment */
+    double pos[NDIM]; /* position of body */
+    float mass;       /* mass of body */
 #else
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
 #endif
-    float vel[NDIM];		/* velocity of body */
-    float h;			/* smoothing length */
-    float rho;			/* density */
-    float pr;			/* pressure */
-    float vsound;		/* sound speed */
-    float rho_est;		/* estimated density */
-    float u;			/* internal energy */
+    float vel[NDIM]; /* velocity of body */
+    float h;         /* smoothing length */
+    float rho;       /* density */
+    float pr;        /* pressure */
+    float vsound;    /* sound speed */
+    float rho_est;   /* estimated density */
+    float u;         /* internal energy */
     float abar;
     float temp;
     float ye;
@@ -96,10 +96,10 @@ typedef struct {
     int bghost;
     void *ireal;
     short ebeta, pbeta;
-    float dq;                   /* viscous heating */
+    float dq; /* viscous heating */
 } SPHbody;
 
-typedef struct {		/* don't need all of this info */
+typedef struct { /* don't need all of this info */
     float grav_acc[NDIM];
     float phi;
     int grav_nterms;
@@ -113,9 +113,9 @@ typedef struct {		/* don't need all of this info */
 /* If you add anything to the outbody structure, make sure to add an */
 /* assignment to the Output routine */
 typedef struct {
-    float mass;		/* mass of body */
-    float pos[NDIM];		/* position of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
     float u;
     float h;
     float rho;
@@ -154,27 +154,27 @@ typedef struct {
     float p2;
     float p3;
     float p4;
-    int  ifleos;
+    int ifleos;
 #ifdef SPH_SAVE_ACC
     float acc[NDIM];
     float grav_acc[NDIM];
- /* float acc_last[NDIM]; */
+    /* float acc_last[NDIM]; */
     float phi;
     float dt;
 #endif
     float taccreted;
     int iteraccreted;
     unsigned int nbrs;
-    unsigned int ident;		/* unique? identifier */
+    unsigned int ident; /* unique? identifier */
     float dq;
 } SPHoutbody;
 
 /* This is the descriptor that goes into the SDF header. */
 
-#if NDIM==3
+#if NDIM == 3
 #ifdef SPH_SAVE_ACC
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -229,7 +229,7 @@ typedef struct {
 }"
 #else
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;		/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -282,7 +282,7 @@ typedef struct {
 #else  /* NDIM==2 */
 #ifdef SPH_SAVE_ACC
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -337,7 +337,7 @@ typedef struct {
 }"
 #else
 #define SPHOUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -416,7 +416,7 @@ typedef struct {
 
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     float mass;
     float pos[NDIM];
     float vel[NDIM];
@@ -444,7 +444,7 @@ typedef struct{
     float ufreez;
 } SPHcofmdata;
 
-typedef struct{
+typedef struct {
     float extent;
     float pos[NDIM];
     float vel[NDIM];
@@ -477,8 +477,8 @@ typedef struct{
     float tempnue, tempnueb, tempnux;
     float etanue, etanueb, etanux;
     float gshift;
-    float xfac;			/* geometrical factor */
-    int ident;			/* not necessary, but useful for debugging */
+    float xfac; /* geometrical factor */
+    int ident;  /* not necessary, but useful for debugging */
 } SinkSPH;
 
 /* bndry_t needs double-precision members to store the accumulating
@@ -527,9 +527,14 @@ char *PrintSPHBodyContentsLong(const SPHbody *vp);
 char *PrintSPHBranch(const SPHcofmdata *cmp);
 
 /* In sph.c */
-void SetSPH(float visc_alpha, float visc_beta, float visc_epsilon, 
-	    float heat_f1, float eos_gamma, int gnobj,  
-	    void bfunc(), void cfunc());
+void SetSPH(float visc_alpha,
+            float visc_beta,
+            float visc_epsilon,
+            float heat_f1,
+            float eos_gamma,
+            int gnobj,
+            void bfunc(),
+            void cfunc());
 void SPHaux(float rinner);
 void SPHgate(SinkSPH *sink, hcell **src_vec, int *result, int n);
 void nbrMAC(SinkSPH *sink, hcell **src_vec, int *result, int n);
@@ -537,15 +542,34 @@ void macRho(SinkSPH *sink, hcell **source, int *result, int n);
 void macSPH(SinkSPH *sink, hcell **source, int *result, int n);
 void InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp);
 void update_final(SPHbody *btab, int nobj, float dt, int *limit_high, int *limit_low, float dttol);
-void update_intermediate(SPHbody *btab, int nobj, float dt_last, int flag, int *limit, float xmtheo);
-void SPH_setup(int dim, int ncoef1, double *coef1, int ncoef2, double *coef2,
-	       float maxnue, float maxnueb, float maxnux,
-	       float enue, float enueb, float enux,
-	       float e2nue, float e2nueb, float e2nux,
-	       float ftrape, float ftrapb, float ftrapx);
-void Getrmax(float *maxnue, float *maxnueb, float *maxnux, 
-	     float *enue, float *enueb, float *enux, 
-	     float *e2nue, float *e2nueb, float *e2nux);
+void update_intermediate(
+    SPHbody *btab, int nobj, float dt_last, int flag, int *limit, float xmtheo);
+void SPH_setup(int dim,
+               int ncoef1,
+               double *coef1,
+               int ncoef2,
+               double *coef2,
+               float maxnue,
+               float maxnueb,
+               float maxnux,
+               float enue,
+               float enueb,
+               float enux,
+               float e2nue,
+               float e2nueb,
+               float e2nux,
+               float ftrape,
+               float ftrapb,
+               float ftrapx);
+void Getrmax(float *maxnue,
+             float *maxnueb,
+             float *maxnux,
+             float *enue,
+             float *enueb,
+             float *enux,
+             float *e2nue,
+             float *e2nueb,
+             float *e2nux);
 
 void SetSPHOffset(float *off, float *voff);
 void UnSetSPHOffset(void);
@@ -555,68 +579,178 @@ void update_point_SPHmass(SPHbody *btab, int nobj, void *p, float smooth2, float
 void update_bardeen(SPHbody *btab, int nobj, float G, float c, bndry_t b);
 
 /* In sphinit.c */
-void *DarkRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
-void *SPHRead(char *name, void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel, float new_h, float new_u);
+void *DarkRead(
+    char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, int set_id, int setpvel);
+void *SPHRead(char *name,
+              void *csdfp,
+              SPHbody **btabp,
+              int *gnobjp,
+              int *nobjp,
+              int set_id,
+              int setpvel,
+              float new_h,
+              float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
-void *InitRead(char *name, void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-	 SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, 
-	 int set_id, int setpvel, float new_h, float new_u);
-void DarkSPHTestData(void *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-		SPHbody **SPHbtabp, int *SPHgnobjp, int *SPHnobjp, int periodic);
+void *InitRead(char *name,
+               void *csdfp,
+               void **btabp,
+               int *gnobjp,
+               int *nobjp,
+               SPHbody **SPHbtabp,
+               int *SPHgnobjp,
+               int *SPHnobjp,
+               int set_id,
+               int setpvel,
+               float new_h,
+               float new_u);
+void DarkSPHTestData(void *csdfp,
+                     void **btabp,
+                     int *gnobjp,
+                     int *nobjp,
+                     SPHbody **SPHbtabp,
+                     int *SPHgnobjp,
+                     int *SPHnobjp,
+                     int periodic);
 
 /* In sphplus.c */
 void GravPlusSPH(void **btab, int *nobj, SPHbody *SPHbtab, int SPHnobj);
 void GravMinusSPH(void **btab, int *nobj, accbody **atab, int *anobj);
-void SPHreduce(tree_t *sphtree, float bmax, float rmax, 
-	       char *outnamebase, int iter, 
-	       float gnewt, float dt, float tpos, float tvel,
-	       float rmaxnue, float rmaxnueb, float rmaxnux, 
-	       float enue, float enueb, float enux, 
-	       float e2nue, float e2nueb, float e2nux,
-	       float ftrape, float ftrapb, float ftrapx);
+void SPHreduce(tree_t *sphtree,
+               float bmax,
+               float rmax,
+               char *outnamebase,
+               int iter,
+               float gnewt,
+               float dt,
+               float tpos,
+               float tvel,
+               float rmaxnue,
+               float rmaxnueb,
+               float rmaxnux,
+               float enue,
+               float enueb,
+               float enux,
+               float e2nue,
+               float e2nueb,
+               float e2nux,
+               float ftrape,
+               float ftrapb,
+               float ftrapx);
 
 /* In sn.c */
 void mmw(SPHbody *btab, int nobj);
 void eosaux_setup(SPHbody *btab, int nobj);
 void eos_prev(SPHbody *btab, int nobj);
 void eosgen_setup(SPHbody *btab, int nobj);
-void movebound(SPHbody *btab, int nobj, float t, double rb, double *vb, 
-int *icore);
-void pghost(SPHbody **btab, int *nobj, int *gnobj, 
-	    double rb, double vb, double rbout, int iextf, int icore, 
-	    float gg, float xmcore, float aleph, int do_ghosts);
+void movebound(SPHbody *btab, int nobj, float t, double rb, double *vb, int *icore);
+void pghost(SPHbody **btab,
+            int *nobj,
+            int *gnobj,
+            double rb,
+            double vb,
+            double rbout,
+            int iextf,
+            int icore,
+            float gg,
+            float xmcore,
+            float aleph,
+            int do_ghosts);
 void remove_ghosts(SPHbody **btabp, int *nobjp, int *gnobjp);
-void sn_gravity(SPHbody *btab, int nobj, float xmcore, float xmtheo, float gg, 
-	   float clight, int icore, float rmin, float rmax);
+void sn_gravity(SPHbody *btab,
+                int nobj,
+                float xmcore,
+                float xmtheo,
+                float gg,
+                float clight,
+                int icore,
+                float rmin,
+                float rmax);
 
-/* In eos3.f */ 
+/* In eos3.f */
 void Fortran(eossetup)(void);
-void Fortran(eos3)(double *rhoi, double *ui, double *u2i, double *yei, 
-		   double *tempi, int *ifleosi, double *abari, double *xpi, 
-		   double *xni, double *xpfi, double *p2i, double *p3i, 
-		   double *p4i, double *temprev, double*rhoprev, 
-		   double *xpprev, double *xnprev, double *yeprev, 
-		   double *ufreez, int *iident, int *iprocnum);
-void Fortran(neutrino)(float *steps, float *rhok, float *yek, float *xpk,
-		       float *xnk, float *hi, 
-		       double *xheavyk, double *xalphak, double *yehk, 
-		       float *etak,
-		       float *tempk, float *abark, float *gshifti, float *ri,
-		       float *pmassi, float *vsoundk, float *xmuhatk,
-		       float *ynuei, float *ynuebi, float *ynuxi, float *unuei,
-		       float *unuebi, float *unuxi, float *rmaxnue,
-		       float *rmaxnueb, float *rmaxnux, float *ftrape,
-		       float *ftrapb, float *ftrapx, float *jtrape,
-		       float *jtrapb, float *jtrapx, int *ident);
-void Fortran(neutrino2)(float *steps, float *rhok, float *xpk, float *xnk,
-			float *etak, float *tempk, float *ri, float *pmassi,
-			float *vsoundi, float *xmuhati, float *ynuei,
-			float *ynuebi, float *ynuxi, 
-			float *unuei, float *unuebi, float *rlumnue,
-			float *rlumnueb, float *rlumnux, float *enue,
-			float *enueb, float *enux, float *e2nue, float *e2nueb,
-			float *e2nux, float *gshifti, float *rmaxnue, 
-			float *rmaxnueb, float *rmaxnux, float *hi);
+void Fortran(eos3)(double *rhoi,
+                   double *ui,
+                   double *u2i,
+                   double *yei,
+                   double *tempi,
+                   int *ifleosi,
+                   double *abari,
+                   double *xpi,
+                   double *xni,
+                   double *xpfi,
+                   double *p2i,
+                   double *p3i,
+                   double *p4i,
+                   double *temprev,
+                   double *rhoprev,
+                   double *xpprev,
+                   double *xnprev,
+                   double *yeprev,
+                   double *ufreez,
+                   int *iident,
+                   int *iprocnum);
+void Fortran(neutrino)(float *steps,
+                       float *rhok,
+                       float *yek,
+                       float *xpk,
+                       float *xnk,
+                       float *hi,
+                       double *xheavyk,
+                       double *xalphak,
+                       double *yehk,
+                       float *etak,
+                       float *tempk,
+                       float *abark,
+                       float *gshifti,
+                       float *ri,
+                       float *pmassi,
+                       float *vsoundk,
+                       float *xmuhatk,
+                       float *ynuei,
+                       float *ynuebi,
+                       float *ynuxi,
+                       float *unuei,
+                       float *unuebi,
+                       float *unuxi,
+                       float *rmaxnue,
+                       float *rmaxnueb,
+                       float *rmaxnux,
+                       float *ftrape,
+                       float *ftrapb,
+                       float *ftrapx,
+                       float *jtrape,
+                       float *jtrapb,
+                       float *jtrapx,
+                       int *ident);
+void Fortran(neutrino2)(float *steps,
+                        float *rhok,
+                        float *xpk,
+                        float *xnk,
+                        float *etak,
+                        float *tempk,
+                        float *ri,
+                        float *pmassi,
+                        float *vsoundi,
+                        float *xmuhati,
+                        float *ynuei,
+                        float *ynuebi,
+                        float *ynuxi,
+                        float *unuei,
+                        float *unuebi,
+                        float *rlumnue,
+                        float *rlumnueb,
+                        float *rlumnux,
+                        float *enue,
+                        float *enueb,
+                        float *enux,
+                        float *e2nue,
+                        float *e2nueb,
+                        float *e2nux,
+                        float *gshifti,
+                        float *rmaxnue,
+                        float *rmaxnueb,
+                        float *rmaxnux,
+                        float *hi);
 extern void *Fortran(output);
 extern void *Fortran(neutout);
 extern void *Fortran(nuout);
@@ -627,33 +761,42 @@ extern void *Fortran(unit2);
 extern void *Fortran(beta);
 extern void *Fortran(nutrap);
 
-/* In eosgen.f */ 
-void Fortran(eosgen)(double *rhoi, double *tempi, double *yei, 
-		     double *abari, double *ui, double *u2i, 
-		     double *pri, double *xpi, double *xni, 
-		     double *ufreez, int *ifleosi, int *iident, int *iprocnum);
+/* In eosgen.f */
+void Fortran(eosgen)(double *rhoi,
+                     double *tempi,
+                     double *yei,
+                     double *abari,
+                     double *ui,
+                     double *u2i,
+                     double *pri,
+                     double *xpi,
+                     double *xni,
+                     double *ufreez,
+                     int *ifleosi,
+                     int *iident,
+                     int *iprocnum);
 
 /* common /konst/ gg, clight, arad, bigr, xsecnn, xsecne */
 typedef struct {
-  float gg;
-  float clight;
-  float arad;
-  float bigr;
-  float xsecnn;
-  float xsecne;
+    float gg;
+    float clight;
+    float arad;
+    float bigr;
+    float xsecnn;
+    float xsecne;
 } konst_s;
 
 /* common /output/ vsoundi,pri,etai,yehi,xmuei,xmuhati,xalphai,
    $     xheavyi */
 typedef struct {
-  double vsound;
-  double pr;
-  double eta;
-  double yeh;
-  double xmue;
-  double xmuhat;
-  double xalpha;
-  double xheavy;
+    double vsound;
+    double pr;
+    double eta;
+    double yeh;
+    double xmue;
+    double xmuhat;
+    double xalpha;
+    double xheavy;
 } output_s;
 
 /* common /neutout/ dyei,dynuei,dynuebi,dynuxi,
@@ -661,85 +804,85 @@ typedef struct {
    $     dnuei,dnuebi,dnuxi,dunuei,dunuebi,dunuxi,dunui,
    $     etanuei,etanuebi,etanuxi,prnui */
 typedef struct {
-  float dye;
-  float dynue;
-  float dynueb;
-  float dynux;
-  float tempnue;
-  float tempnueb;
-  float tempnux;
+    float dye;
+    float dynue;
+    float dynueb;
+    float dynux;
+    float tempnue;
+    float tempnueb;
+    float tempnux;
 
-  float enuet;
-  float enuebt;
-  float enuxt;
-  float dnue;
-  float dnueb;
-  float dnux;
-  float dunue;
-  float dunueb;
-  float dunux;
-  float dunu;
-  float etanue;
-  float etanueb;
-  float etanux;
-  float prnu;
+    float enuet;
+    float enuebt;
+    float enuxt;
+    float dnue;
+    float dnueb;
+    float dnux;
+    float dunue;
+    float dunueb;
+    float dunux;
+    float dunu;
+    float etanue;
+    float etanueb;
+    float etanux;
+    float prnu;
 } neut_out_s;
 
 /* common /nuout/ rmxnue,rmxnueb,rmxnux */
 typedef struct {
-  float rmxnue;
-  float rmxnueb;
-  float rmxnux;
+    float rmxnue;
+    float rmxnueb;
+    float rmxnux;
 } nu_out_s;
 
 /* common /nulums/ rlumnue, rlumnueb, rlumnux,
    $     enue, enueb, enux, e2nue, e2nueb, e2nux */
 typedef struct {
-  float rlumnue;
-  float rlumnueb;
-  float rlumnux;
-  float dlumnu;
-  float enue;
-  float enueb;
-  float enux;
-  float e2nue;
-  float e2nueb;
-  float e2nux;
-  float enues;
-  float enuebs;
-  float enuxs;
-  float dee;
-  float deeb;
-  float dex;
+    float rlumnue;
+    float rlumnueb;
+    float rlumnux;
+    float dlumnu;
+    float enue;
+    float enueb;
+    float enux;
+    float e2nue;
+    float e2nueb;
+    float e2nux;
+    float enues;
+    float enuebs;
+    float enuxs;
+    float dee;
+    float deeb;
+    float dex;
 } nu_lums_s;
 
 /* common /units/ umass, udist, udens, utime, uergg, uergcc */
 typedef struct {
-  double umass;
-  float udist;
-  float udens;
-  float utime;
-  float uergg;
-  float uergcc;
+    double umass;
+    float udist;
+    float udens;
+    float utime;
+    float uergg;
+    float uergcc;
 } units_s;
 
 /* common /unit2/ utemp, utmev, ufoe, umevnuc, umeverg */
 typedef struct {
-  float utemp;
-  float utemv;
-  float ufoe;
-  float umevnuc;
-  float umeverg;
+    float utemp;
+    float utemv;
+    float ufoe;
+    float umevnuc;
+    float umeverg;
 } unit2_s;
 
 typedef struct {
-  int ebetaeq;
-  int pbetaeq;
+    int ebetaeq;
+    int pbetaeq;
 } beta_s;
 
 typedef struct {
-  float dtrapnue;
-  float dtrapnueb;
+    float dtrapnue;
+    float dtrapnueb;
 } nutrap_s;
 
 extern konst_s *Konst;
@@ -754,4 +897,3 @@ extern nutrap_s *Nutrap;
 extern float ftrape;
 extern float ftrapb;
 extern float ftrapx;
-

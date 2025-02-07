@@ -172,19 +172,13 @@ c..   pairs reduced for identical particles to avoid double counting
 c..   sigv is constructed from sig
             sig(k)  = 0.5d0 * sig(k)
             sigt(k) = 0.5d0 * sigt(k)
-         endif
-c         if(rname(1,k) .eq. '  c12' .and. rname(2,k) .eq. '  he4')then
-c            sig(k) = 0.5d0 * sig(k)
-c            sigt(k) = 0.5d0 * sigt(k)
-c         endif
-c         if(rname(2,k) .eq. '  c12' .and. rname(1,k) .eq. '  he4')then
-c            sig(k) = 0.5d0 * sig(k)
-c            sigt(k) = 0.5d0 * sigt(k)
-c         endif
-c..   this is another power of rho
-         sigv(k)  = -rho * rho * sig(k)
-         sig(k)   =  rho * sig(k)
-         sigt(k)  =  rho * sigt(k)
+      endif c if (rname(1, k).eq.'  c12'.and.rname(2, k).eq.'  he4') then c sig(k) = 0.5d0 * sig(k)
+      c sigt(k) = 0.5d0 * sigt(k)
+      c endif c if (rname(2, k).eq.'  c12'.and.rname(1, k).eq.'  he4') then c sig(k)
+          = 0.5d0 * sig(k)
+      c sigt(k) = 0.5d0 * sigt(k)
+      c endif c..this is another power of rho sigv(k) = -rho * rho * sig(k) sig(k)
+          = rho * sig(k) sigt(k) = rho * sigt(k)
 
       enddo
       
@@ -322,8 +316,8 @@ c            sigt(irev(k)) = fak * sigt(irev(k))
 c            sigv(irev(k)) = fak * sigv(irev(k))
 c..   overwrite fkt value
 c            sig(irev(k)) = fak * sig(k)
-c            sigt(irev(k)) = fak * sigt(k)
-c            sigv(irev(k)) = fak * sigv(k)
+         c sigt(irev(k)) = fak * sigt(k)
+         c sigv(irev(k)) = fak * sigv(k)
 c         endif
 c         write(*,*)k,irev(k),sig(k),sig(irev(k)),qval(k),fak
 c      enddo
@@ -348,8 +342,8 @@ c     1              *( anuc(i1)*anuc(i2)/anuc(i3) )**1.5d0
 c     2              *exp( -11.605d0*qval(k)/t9 )
 c..   overwrite fkt value
 c               sig(irev(k)) = fak * sig(k)
-c               sigt(irev(k)) = fak * sigt(k)
-c               sigv(irev(k)) = fak * sigv(k)
+c sigt(irev(k)) = fak * sigt(k)
+c sigv(irev(k)) = fak * sigv(k)
 c               if( nrr(1,k) .eq. nrr(2,k) )then
 c                  sig(irev(k)) = 2.0d0*sig(irev(k))
 c                  sigt(irev(k)) = 2.0d0*sigt(irev(k))
@@ -403,8 +397,8 @@ c     1              *( anuc(i1)*anuc(i2)/anuc(i3) )**1.5d0
 c     2              *exp( -11.605d0*qval(k)/t9 )
 c..   overwrite fkt value
 c               sig(irev(k)) = fak * sig(k)
-c               sigt(irev(k)) = fak * sigt(k)
-c               sigv(irev(k)) = fak * sigv(k)
+c sigt(irev(k)) = fak * sigt(k)
+c sigv(irev(k)) = fak * sigv(k)
 c               if( nrr(1,k) .eq. nrr(2,k) )then
 c                  sig(irev(k)) = 2.0d0*sig(irev(k))
 c                  sigt(irev(k)) = 2.0d0*sigt(irev(k))
@@ -519,7 +513,8 @@ c..   heavy ion reactions have no inverse implemented so irev=0 for them
 c            write(*,'(2i5,4a6,5x,a5,a1,1pe12.3,2i5,1pe12.3)')k,
 c     1           ideck(k),
 c     1           (rname(i,k),i=1,4),rlkh(k),rvw(k),qval(k),irev(k)
-c..   for irev <0, the inverses are the forward rates; do nothing
+c..   for irev <0, the inverses are the forward rates;
+do nothing
          endif
       enddo
 
@@ -1097,6 +1092,3 @@ c..   can add T and V derivatives from f0 here
 
       return
       end
-
-
-

@@ -6,6 +6,7 @@
 #define physics_NdotH
 
 #include <tree.h>
+
 #include "key.h"
 #include "timers.h"
 
@@ -22,17 +23,17 @@
 #define SAVE_ACC
 
 typedef struct {
-    double mass;			/* mass of body */
-    double pos[NDIM];		/* position of body */
-    double vel[NDIM];		/* velocity of body */
+    double mass;      /* mass of body */
+    double pos[NDIM]; /* position of body */
+    double vel[NDIM]; /* velocity of body */
     double h;
-    double acc[NDIM];       /* EVERYTHING ABOVE ACC WILL BE COMMUNICATED! */
+    double acc[NDIM]; /* EVERYTHING ABOVE ACC WILL BE COMMUNICATED! */
     double phi;
     Key_t key;
     unsigned int ident;
     unsigned int type;
     double nterms;
-    double pos_last[NDIM];	/* position of body */
+    double pos_last[NDIM]; /* position of body */
 } body, *bodyptr;
 
 /* When we send a body from node to node, how much must we send??? */
@@ -40,24 +41,24 @@ typedef struct {
 #define TBODYSZ (offsetof(body, acc)) /*SD--08/25/2005*/
 
 typedef struct {
-    double mass;			/* mass of body */
-    double pos[NDIM];		/* position of body */
-    double vel[NDIM];		/* velocity of body */
+    double mass;      /* mass of body */
+    double pos[NDIM]; /* position of body */
+    double vel[NDIM]; /* velocity of body */
     double h;
 #ifdef SAVE_ACC
     double acc[NDIM];
     double phi;
 #endif
-    unsigned int ident;		/* unique? identifier */
-    unsigned int type;	/* fill the gap for SDF file */
+    unsigned int ident; /* unique? identifier */
+    unsigned int type;  /* fill the gap for SDF file */
 } outbody, *outbodyptr;
 
 /* This is the descriptor that goes into the SDF header. */
 
 #ifdef SAVE_ACC
-#if NDIM==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double mass;			/* mass of body */\n\
     double x, y, z;			/* position of body */\n\
     double vx, vy, vz;		/* velocity of body */\n\
@@ -68,9 +69,9 @@ typedef struct {
     unsigned int type;       /* fill the gap for SDF file */\n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double mass;			/* mass of body */\n\
     double x, y;			/* position of body */\n\
     double vx, vy;		/* velocity of body */\n\
@@ -81,13 +82,13 @@ typedef struct {
     unsigned int type;       /* fill the gap for SDF file */\n\
 }"
 #else
- # error No case for NDIM
+#error No case for NDIM
 #endif /* NDIM==2 */
 #endif /* NDIM==3 */
 #else
-#if NDIM==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double mass;			/* mass of body */\n\
     double x, y, z;			/* position of body */\n\
     double vx, vy, vz;		/* velocity of body */\n\
@@ -96,9 +97,9 @@ typedef struct {
     unsigned int type;       /* fill the gap for SDF file */\n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     double mass;			/* mass of body */\n\
     double x, y;			/* position of body */\n\
     double vx, vy;		/* velocity of body */\n\
@@ -107,7 +108,7 @@ typedef struct {
     unsigned int type;       /* fill the gap for SDF file */\n\
 }"
 #else
- # error No case for NDIM
+#error No case for NDIM
 #endif /* NDIM==2 */
 #endif /* NDIM==3 */
 #endif /* SAVE_ACC */
@@ -122,7 +123,7 @@ typedef struct {
 
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     double mass;
     double pos[NDIM];
     double massinv;
@@ -132,7 +133,7 @@ typedef struct{
     int ndaughters;
 } cofmdata;
 
-typedef struct{
+typedef struct {
     double bmax;
     double pos[NDIM];
     double h;
@@ -151,10 +152,10 @@ typedef struct{
 #define HAS_KEY
 
 #define Mass(x) ((x)->mass)
-#define Pos(x)  ((x)->pos)
+#define Pos(x) ((x)->pos)
 
 #define BMAX_MAC 1
-#define BH_MAC  2
+#define BH_MAC 2
 #define AREL_MAC 3
 
 /* Prototypes for all the functions which are "friends" of physics.h */
@@ -187,8 +188,7 @@ extern Counter_t CCInt, CBInt, BCInt, BBInt;
 extern Counter_t CCIntRej;
 extern Counter_t TranslateCnt;
 
-void SetTol(double tol, double frac_tol, double newton_const, double eps, 
-	    int gnobj);
+void SetTol(double tol, double frac_tol, double newton_const, double eps, int gnobj);
 void InheritSink(const Sink *from, Sink *to, hcell *pp);
 void DLRcritMAC(Sink *sink, const hcell **source, int *result, int n);
 void RcritMAC(Sink *sink, const hcell **source, int *result, int n);
@@ -197,17 +197,24 @@ void UnSetGravOffset(void);
 void InheritSinkNlogN(const Sink *from, Sink *to, hcell *pp);
 
 /* In grav.c */
-void do_grav(const double *p, const double *end, const double *pos0, 
-	     double *mass0, double *acc0, double *phi0, 
-	     const double *eps2p, int *ncut);
-void update_point_mass(body *btab, int nobj, body *p, double smooth2, 
-		       double newt);
+void do_grav(const double *p,
+             const double *end,
+             const double *pos0,
+             double *mass0,
+             double *acc0,
+             double *phi0,
+             const double *eps2p,
+             int *ncut);
+void update_point_mass(body *btab, int nobj, body *p, double smooth2, double newt);
 
 /* In sph.c */
-void do_SPHgrav(const double *p, const double *end, const double *pos0, 
-		double *mass0, double *acc0, double *phi0, 
-		const double *eps2p, int *ncut);
+void do_SPHgrav(const double *p,
+                const double *end,
+                const double *pos0,
+                double *mass0,
+                double *acc0,
+                double *phi0,
+                const double *eps2p,
+                int *ncut);
 
 #endif
-
-

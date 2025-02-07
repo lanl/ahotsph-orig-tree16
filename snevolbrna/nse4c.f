@@ -1,49 +1,17 @@
-      subroutine nsestart(t9fnl,rhofnl,yefnl,yp,yn)
-      parameter (nsetol=1d-4,kmax=7)
-      implicit double precision (a-h,o-z)
-      T9start=100.d0
-      rho=rhofnl
-      ye=yefnl
-      yp=ye
-      yn=1.d0-ye
-      ider=0
-      T9=T9start
-      DelT9=dsign(20.d0,(t9fnl-t9start))
-  100 testt=t9fnl-t9    
-c     write(*,*) 'testt',testt
-      If(dabs(testt).gt.nsetol) Then
-          call nsesolv(ider,t9,rho,ye,yp,yn,kit,kmax,ubind,
-     &                   xa,xh,yeh,zbar,abar)
-c         write(*,999) t9fnl,t9,rho,ye,yp,yn,kit
-          If(kit.ge.kmax) Then
-              t9=t9-delt9
-              delt9=.5d0*delt9
-          Else
-              t9last=t9
-              If(kit.le.3) Then
-                 delt9=2.d0*delt9
-              Endif
-          Endif
-          If(t9.gt.35.d0) Then
-              dtmax=10.d0
-          Elseif(t9.gt.25.d0) Then
-              dtmax=3.d0
-          Elseif(t9.gt.10.d0) Then
-              dtmax=1.d0
-          Elseif(t9.gt.4.5d0) Then
-              dtmax=.1d0
-          Else
-              dtmax=.01d0
-          Endif
-          delT9=dsign(dmin1(dabs(testt),dabs(delt9),dabs(dtmax)),testt)
-          T9=T9+delT9
-          GOTO 100
-      Else
-          t9=t9fnl
-          ider=2
-          kmtmp=3*kmax
-          call nsesolv(ider,t9,rho,ye,yp,yn,kit,kmtmp,ubind,
-     &                   xa,xh,yeh,zbar,abar)
+subroutine nsestart(t9fnl, rhofnl, yefnl, yp, yn) parameter(nsetol = 1d - 4, kmax = 7) implicit
+    double precision(a - h, o - z) T9start
+    = 100.d0 rho = rhofnl ye = yefnl yp = ye yn = 1.d0 - ye ider = 0 T9 = T9start DelT9
+    = dsign(20.d0, (t9fnl - t9start)) 100 testt = t9fnl - t9 c write(*, *) 'testt',
+             testt If(dabs(testt).gt.nsetol) Then call
+    nsesolv(ider, t9, rho, ye, yp, yn, kit, kmax, ubind, &xa, xh, yeh, zbar, abar)
+c write(*, 999) t9fnl, t9, rho, ye, yp, yn,
+    kit If(kit.ge.kmax) Then t9 = t9 - delt9 delt9 = .5d0 *delt9 Else t9last
+    = t9 If(kit.le .3) Then delt9 = 2.d0 * delt9 Endif Endif If(t9.gt .35.d0) Then dtmax
+    = 10.d0 Elseif(t9.gt .25.d0) Then dtmax = 3.d0 Elseif(t9.gt .10.d0) Then dtmax
+    = 1.d0 Elseif(t9.gt .4.5d0) Then dtmax = .1d0 Else dtmax = .01d0 Endif delT9
+    = dsign(dmin1(dabs(testt), dabs(delt9), dabs(dtmax)), testt) T9 = T9 + delT9 GOTO 100 Else t9
+    = t9fnl ider = 2 kmtmp
+    = 3 * kmax call nsesolv(ider, t9, rho, ye, yp, yn, kit, kmtmp, ubind, &xa, xh, yeh, zbar, abar)
 c         write(*,999) t9fnl,t9,rho,ye,yp,yn,kit
           If(kit.ge.kmtmp) Then
              print*,'broken code'
@@ -502,7 +470,7 @@ c       GNZ=GNP*ZZ*2.d0/(Z13+Z23)
         GT36=GT33*GT33
         GT312=GT36*GT36
         FNUM=.0455d0*GT3+.348d0*GT33+9.49d0*GT36-.123d0*GT312+
-     #    .101d0*GT312*GT3
+# .101d0 * GT312 * GT3
         FDEN=1.d0+100.d0*GT33*GT3+.267*GT312
         F90=FNUM/FDEN
         SCR=1.25d0*GNZ-TAU*F90 
@@ -580,6 +548,4 @@ c-----------------------------------------------------c
    20 Continue
 c-----------------------------------------------------c
       return
-      end 
-
-
+      end

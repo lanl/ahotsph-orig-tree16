@@ -5,9 +5,9 @@
 #ifndef physics_NdotH
 #define physics_NdotH
 
-#include "tree.h"
 #include "key.h"
 #include "timers.h"
+#include "tree.h"
 
 #ifdef USE_PH
 /* An ugly hack! */
@@ -21,9 +21,9 @@
 #define NDIM 3
 
 typedef struct {
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
     float acc[NDIM];
     float phi;
     Key_t key;
@@ -33,25 +33,25 @@ typedef struct {
 } body, *bodyptr;
 
 /* When we send a body from node to node, how much must we send??? */
-#define TBODYSZ (1+NDIM)*sizeof(float)
+#define TBODYSZ (1 + NDIM) * sizeof(float)
 
 typedef struct {
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
 #ifdef SAVE_ACC
     float acc[NDIM];
     float phi;
 #endif
-    unsigned int ident;		/* unique? identifier */
+    unsigned int ident; /* unique? identifier */
 } outbody, *outbodyptr;
 
 /* This is the descriptor that goes into the SDF header. */
 
 #ifdef SAVE_ACC
-#if NDIM==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -60,9 +60,9 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -71,29 +71,29 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
- # error No case for NDIM
+#error No case for NDIM
 #endif /* NDIM==2 */
 #endif /* NDIM==3 */
 #else
-#if NDIM==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
- # error No case for NDIM
+#error No case for NDIM
 #endif /* NDIM==2 */
 #endif /* NDIM==3 */
 #endif /* SAVE_ACC */
@@ -109,7 +109,7 @@ typedef struct {
 
 /* Now for Order N */
 
-#if (NDIM==3)
+#if (NDIM == 3)
 typedef struct {
     float xx;
     float yy;
@@ -127,7 +127,7 @@ typedef struct {
 #endif
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     float mass;
     float pos[NDIM];
     float B2;
@@ -137,12 +137,12 @@ typedef struct{
     int ndaughters;
 } cofmdata;
 
-typedef struct{
+typedef struct {
     float bmax;
     float pos[NDIM];
     float M0;
     float M1[NDIM];
-    float m;		/* This is only needed for testing */
+    float m; /* This is only needed for testing */
     float acc_last_max;
     int isbody;
     moment M2;
@@ -158,7 +158,7 @@ typedef struct{
 #define HAS_KEY
 
 #define Mass(x) ((x)->mass)
-#define Pos(x)  ((x)->pos)
+#define Pos(x) ((x)->pos)
 
 /* Prototypes for all the functions which are "friends" of physics.h */
 #include "physics_generic.h"
@@ -197,8 +197,14 @@ void SetGravOffset(float *off);
 void UnSetGravOffset(void);
 void InheritSinkNlogN(const Sink *from, Sink *to, hcell *pp);
 void Nlogngate(Sink *sink, const hcell **source_vec, int *result, int n);
-void do_grav(const float *p, const float *end, const float *pos0, float *mass0,
-	     float *acc0, float *phi0, const float *eps2p, int *ncut);
+void do_grav(const float *p,
+             const float *end,
+             const float *pos0,
+             float *mass0,
+             float *acc0,
+             float *phi0,
+             const float *eps2p,
+             int *ncut);
 
 
 /* In grav_ring.c */

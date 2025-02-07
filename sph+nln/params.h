@@ -6,11 +6,11 @@
 #endif
 
 typedef struct {
-    char name[256]; /* "datafile" */
-    char SPHdatafile[256]; /* "SPHdatafile" */
-	char template_name[256]; /* wind template */
-	char winddata_name[256]; /* "winddata_name" */
-	char outnamebase[256];
+    char name[256];          /* "datafile" */
+    char SPHdatafile[256];   /* "SPHdatafile" */
+    char template_name[256]; /* wind template */
+    char winddata_name[256]; /* "winddata_name" */
+    char outnamebase[256];
     int timeout;
     int fail_if_slow;
     int do_restart;
@@ -40,9 +40,9 @@ typedef struct {
     int do_Bmax;
     int do_Arel;
     int nsteps;
-    int log_time;	/* if true, use dt \propto t */
-    int comov_eps;	/* if true, use comoving epsilon */
-    int save_first;	/* save first step (for acc testing) */
+    int log_time;   /* if true, use dt \propto t */
+    int comov_eps;  /* if true, use comoving epsilon */
+    int save_first; /* save first step (for acc testing) */
     int ntimer_detail;
     int exact_rho;
     int nbrcut_max;
@@ -51,20 +51,20 @@ typedef struct {
     int independent_dt;
     int dark_independent_dt;
     int default_nterms;
-	int tlow_cut;
-	int dt_short;
-	int dt_long;
-	int do_output;
-	int output_freq;
-	int short_output;
-	int timer_freq;
-	int image_freq;
-	int x_pixels;
-	int y_pixels;
-	int log_image;
+    int tlow_cut;
+    int dt_short;
+    int dt_long;
+    int do_output;
+    int output_freq;
+    int short_output;
+    int timer_freq;
+    int image_freq;
+    int x_pixels;
+    int y_pixels;
+    int log_image;
     int kernel_ncoef1;
     int kernel_ncoef2;
-	int poly_eos;
+    int poly_eos;
     int limit_dt_on_acc;
     float new_h;
     float new_u;
@@ -78,13 +78,13 @@ typedef struct {
     float v_wind;
     float mdot_wind;
     float u_wind;
-    float eps;	/* Plummer smoothing length */
-    float tol;	/* MAC tolerance */
-		/* for big MAC, this is multiplied by M/(rsize*rsize) */
+    float eps; /* Plummer smoothing length */
+    float tol; /* MAC tolerance */
+               /* for big MAC, this is multiplied by M/(rsize*rsize) */
     float frac_tol;
     float CWfac;
     float SPHCWfac;
-	float dt;
+    float dt;
     float dark_dt;
     float comov_eps_epoch;
     float visc_alpha;
@@ -99,17 +99,17 @@ typedef struct {
     float fmassCF;
     float flenCF;
     float ftimeCF;
-	float dt_max;
-	float sort_tol;
+    float dt_max;
+    float sort_tol;
     double kernel_coef1[MAXCOEF];
     double kernel_coef2[MAXCOEF];
     float drag_coeff;
 } setup_params_t;
 
-typedef struct{
+typedef struct {
     float pos[NDIM];
     float vel[NDIM];
-	float acc[NDIM];
+    float acc[NDIM];
     float p[NDIM];
     float l[NDIM];
     float mass;
@@ -118,7 +118,7 @@ typedef struct{
 
 extern setup_params_t params;
 
-void read_initial_ctl (SDF *sdfp, setup_params_t *params);
-void print_initial_ctl (setup_params_t params);
-void read_absorb_bndry (SDF *sdfp, bndry_t *bndry);
-void print_absorb_bndry (bndry_t bndry);
+void read_initial_ctl(SDF *sdfp, setup_params_t *params);
+void print_initial_ctl(setup_params_t params);
+void read_absorb_bndry(SDF *sdfp, bndry_t *bndry);
+void print_absorb_bndry(bndry_t bndry);

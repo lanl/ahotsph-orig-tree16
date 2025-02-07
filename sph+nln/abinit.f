@@ -1,4 +1,4 @@
-      subroutine abinit(irank,netrcfile)
+subroutine abinit(irank, netrcfile)
 
       implicit none
 
@@ -418,13 +418,7 @@ c         do j = 1, nucpg, 10
 c            write(lun,'(10i5)')(nucp(i),i=j,j+9)
 c         enddo
 c         close(lun)
-c         if(irank.eq.0) write(*,*) trim(netrcfile),
-c     1      ' adjusted for new nucp index array'
-c      endif
+      c if (irank.eq .0) write(*, *) trim(netrcfile), c
+          1 ' adjusted for new nucp index array' c endif
 
-      if(irank.eq.0) write(*,*)'LEAVING ABINIT'
-      return
-      end
-
-
-
+          if (irank.eq .0) write(*, *) 'LEAVING ABINIT' return end

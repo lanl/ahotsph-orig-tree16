@@ -7,9 +7,9 @@
 #include "timers.h"
 
 #ifdef NDIM
-# if NDIM != 3 
-# error this code assumes NDIM is 3
-# endif
+#if NDIM != 3
+#error this code assumes NDIM is 3
+#endif
 #else
 #define NDIM 3
 #endif
@@ -30,7 +30,7 @@ typedef struct {
 
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 
 void NeighCofmFromDaugh(hcell *hptr, hcell **dlist);

@@ -1,25 +1,25 @@
 #ifndef PHYSICS_vrtxDOTh
 #define PHYSICS_vrtxDOTh
 
-/* Version for the gaussian smoothing 
+/* Version for the gaussian smoothing
    Also, error estimates are on the norm of vorticity vector (march 93)
 */
 /* Jan 1995,
      added optional (#ifdef) double precision for certain accumulators. */
 
 #define NDIM 3
-#include "tree.h"
 #include "key.h"
+#include "tree.h"
 
 extern float epsilon;
-extern float kc;		/* kernel cutoff */
-extern float kc2;		/* kernel cutoff squared */
+extern float kc;  /* kernel cutoff */
+extern float kc2; /* kernel cutoff squared */
 extern float epsinv;
 extern float errtol;
 extern float nu;
 
 /* The transmitted bodies must cary pos[3], str[3] and vol. */
-#define TBODYSZ (7*sizeof(float))
+#define TBODYSZ (7 * sizeof(float))
 
 
 #ifdef DOUBLE_ACCUMULATORS
@@ -32,7 +32,7 @@ extern float nu;
 #else
 #define ACCUM float
 #define ACCUM_S "float"
-#define PAD_DECL 
+#define PAD_DECL
 #define PAD_DECL_S "/* No padding */"
 #endif
 
@@ -45,33 +45,33 @@ extern float nu;
 #define HAS_IDENT
 #define HAS_KEY
 
-#define Errsum(x)      ((x)->errsum)
-#define Errsum2(x)     ((x)->errsum2)
-#define Pos(x)         ((x)->pos)
-#define Strength(x)    ((x)->strength)
-#define Vol(x)         ((x)->vol)
-#define Psi(x)         ((x)->psi)
-#define Vel(x)         ((x)->vel)
-#define Gradvel(x)     ((x)->gradvel)
-#define Dstr(x)        ((x)->dstr)
-#define Vel_old(x)     ((x)->vel_old)
-#define Dstr_old(x)    ((x)->dstr_old)
-#define Dpole(x)       ((x)->dpole)
-#define Qpole(x)       ((x)->qpole)
-#define Bmax(x)        ((x)->bmax)
-#define Daughters(x)   ((x)->daughters)
+#define Errsum(x) ((x)->errsum)
+#define Errsum2(x) ((x)->errsum2)
+#define Pos(x) ((x)->pos)
+#define Strength(x) ((x)->strength)
+#define Vol(x) ((x)->vol)
+#define Psi(x) ((x)->psi)
+#define Vel(x) ((x)->vel)
+#define Gradvel(x) ((x)->gradvel)
+#define Dstr(x) ((x)->dstr)
+#define Vel_old(x) ((x)->vel_old)
+#define Dstr_old(x) ((x)->dstr_old)
+#define Dpole(x) ((x)->dpole)
+#define Qpole(x) ((x)->qpole)
+#define Bmax(x) ((x)->bmax)
+#define Daughters(x) ((x)->daughters)
 #define B0(x) ((x)->b0)
 #define B1(x) ((x)->b1)
 #define B2(x) ((x)->b2)
 #define B3(x) ((x)->b3)
 #define B4(x) ((x)->b4)
 #define Omegat(x) ((x)->omegat)
-    
+
 /* Prototypes for all the functions which are "friends" of physics.h */
 #include "physics_generic.h"
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 /* From cofm_vrtx.c */
 void CofmFromDaugh(hcell *, hcell **);
@@ -91,8 +91,7 @@ void InteractCell(cellptr cp, bodyptr me);
 extern Counter_t CellCnt;
 
 /* from mono_vrtx.c */
-void InteractBody(body *bp, bodyptr me, 
-		    float eps2inv12, float nu);
+void InteractBody(body *bp, bodyptr me, float eps2inv12, float nu);
 extern Counter_t BodyCnt;
 extern Counter_t FullKernelCnt;
 extern Counter_t TaylorKernelCnt;

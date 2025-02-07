@@ -1,21 +1,20 @@
 #include <math.h>
 #include <stdio.h>
-#include "tree.h"
-#include "physics_sph.h"
-#include "vop.h"
-#include "chn.h"
-#include "bigmalloc.h"
-#include "Msgs.h"
-#include "error.h"
+
 #include "Assert.h"
+#include "Msgs.h"
+#include "bigmalloc.h"
+#include "chn.h"
+#include "error.h"
 #include "fastflpt.h"
+#include "physics_sph.h"
 #include "protos.h"
+#include "tree.h"
+#include "vop.h"
 
-void SPHSetupCofm(int type, float tol, float rel_tol)
-{
-}
+void SPHSetupCofm(int type, float tol, float rel_tol) {}
 
-void SPHCofmFromDaugh(hcellptr hptr, hcellptr daughters[]){
+void SPHCofmFromDaugh(hcellptr hptr, hcellptr daughters[]) {
     int i;
     SPHcofmdata *dp;
     SPHcofmdata *cmp;
@@ -36,74 +35,73 @@ void SPHCofmFromDaugh(hcellptr hptr, hcellptr daughters[]){
     cmp->ndaughters = 0;
 
     /* First get the cm of the new cell. */
-    for(i=0; i<(1<<NDIM); i++){
-	if (daughters[i] == NULL)
-	  continue;
-	if (Sub_Flags(daughters[i]) == 0) {
-	    bp = daughters[i]->ptr;
-	    dmass = bp->mass;
-	    cmp->mass += dmass;
-	    if (bp->h > cmp->lap)
-	      cmp->lap = bp->h;
-	    VV(cmp->pos, += dmass * bp->pos);
-	    cmp->ndaughters++;
-	} else {
-	    dp = daughters[i]->ptr;
-	    dmass = dp->mass;
-	    cmp->mass += dmass;
-	    if (dp->lap > cmp->lap)
-	      cmp->lap = dp->lap;
-	    VV(cmp->pos, += dmass * dp->pos);
-	    cmp->ndaughters += dp->ndaughters;
-	} 
+    for (i = 0; i < (1 << NDIM); i++) {
+        if (daughters[i] == NULL)
+            continue;
+        if (Sub_Flags(daughters[i]) == 0) {
+            bp = daughters[i]->ptr;
+            dmass = bp->mass;
+            cmp->mass += dmass;
+            if (bp->h > cmp->lap)
+                cmp->lap = bp->h;
+            VV(cmp->pos, += dmass * bp->pos);
+            cmp->ndaughters++;
+        } else {
+            dp = daughters[i]->ptr;
+            dmass = dp->mass;
+            cmp->mass += dmass;
+            if (dp->lap > cmp->lap)
+                cmp->lap = dp->lap;
+            VV(cmp->pos, += dmass * dp->pos);
+            cmp->ndaughters += dp->ndaughters;
+        }
     }
     /* Divide out the total mass */
     if (cmp->mass != (float)0.) {
-	cmp->massinv = recipf(cmp->mass);
-	VS(cmp->pos, *= cmp->massinv);
+        cmp->massinv = recipf(cmp->mass);
+        VS(cmp->pos, *= cmp->massinv);
     } else {
-	Error("Zero mass in BranchFromDaughters!\n");
+        Error("Zero mass in BranchFromDaughters!\n");
     }
     /* Now loop again to pick up B2, etc.  */
-    for (i=0; i<(1<<NDIM); i++) {
-	float tmp[NDIM];
-	float tmpsq;
+    for (i = 0; i < (1 << NDIM); i++) {
+        float tmp[NDIM];
+        float tmpsq;
 
-	if(daughters[i] == NULL)
-	    continue;
-	if (Sub_Flags(daughters[i]) == 0) {
-	    bp = daughters[i]->ptr;
-	    VVV(tmp, = cmp->pos, - bp->pos);
-	    newbmax = (float)0.;
-	} else {
-	    dp = daughters[i]->ptr;
-	    VVV(tmp, = cmp->pos, - dp->pos);
-	    newbmax = dp->bmax;
-	}
-	tmpsq = Dot(tmp, tmp);
-	if (tmpsq != 0.F) {
-	    /* avoid doing a sqrtf_fast(0).  and don't bother multiplying
-	       by and adding zero either */
-	    newbmax += sqrtf_fast(tmpsq);
-	}
-	if (newbmax > cmp->bmax)
-	  cmp->bmax = newbmax;
+        if (daughters[i] == NULL)
+            continue;
+        if (Sub_Flags(daughters[i]) == 0) {
+            bp = daughters[i]->ptr;
+            VVV(tmp, = cmp->pos, -bp->pos);
+            newbmax = (float)0.;
+        } else {
+            dp = daughters[i]->ptr;
+            VVV(tmp, = cmp->pos, -dp->pos);
+            newbmax = dp->bmax;
+        }
+        tmpsq = Dot(tmp, tmp);
+        if (tmpsq != 0.F) {
+            /* avoid doing a sqrtf_fast(0).  and don't bother multiplying
+               by and adding zero either */
+            newbmax += sqrtf_fast(tmpsq);
+        }
+        if (newbmax > cmp->bmax)
+            cmp->bmax = newbmax;
     }
     /* This is an alternative bound on bmax, which is sometimes tighter */
     /* than the cumulative bound computed above. */
     CellCorner(hptr->key, center, &cellsz);
-    cmp->sz = cellsz;		/* for pure Barnes-But */
+    cmp->sz = cellsz; /* for pure Barnes-But */
     cellsz *= (float)0.5;
     VS(center, += cellsz);
-    VxVVS(dx, = cellsz+ fabs LPAREN cmp->pos, - center,  RPAREN);
+    VxVVS(dx, = cellsz + fabs LPAREN cmp->pos, -center, RPAREN);
     newbmax = sqrtf_fast(Dotx(dx, dx));
     cmp->bmax = (newbmax < cmp->bmax) ? newbmax : cmp->bmax;
     hptr->ptr = cmp;
 }
 
 /* Turn the ptr from a cofmdata to a cell. */
-void SPHCellFromCofm(SPHcell *cp, SPHcofmdata *cmp)
-{
+void SPHCellFromCofm(SPHcell *cp, SPHcofmdata *cmp) {
     cp->mass = cmp->mass;
     VV(cp->pos, = cmp->pos);
     cp->bmax = cmp->bmax;
@@ -111,4 +109,3 @@ void SPHCellFromCofm(SPHcell *cp, SPHcofmdata *cmp)
     cp->lap = cmp->lap;
     Msgf(("Cell: %s\n", PrintSPHCellContents(cp)));
 }
-

@@ -5,9 +5,9 @@
 #ifndef physics_NdotH
 #define physics_NdotH
 
-#include "tree.h"
 #include "key.h"
 #include "timers.h"
+#include "tree.h"
 
 #ifdef USE_PH
 /* An ugly hack! */
@@ -24,9 +24,9 @@
 #define SPH_GRAV
 
 typedef struct {
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
 #ifdef SPH_GRAV
     float h;
 #endif
@@ -35,29 +35,29 @@ typedef struct {
     Key_t key;
     unsigned int ident;
     float nterms;
-    float pos_last[NDIM];	/* position of body */
+    float pos_last[NDIM]; /* position of body */
 } body, *bodyptr;
 
 /* When we send a body from node to node, how much must we send??? */
 #define TBODYSZ offsetof(body, acc)
 
 typedef struct {
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
-    float vel[NDIM];		/* velocity of body */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
 #ifdef SAVE_ACC
     float acc[NDIM];
     float phi;
 #endif
-    unsigned int ident;		/* unique? identifier */
+    unsigned int ident; /* unique? identifier */
 } outbody, *outbodyptr;
 
 /* This is the descriptor that goes into the SDF header. */
 
 #ifdef SAVE_ACC
-#if NDIM==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -66,9 +66,9 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -77,29 +77,29 @@ typedef struct {
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
- # error No case for NDIM
+#error No case for NDIM
 #endif /* NDIM==2 */
 #endif /* NDIM==3 */
 #else
-#if NDIM==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
     unsigned int ident;		/* unique? identifier */\n\
 }"
 #else
- # error No case for NDIM
+#error No case for NDIM
 #endif /* NDIM==2 */
 #endif /* NDIM==3 */
 #endif /* SAVE_ACC */
@@ -114,7 +114,7 @@ typedef struct {
 
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     float mass;
     float pos[NDIM];
     float massinv;
@@ -124,7 +124,7 @@ typedef struct{
     int ndaughters;
 } cofmdata;
 
-typedef struct{
+typedef struct {
     float bmax;
     float pos[NDIM];
 #ifdef SPH_GRAV
@@ -145,10 +145,10 @@ typedef struct{
 #define HAS_KEY
 
 #define Mass(x) ((x)->mass)
-#define Pos(x)  ((x)->pos)
+#define Pos(x) ((x)->pos)
 
 #define BMAX_MAC 1
-#define BH_MAC  2
+#define BH_MAC 2
 #define AREL_MAC 3
 
 /* Prototypes for all the functions which are "friends" of physics.h */
@@ -173,7 +173,6 @@ char *PrintBodyContentsLong(const body *vp);
 char *PrintBranch(const cofmdata *cmp);
 
 
-
 /* In mac.c */
 extern Timer_t GravTm, MACTm;
 extern Counter_t CCInt, CBInt, BCInt, BBInt;
@@ -190,9 +189,13 @@ void UnSetGravOffset(void);
 void InheritSinkNlogN(const Sink *from, Sink *to, hcell *pp);
 
 /* In grav.v */
-void do_grav(const float *p, const float *end, const float *pos0, float *mass0,
-	     float *acc0, float *phi0, const float *eps2p, int *ncut);
+void do_grav(const float *p,
+             const float *end,
+             const float *pos0,
+             float *mass0,
+             float *acc0,
+             float *phi0,
+             const float *eps2p,
+             int *ncut);
 void update_point_mass(body *btab, int nobj, body *p, float smooth2, float newt);
 #endif
-
-

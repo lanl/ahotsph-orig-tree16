@@ -1,65 +1,39 @@
 C23456789012345678901234567890123456789012345678901234567890123456789012
-C***********************************************************************
-C
-C    FILE:         INVEOS
-C    MODULE:       INVEOS
-C    TYPE:         SUBROUTINE
-C    AUTHOR:       F. DOUGLAS SWESTY, Dpt of Physics SUNY @ Stony Brook
-C
-C    DATE:         5/23/90
-C                  Bug fixed on (5/24/90)
-C
-C
-C    CALL LINE:    CALL INVEOS(INPVAR,T_OLD,YE,BRYDNS,IFLAG,EOSFLG,XPREV)
-C
-C    INPUTS:       INPVAR = TEMP, INTERNAL ENG, OR ENTROPY
-C                  T_OLD = INITIAL GUESS AT THE TEMPERATURE
-C                  YE = ELECTRON FRACTION
-C                  BRYDNS = BARYON NUMBER DENSITY
-C                  IFLAG = 1 --> INPVAR IS TEMPERATURE
-C                          2 --> INPVAR IS INTERNAL ENERGY
-C                          3 --> INPVAR IS ENTROPY (NOT IMPLEM)
-C
-C    OUTPUTS       EOSFLG = 1 --> "NO NUCLEI" EOS
-C                           2 --> GENERAL EOS
-C                           3 --> BULK EOS FOR DENSITIES ABOVE NUCLEAR
-C                  XPREV = PREVIOUS VALUE OF X
-C                  P_PREV = PREVIOUS VALUE OF PROTON DENSITY
-C
-C
-C
-C 
-C    INCLUDE FILES:  EOS_M1D.INC
-C
-C
-C*************************************************************************
-C23456789012345678901234567890123456789012345678901234567890123456789012
-C
-      SUBROUTINE INVEOS(INPVAR,T_OLD,YE,BRYDNS,IFLAG,EOSFLG,
-     1                  FORFLG,SF,XPREV,P_PREV)
-C
-C
-C
+C*********************************************************************** C C FILE : INVEOS C MODULE
+    : INVEOS C TYPE : SUBROUTINE C AUTHOR : F.DOUGLAS SWESTY,
+    Dpt of Physics SUNY @Stony Brook C C DATE : 5 / 23
+        / 90 C Bug fixed on(5 / 24 / 90) C C C CALL LINE
+    : CALL INVEOS(INPVAR, T_OLD, YE, BRYDNS, IFLAG, EOSFLG, XPREV)
+C C INPUTS : INPVAR
+             = TEMP,
+    INTERNAL ENG,
+    OR ENTROPY C T_OLD = INITIAL GUESS AT THE TEMPERATURE C YE = ELECTRON FRACTION C BRYDNS
+    = BARYON NUMBER DENSITY C IFLAG
+    = 1 -- > INPVAR IS TEMPERATURE C 2 -- > INPVAR IS INTERNAL ENERGY C 3 --
+      > INPVAR IS ENTROPY(NOT IMPLEM) C C OUTPUTS EOSFLG
+    = 1 -- > "NO NUCLEI" EOS C 2 -- > GENERAL EOS C 3 --
+      > BULK EOS FOR DENSITIES ABOVE NUCLEAR C XPREV
+    = PREVIOUS VALUE OF X C P_PREV
+    = PREVIOUS VALUE OF PROTON DENSITY C C C C C INCLUDE FILES : EOS_M1D.INC C C C
+      * ************************************************************************C23456789012345678901234567890123456789012345678901234567890123456789012
+                                                                               C SUBROUTINE
+                                                                               INVEOS(INPVAR,
+                                                                                      T_OLD,
+                                                                                      YE,
+                                                                                      BRYDNS,
+                                                                                      IFLAG,
+                                                                                      EOSFLG,
+                                                                                      1 FORFLG,
+                                                                                      SF,
+                                                                                      XPREV,
+                                                                                      P_PREV)
+C C C
 
-C
-      IMPLICIT NONE
-C
-C
-C                         Local variables
-      INCLUDE 'eos_m4a.inc'
-C
-      DOUBLE PRECISION INP_V, INP_VO, INP_VN, UFTN, DUFTN, DT
-      DOUBLE PRECISION T_OLD, T_NEW, T_TEMP, T_LB, T_UB, PERDIF
-      DOUBLE PRECISION eps, prec, var, t_old0, al, fa, bl, fb, cl, 
-     1                 fc, d, e, tm, tol1, s, p, ql, r
-      INTEGER LOOP, SF, NEW_F
-      INTEGER itmax, IFLAG0
-c
-      data itmax/300/ , eps/1.d-20/
-      data prec/1.d-14/
-C
-      RSFLAG = 1
-C                         Input is the temperature; call the EOS
+    C IMPLICIT NONE C C C Local variables INCLUDE 'eos_m4a.inc' C DOUBLE PRECISION INP_V,
+    INP_VO, INP_VN, UFTN, DUFTN, DT DOUBLE PRECISION T_OLD, T_NEW, T_TEMP, T_LB, T_UB,
+    PERDIF DOUBLE PRECISION eps, prec, var, t_old0, al, fa, bl, fb, cl, 1 fc, d, e, tm, tol1, s, p,
+    ql, r INTEGER LOOP, SF, NEW_F INTEGER itmax, IFLAG0 c data itmax / 300 /,
+    eps / 1.d - 20 / data prec / 1.d - 14 / C RSFLAG = 1 C Input is the temperature; call the EOS
 C                         normally and then return
       IF(IFLAG.EQ.1) THEN
         CALL EOS_M4A(INPVAR,YE,BRYDNS,1,EOSFLG,FORFLG,SF,
@@ -5507,14 +5481,3 @@ C***********************************************************************
  100  FHALF=F1  
  999  RETURN
       END
-
-
-
-
-
-
-
-
-
-
-

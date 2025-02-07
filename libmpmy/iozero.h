@@ -13,8 +13,7 @@ static int lseek0(int fd, long offset, int whence);
 static int tell0(int fd);
 static int flen(int fd);
 static int flen0(int fd);
-static int  fseekrd0(int fd, long offset, int whence, void *buf, 
-		     int reclen, int nrecs);
+static int fseekrd0(int fd, long offset, int whence, void *buf, int reclen, int nrecs);
 static int write0_multi(int fd, const void *buf, unsigned int nbytes);
 static int read0_multi(int fd, void *buf, unsigned int nbytes);
 #endif

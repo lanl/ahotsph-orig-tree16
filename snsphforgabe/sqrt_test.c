@@ -1,15 +1,13 @@
 
 float sqrtf_fast(float x);
 
-main(int argc, char *argv)
-{
-	float y;
-	float x = 100.0;
+main(int argc, char *argv) {
+    float y;
+    float x = 100.0;
 
-	y = sqrtf_fast(x);
+    y = sqrtf_fast(x);
 
-	printf("answer is %f\n", y);
+    printf("answer is %f\n", y);
 
-	exit(0);
+    exit(0);
 }
-

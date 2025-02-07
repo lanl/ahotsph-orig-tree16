@@ -4,13 +4,14 @@
 /* time.h should define CLOCKS_PER_SECOND and prototype clock() and time()
    and it should have typedefs for time_t and clock_t. */
 #include <time.h>
-#include "mpmy_time.h"
-#include "chn.h"
+
 #include "bigmalloc.h"
+#include "chn.h"
+#include "mpmy_time.h"
 
 #ifndef CLOCKS_PER_SECOND
 /* We've got a non-standard time.h.  At least we have a time.h...*/
-#ifdef CLOCKS_PER_SEC	/* This works for linux */
+#ifdef CLOCKS_PER_SEC /* This works for linux */
 #define CLOCKS_PER_SECOND CLOCKS_PER_SEC
 #else
 #define CLOCKS_PER_SECOND 1000000 /* this is just a wild guess!! */
@@ -26,18 +27,18 @@
    SVr4 (one argument) and XSH4.2 (two arguments).  Sigh...
 */
 #if defined(sun) || defined(__INTEL_SSD__) || defined(_AIX) || defined(__iX86__)
-# define USE_GETTIMEOFDAY
-# include <sys/time.h>
-# if defined(_AIX)
+#define USE_GETTIMEOFDAY
+#include <sys/time.h>
+#if defined(_AIX)
 extern int gettimeofday(struct timeval *tp, void *tzp);
-# elif !defined(__SUN5__)
+#elif !defined(__SUN5__)
 /* On Solaris2.5 systems, gettimeofday is declared in sys/time.h.  On
    Solaris2.4 systems it is not.  Both of them are __SUN5__ in our
    terminology.  This #ifndef therefore gives a warning on 2.4, but
    without it, compilation would fail on 2.5...  */
 extern int gettimeofday(struct timeval *tp, struct timezone *tzp);
-# endif
-#else  /* don't use gettimeofday. use time() instead */
+#endif
+#else /* don't use gettimeofday. use time() instead */
 extern time_t time(time_t *);
 #endif
 
@@ -58,12 +59,12 @@ typedef struct {
 #endif
 } MPMY_Timer;
 
-void *MPMY_CreateTimer(int type){
+void *MPMY_CreateTimer(int type) {
     MPMY_Timer *ret;
 
-    if( initialized == 0 ){
-	ChnInit(&timer_chn, sizeof(MPMY_Timer), 40, Realloc_f);
-	initialized = 1;
+    if (initialized == 0) {
+        ChnInit(&timer_chn, sizeof(MPMY_Timer), 40, Realloc_f);
+        initialized = 1;
     }
 
     ret = ChnAlloc(&timer_chn);
@@ -72,53 +73,53 @@ void *MPMY_CreateTimer(int type){
     return (void *)ret;
 }
 
-int MPMY_DestroyTimer(void *p){
+int MPMY_DestroyTimer(void *p) {
     ChnFree(&timer_chn, p);
     return MPMY_SUCCESS;
 }
 
-int MPMY_StartTimer(void *p){
+int MPMY_StartTimer(void *p) {
     MPMY_Timer *t = p;
 
-    switch(t->type){
-    case MPMY_WC_TIME:
+    switch (t->type) {
+        case MPMY_WC_TIME:
 #ifdef USE_GETTIMEOFDAY
-	gettimeofday(&t->wc_start, 0);
+            gettimeofday(&t->wc_start, 0);
 #else
-	t->wc_start = time(0);
+            t->wc_start = time(0);
 #endif
-	break;
-    case MPMY_CPU_TIME:
-	t->cpu_start = clock();
-	break;
+            break;
+        case MPMY_CPU_TIME:
+            t->cpu_start = clock();
+            break;
     }
     return MPMY_SUCCESS;
 }
 
-int MPMY_StopTimer(void *p){
+int MPMY_StopTimer(void *p) {
     MPMY_Timer *t = p;
 
-    switch(t->type){
-    case MPMY_WC_TIME:
+    switch (t->type) {
+        case MPMY_WC_TIME:
 #ifdef USE_GETTIMEOFDAY
-	{ 
-	    struct timeval tnow;
-	    gettimeofday(&tnow, 0);
-	    t->wc_accum.tv_sec += tnow.tv_sec - t->wc_start.tv_sec;
-	    t->wc_accum.tv_usec += tnow.tv_usec - t->wc_start.tv_usec;
-	}
+        {
+            struct timeval tnow;
+            gettimeofday(&tnow, 0);
+            t->wc_accum.tv_sec += tnow.tv_sec - t->wc_start.tv_sec;
+            t->wc_accum.tv_usec += tnow.tv_usec - t->wc_start.tv_usec;
+        }
 #else
-	t->wc_accum += time(0) - t->wc_start;
+            t->wc_accum += time(0) - t->wc_start;
 #endif
-	break;
-    case MPMY_CPU_TIME:
-	t->cpu_accum += clock() - t->cpu_start;
-	break;
+        break;
+        case MPMY_CPU_TIME:
+            t->cpu_accum += clock() - t->cpu_start;
+            break;
     }
     return MPMY_SUCCESS;
 }
 
-int MPMY_ClearTimer(void *p){
+int MPMY_ClearTimer(void *p) {
     MPMY_Timer *t = p;
 
 #ifdef USE_GETTIMEOFDAY
@@ -131,18 +132,18 @@ int MPMY_ClearTimer(void *p){
     return MPMY_SUCCESS;
 }
 
-double MPMY_ReadTimer(void *p){
+double MPMY_ReadTimer(void *p) {
     MPMY_Timer *t = p;
 
-    switch(t->type){
-    case MPMY_WC_TIME:
+    switch (t->type) {
+        case MPMY_WC_TIME:
 #ifdef USE_GETTIMEOFDAY
-	return (double)t->wc_accum.tv_sec + (double)t->wc_accum.tv_usec*1.0e-6;
+            return (double)t->wc_accum.tv_sec + (double)t->wc_accum.tv_usec * 1.0e-6;
 #else
-	return (double)t->wc_accum;
-#endif	
-    case MPMY_CPU_TIME:
-	return (double)t->cpu_accum * (1.0/CLOCKS_PER_SECOND);
+            return (double)t->wc_accum;
+#endif
+        case MPMY_CPU_TIME:
+            return (double)t->cpu_accum * (1.0 / CLOCKS_PER_SECOND);
     }
     return -1.0;
 }

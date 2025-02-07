@@ -1,103 +1,78 @@
-      subroutine weakread(irank)
+subroutine weakread(irank)
 
-c..   read netweak and set up arrays interpolation in t9, rho
+    c..read netweak and set up arrays interpolation in t9,
+    rho
 
-      implicit none
+        implicit none
 
-      include 'dimen'
-      include 'crate'
-      include 'comcsolve'
+        include 'dimen' include 'crate' include 'comcsolve'
 
-      integer*4 irank
+        integer
+        * 4 irank
 
-      integer*4 rloc, i,j,k,l, kup, klo, rdex
-c..   defined in dimenfile      parameter(tsize = 13, rhosize = 11)
-      real*8 ratin(tsize,rhosize), 
-     1       enuin(tsize,rhosize)
-      
-      integer*4 arrshape2(2), arrshape3(3)
+        integer
+        * 4 rloc,
+    i, j, k, l, kup, klo,
+    rdex c..defined in dimenfile parameter(tsize = 13, rhosize = 11) real * 8 ratin(tsize, rhosize),
+    1 enuin(tsize, rhosize)
 
-      character*72 cdumblong
-      character*64 cdumbshort
-      character*5 ci1,ci2
-      character*4 clrat
-c-----------------------------------------------------------------
+            integer
+        * 4 arrshape2(2),
+    arrshape3(3)
 
-      kup = k1deck(1)
-      klo = k2deck(2)
-c checking array bounds
-      arrshape2 = shape (ratin)
-      if (arrshape2(1) .gt. tsize .or. arrshape2(2) .gt. rhosize) then
-          write(*,*)"Error: ratin has wrong dimensions. Expected ",
-     1       tsize, rhosize, " got ", arrshape2
-          call exit(22)
-      endif
-      arrshape2 = shape (enuin)
-      if (arrshape2(1) .gt. tsize .or. arrshape2(2) .gt. rhosize) then
-          write(*,*)"Error: enuin has wrong dimensions. Expected ",
-     1       tsize, rhosize, " got ", arrshape2
-          call exit(22)
-      endif
-      arrshape3 = shape (ratarray)
-      if (arrshape3(1) .gt. wkreac .or. arrshape3(2) .gt. tsize .or.
-     1    arrshape3(3) .gt. rhosize) then
-          write(*,*)"Error: ratarray has wrong dimensions. Expected ",
-     1         wkreac , rhosize, tsize, " got ", arrshape3
-          call exit(22)
-      endif
-      arrshape3 = shape (enuarray)
-      if (arrshape3(1) .gt. wkreac .or. arrshape3(2) .gt. tsize .or.
-     1    arrshape3(3) .gt. rhosize) then
-          write(*,*)"Error: enuarray has wrong dimensions. Expected ",
-     1         wkreac , rhosize, tsize, " got ", arrshape3
-          call exit(22)
-      endif
-      do k = kup, klo
-c..loop over decks 1 and 2 which have weak rates
-         if( iffn(k) .gt. 0 )then
+            character
+        * 72 cdumblong character * 64 cdumbshort character * 5 ci1,
+    ci2 character * 4 clrat c
+    -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
 
-c..   location in netweak data set
-            rloc = iffn(k) 
-            if (rloc .gt. wkreac) then
-                write(*,*)"Error: rloc exceeded wkreac: ", rloc, " > ",
-     1                 wkreac
-                call exit(22)
-            endif
-            if(irank.eq.0) write(*,*)"about to open netweak"
-c..   open file starts at the beginning
-            open(19,file='netweak')
-            if(irank.eq.0) write(*,*)"netweak open with rloc=",rloc
-            do i = 1, rloc-1
-               read(19,'(a64)')cdumbshort
-c               if(irank.eq.0) write(*,*)i,rloc,cdumbshort
-               do j = 1,32
-                  read(19,'(a72)')cdumblong
-               enddo
-            enddo   
-            read(19,'(a64)')cdumbshort
+    kup
+    = k1deck(1) klo = k2deck(2) c checking array bounds arrshape2
+    = shape(ratin) if (arrshape2(1).gt.tsize.or.arrshape2(2).gt.rhosize) then
+    write(*, *) "Error: ratin has wrong dimensions. Expected ",
+                1 tsize, rhosize, " got ",
+                arrshape2 call exit(22) endif arrshape2
+                = shape(enuin) if (arrshape2(1).gt.tsize.or.arrshape2(2).gt.rhosize) then
+                write(*, *) "Error: enuin has wrong dimensions. Expected ",
+                1 tsize, rhosize, " got ",
+                arrshape2 call exit(22) endif arrshape3
+                = shape(ratarray) if (arrshape3(1).gt.wkreac.or.arrshape3(2).gt.tsize.
+                                      or.1 arrshape3(3).gt.rhosize) then
+                write(*, *) "Error: ratarray has wrong dimensions. Expected ",
+                1 wkreac, rhosize, tsize, " got ",
+                arrshape3 call exit(22) endif arrshape3
+                = shape(enuarray) if (arrshape3(1).gt.wkreac.or.arrshape3(2).gt.tsize.
+                                      or.1 arrshape3(3).gt.rhosize) then
+                write(*, *) "Error: enuarray has wrong dimensions. Expected ",
+                1 wkreac, rhosize, tsize, " got ", arrshape3 call exit(22) endif do k = kup,
+                klo c..loop over decks 1
+                    and 2 which have weak rates if (iffn(k).gt.0) then
 
-c..   weak rate and neutrino energy emission arrays (in log10)
-c..   netweak data is listed as
-c     x(t1,d1),x(t2,d1),...,x(t13,d1)
-c..   x(t1,d2),x(t2,d2),...,x(t13,d2)
-c..   ...                   x(t13,d11)
+                        c..location in netweak data set rloc
+                = iffn(k) if (rloc.gt.wkreac) then write(*, *) "Error: rloc exceeded wkreac: ",
+                rloc, " > ",
+                1 wkreac call exit(22) endif if (irank.eq .0)
+                    write(*, *) "about to open netweak" c..open file starts at the beginning
+                open(19, file = 'netweak') if (irank.eq .0) write(*, *) "netweak open with rloc=",
+                rloc do i = 1,
+                rloc - 1 read(19, '(a64)') cdumbshort c if (irank.eq .0) write(*, *) i, rloc,
+                cdumbshort do j = 1,
+                32 read(19, '(a72)') cdumblong enddo enddo read(19, '(a64)') cdumbshort
 
-            read(19,*)((ratin(i,j),enuin(i,j),i=1,tsize),
-     1           j=1,rhosize)
+                c..weak rate and neutrino energy emission
+                arrays(in log10) c..netweak data is listed as c x(t1, d1),
+                x(t2, d1), ..., x(t13, d1) c..x(t1, d2), x(t2, d2), ...,
+                x(t13, d2) c..... x(t13, d11)
 
-            do i=1, tsize
-               do j=1,rhosize
-                  ratarray(rloc,i,j) = ratin(i,j)
-                  enuarray(rloc,i,j) = enuin(i,j)
-               enddo
-            enddo
+                    read(19, *)((ratin(i, j), enuin(i, j), i = 1, tsize), 1 j = 1, rhosize)
 
-            close(19)
+                        do i
+                = 1,
+                tsize do j = 1,
+                rhosize ratarray(rloc, i, j) = ratin(i, j) enuarray(rloc, i, j)
+                = enuin(i, j) enddo enddo
 
-         endif            
-      enddo
+                close(19)
 
-      return
-      end
+                    endif enddo
 
-      
+                return end

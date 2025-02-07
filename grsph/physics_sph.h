@@ -2,9 +2,9 @@
  * Copyright 1993 Michael S. Warren and John K. Salmon.  All Rights Reserved.
  */
 
-#include "tree.h"
 #include "key.h"
 #include "timers.h"
+#include "tree.h"
 
 #ifdef USE_PH
 /* An ugly hack! */
@@ -18,40 +18,40 @@
 #define NDIM 3
 
 typedef struct {
-    float mass;			        /* mass of body */
-    float pos[NDIM];		        /* position of body */
-    float vel[NDIM];		        /* velocity of body */
-    float h;			           /* smoothing length */
-    float rho;			           /* density */
-    float pr;			           /* pressure */
-    float vsound;		           /* sound speed */
-    float rho_est;	           /* estimated density */
-    float gr_mass;              /* mass/sqrt(hdet) */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
+    float h;         /* smoothing length */
+    float rho;       /* density */
+    float pr;        /* pressure */
+    float vsound;    /* sound speed */
+    float rho_est;   /* estimated density */
+    float gr_mass;   /* mass/sqrt(hdet) */
     Key_t key;
     /* Things declared above this line are communicated between processors */
     /* so they can be used in in the loop over nbrs in FindRho and ForceSPH */
     /* Don't add anything above this line unless you fix TBODYSZ */
-    float acc[NDIM];            /* forces */
-    float phi;                  /* self-gravity potential */
-    float u;		   	        /* internal energy */
+    float acc[NDIM]; /* forces */
+    float phi;       /* self-gravity potential */
+    float u;         /* internal energy */
     float udot;
-    float vel_last[NDIM];       
-    float force_last[NDIM];       
-    float udot_last;            
-    float drho_dt;               
+    float vel_last[NDIM];
+    float force_last[NDIM];
+    float udot_last;
+    float drho_dt;
     float hdot;
     float acc_last;
     unsigned int ident;
     unsigned int nterms;
     unsigned int nbrs;
     /* GR */
-    float vflow[NDIM];          /* flow velocity */
-    float mom[NDIM+1];		     /* momentum */
-    float enth;                 /* enthalpy */
-    float gama;                 /* Lorentz factor */
-    float gama_last;            /* Old gama */
-    float alfa;                 /* redshift */
-    float gxx;                  /* metric */
+    float vflow[NDIM];   /* flow velocity */
+    float mom[NDIM + 1]; /* momentum */
+    float enth;          /* enthalpy */
+    float gama;          /* Lorentz factor */
+    float gama_last;     /* Old gama */
+    float alfa;          /* redshift */
+    float gxx;           /* metric */
     float gyy;
     float gzz;
     float gxy;
@@ -61,7 +61,7 @@ typedef struct {
     float gyt;
     float gzt;
     float gtt;
-    float guxx;                 /* metric inverse */
+    float guxx; /* metric inverse */
     float guyy;
     float guzz;
     float guxy;
@@ -78,20 +78,20 @@ typedef struct {
 } body, *bodyptr;
 
 /* When we send a body from node to node, how much must we send??? */
-#define TBODYSZ ((7+2*NDIM)*sizeof(float)+sizeof(Key_t))
+#define TBODYSZ ((7 + 2 * NDIM) * sizeof(float) + sizeof(Key_t))
 
 typedef struct {
-    float mass;			/* mass of body */
-    float pos[NDIM];		/* position of body */
-    float vel[NDIM];		/* velocity of body */
-    float u;			/* internal energy */
+    float mass;      /* mass of body */
+    float pos[NDIM]; /* position of body */
+    float vel[NDIM]; /* velocity of body */
+    float u;         /* internal energy */
     float h;
     float rho;
     float phi;
     unsigned int nbrs;
-    unsigned int ident;		/* unique? identifier */
+    unsigned int ident; /* unique? identifier */
     /* GR */
-    float mom[NDIM+1];
+    float mom[NDIM + 1];
     float gama;
     float enth;
     /* end GR */
@@ -99,9 +99,9 @@ typedef struct {
 
 /* This is the descriptor that goes into the SDF header. */
 
-#if NDIM ==3
+#if NDIM == 3
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y, z;			/* position of body */\n\
     float vx, vy, vz;		/* velocity of body */\n\
@@ -116,9 +116,9 @@ typedef struct {
     float enthalpy; \n\
 }"
 #else
-#if NDIM==2
+#if NDIM == 2
 #define OUTBODYDESC \
-"struct {\n\
+    "struct {\n\
     float mass;			/* mass of body */\n\
     float x, y;			/* position of body */\n\
     float vx, vy;		/* velocity of body */\n\
@@ -146,7 +146,7 @@ typedef struct {
     float acc_last_max;
 } cell, *cellptr;
 
-#if (NDIM==3)
+#if (NDIM == 3)
 typedef struct {
     float xx;
     float yy;
@@ -163,7 +163,7 @@ typedef struct {
 } moment;
 #endif
 
-typedef struct{
+typedef struct {
     float bmax;
     float pos[NDIM];
     float M0;
@@ -176,7 +176,7 @@ typedef struct{
     int interactions;
 } Sink;
 
-typedef struct{
+typedef struct {
     float extent;
     float pos[NDIM];
     float vel[NDIM];
@@ -189,7 +189,7 @@ typedef struct{
     float udot;
     float M1[NDIM];
     float h;
-	 float alfa;
+    float alfa;
     int isbody;
     int nbrs;
     unsigned int nterms;
@@ -199,7 +199,7 @@ typedef struct{
 /* Now for Order N */
 
 /* This is the intermediate data structure used to construct cofm */
-typedef struct{
+typedef struct {
     float mass;
     float pos[NDIM];
     float B2;
@@ -216,7 +216,7 @@ typedef struct{
 #define HAS_KEY
 
 #define Mass(x) ((x)->mass)
-#define Pos(x)  ((x)->pos)
+#define Pos(x) ((x)->pos)
 
 /* Prototypes for all the functions which are "friends" of physics.h */
 #include "physics_generic.h"
@@ -246,18 +246,26 @@ extern Counter_t NobjCnt;
 extern Counter_t NtermsCnt;
 extern Timer_t ImbalTm;
 extern Timer_t GravTm;
-void
-FindForces(tree_t *tp, float GNewt, float eps,
-	int check_parents,  void (*init_physdata)(body *, cell *),
-	void (*CCinteract)(body **pp, body **end, const float *pos0, 
-		      float *mass0, float *phi0, float *acc0,
-		      moment *qpole0, const float *eps2p, int *ncut,
-		      int *tot_interact),
-	void (*BCinteract)(body *p, body **pp, body **end),
-	float (*bmaxf)(cell *), 
-      int (*CCmac)(float x0, float x1, float x2, cell *, float, Stk *, int *),
-      int (*BCmac)(float x0, float x1, float x2, cell *, float, Stk *, int *),
-      int (*CBmac)(float x0, float x1, float x2, cell *, float, Stk *, int *, int));
+void FindForces(tree_t *tp,
+                float GNewt,
+                float eps,
+                int check_parents,
+                void (*init_physdata)(body *, cell *),
+                void (*CCinteract)(body **pp,
+                                   body **end,
+                                   const float *pos0,
+                                   float *mass0,
+                                   float *phi0,
+                                   float *acc0,
+                                   moment *qpole0,
+                                   const float *eps2p,
+                                   int *ncut,
+                                   int *tot_interact),
+                void (*BCinteract)(body *p, body **pp, body **end),
+                float (*bmaxf)(cell *),
+                int (*CCmac)(float x0, float x1, float x2, cell *, float, Stk *, int *),
+                int (*BCmac)(float x0, float x1, float x2, cell *, float, Stk *, int *),
+                int (*CBmac)(float x0, float x1, float x2, cell *, float, Stk *, int *, int));
 
 /* In grav_n.c */
 extern Counter_t GravCnt;
@@ -268,12 +276,21 @@ void do_body(body *b, body **pp, body **end);
 void FindRho(body *p, body **nbr_list, body **end_list);
 void forceSPH(body *p, body **nbr_list, body **end_list);
 
-void Translate(const float *new_pos,  const float *old_pos,
-	  float phi, const float *acc, const moment *qpole, 
-	  float phi_old, const float *acc_old,
-	  float M0_old, const float *M1_old, const moment *M2_old,
-	  float *M0_new, float *M1_new, moment *M2_new,
-	  float *phi_new, float *acc_new);
+void Translate(const float *new_pos,
+               const float *old_pos,
+               float phi,
+               const float *acc,
+               const moment *qpole,
+               float phi_old,
+               const float *acc_old,
+               float M0_old,
+               const float *M1_old,
+               const moment *M2_old,
+               float *M0_new,
+               float *M1_new,
+               moment *M2_new,
+               float *phi_new,
+               float *acc_new);
 
 /* In physics_n.c */
 char *PrintCellContents(const cell *cp);
@@ -297,17 +314,26 @@ void macSPH(SinkSPH *sink, hcell **source, int *result, int n);
 void InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp);
 
 void SPH_setup(int dim);
-void SetSPH(float visc_alpha, float visc_beta, float eos_gamma, int gnobj, 
-       void bfunc(SinkSPH *sink, hcell **source, int *result, int n), 
-       void cfunc(SinkSPH *sink, hcell **source, int *result, int n));
+void SetSPH(float visc_alpha,
+            float visc_beta,
+            float eos_gamma,
+            int gnobj,
+            void bfunc(SinkSPH *sink, hcell **source, int *result, int n),
+            void cfunc(SinkSPH *sink, hcell **source, int *result, int n));
 /* GR */
 void setup_metric(int kerr_flag, float hole_mass, float kerr_ang_mom);
 void get_metric(body *btab, int nobj);
 void add_gr(body *btab, int nobj);
-void initial_cond(body *btab, int nobj,
-       float xx0, float yy0, float zz0,
-       float vx0, float vy0, float vz0,
-       float bhmass, float Gamma);
+void initial_cond(body *btab,
+                  int nobj,
+                  float xx0,
+                  float yy0,
+                  float zz0,
+                  float vx0,
+                  float vy0,
+                  float vz0,
+                  float bhmass,
+                  float Gamma);
 /* Don */
 void grav_rad(body *btab, int nobj, float *hp, float *hx);
 int df(int x, int y);
@@ -315,4 +341,3 @@ int df(int x, int y);
 /* end GR */
 /* In shrink.c */
 void ShrinkBtab(body **btabp, int *nobj, float r_limit);
-

@@ -91,10 +91,7 @@ c
 c--1) work out code units:
 c
 c--specifie mass unit (g)
-c
-      umass=1.
-c
-c--specifie distance unit (cm)
+c umass = 1. c c-- specifie distance unit(cm)
 c
       udist=1.
 c
@@ -215,5 +212,3 @@ c
 c
    99 return
       end
-
-

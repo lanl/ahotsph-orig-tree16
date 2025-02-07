@@ -75,328 +75,111 @@ c
 c--set options for kernel
 c
 c  the standard 2D SPH kernel is given by:
-c  iflat=flat; icompact=compact; istiff=stiff; ismooth=smfin;
-c  iorder==norder
-c  -1.333333333 0.666666666666 3 0 3
-c
-c--peaked kernel
-c     iflat='noflat'
-c     icompact='compact'
-c     istiff='stiff'
-c     ismooth='sminf'
-c     iorder='norder'
-c     stiff=0.
-c     wrstf=2.
-c     ismw=3
-c     inor=0
-c     idimf=2
-c
-c--4rth order  (sl)
-c     iflat='noflat'
-c     icompact='compact'
-c     istiff='stiff'
-c     ismooth='sminf'
-c     iorder='norder'
-c     stiff=0.
-c     wrstf=1.999999
-c     ismw=3
-c     inor=2
-c     idimf=2
-c
-c-- yet another kernel (si01)
-c     iflat='flat'
-c     icompact='compact'
-c     istiff='stiff'
-c     ismooth='smfin'
-c     iorder='norder'
-c     stiff=0.0
-c     wrstf=2.
-c     ismw=3
-c     inor=2
-c     idimf=2
-c
-c--another kernel (sk)
-      iflat='flat'
-      icompact='compact'
-      istiff='stiff'
-      ismooth='smfin'
-      iorder='norder'
-      stiff=-1.75
-      wrstf=0.3
-      ismw=4
-      inor=0
-      idimf=2
-c
-c--classic kernel
-c     iflat='flat'
-c     icompact='compact'
-c     istiff='stiff'
-c     ismooth='smfin'
-c     iorder='norder'
-c     stiff=-10./7.
-c     wrstf=0.66666666666666666666
-c     ismw=3
-c     inor=0
-c     idimf=2
-c
-c--Compute Size of Matrix
-c
-      imat=0
-      if(iflat(1:4).eq.'flat') then
-         imat=imat+2
-      end if
-      if(icompact(1:7).eq.'compact') then
-         imat=imat+1
-      end if
-      if(istiff(1:5).eq.'stiff') then
-         imat=imat+1
-      end if
-      if(iorder(1:6).eq.'norder') then
-         imat=imat+1+inor/2
-      end if
-      if(ismooth(1:5).eq.'sminf') then
-         imat=imat*2
-      end if
-      if(ismooth(1:5).eq.'smfin') then
-         imat=imat+ismw
-      end if
-c 
-c--Compute number of alphas and betas
-c
-      ibeta=int(imat/2.d0)
-      ialpha=imat-ibeta
-      ialph1=ialpha+1
-c
-c--Compute Matrix
-c
-      irow=1
-c
-c--Flatness
-c
-      if(iflat(1:4).eq.'flat') then
-         do icol=1,ialpha
-            if(icol.eq.2) then
-               trix(irow,icol)=1.d0
-            else
-               trix(irow,icol)=0.d0
-            end if
-         enddo
-         do icol=ialph1,imat
-            trix(irow,icol)=0.d0
-         enddo
-         gamma(irow)=0.d0
-         irow=irow+1
-         do icol=1,ialpha
-            trix(irow,icol)=0.d0
-         enddo
-         do icol=ialph1,imat
-            ibetr=ibeta+icol-imat-1
-            trix(irow,icol)=(ibetr)*(2**(ibetr-1))
-         enddo
-         gamma(irow)=0.d0
-         irow=irow+1
-      end if
-c
-c--Compactness
-c
-      if(icompact(1:7).eq.'compact') then
-         do icol=1,ialpha
-            trix(irow,icol)=0.d0
-         enddo
-         do icol=ialph1,imat
-            ibetr=icol+ibeta-imat-1
-            trix(irow,icol)=2**(ibetr)
-         enddo
-         gamma(irow)=0.d0
-         irow=irow+1
-      end if
-c
-c--Stiffness
-c
-      if(istiff(1:5).eq.'stiff') then
-         do icol=1,ialpha
-             trix(irow,icol)=(icol-1)*((wrstf)**(icol-2))
-         enddo
-         do icol=ialph1,imat
-             trix(irow,icol)=0.d0
-         enddo
-         gamma(irow)=stiff
-         irow=irow+1
-      end if
-c
-c--Smoothness
-c
-      if(ismooth(1:5).eq.'sminf') then
-         ismrow=irow+ialpha-1
-         do irowc=irow,ismrow
-            intemp=irowc-irow
-            do icol=1,ialpha
-               if(icol.le.intemp) then
-                  trix(irowc,icol)=0.d0
-               else
-                  call factor(icol-1,fac1)
-                  call factor(icol-intemp-1,fac2)
-                  trix(irowc,icol)=fac1/fac2
-               end if
-            enddo
-            do icol=ialph1,imat
-               icltmp=icol-ialpha
-               ifac=icltmp-intemp-1
-               if(icltmp.le.intemp) then
-                  trix(irowc,icol)=0.d0
-               else
-                  call factor(icltmp-1,fac1)
-                  call factor(ifac,fac2)
-                  trix(irowc,icol)=-1.d0*fac1/fac2
-               end if
-            enddo
-            gamma(irowc)=0.d0
-         enddo
-         irow=irow+ialpha
-      end if
-c
-      if(ismooth(1:5).eq.'smfin') then
-         ismrow=irow+ismw-1
-         do irowc=irow,ismrow
-            intemp=irowc-irow
-            do icol=1,ialpha
-               if(icol.le.intemp) then
-                  trix(irowc,icol)=0.d0
-               else
-                  ifac=icol-intemp-1
-                  call factor(icol-1,fac1)
-                  call factor(ifac,fac2)
-                  trix(irowc,icol)=fac1/fac2
-               end if
-            enddo
-            do icol=ialph1,imat
-               icltmp=icol-ialpha
-               ifac=icltmp-intemp-1
-               if(icltmp.le.intemp) then
-                  trix(irowc,icol)=0.d0
-               else
-                  call factor(icltmp-1,fac1)
-                  call factor(ifac,fac2)
-                  trix(irowc,icol)=-1.d0*fac1/fac2
-               end if
-            enddo
-            gamma(irowc)=0.d0
-         enddo
-         irow=irow+ismw
-      end if
-c
-c--Accuracy
-c
-      if(iorder(1:6).eq.'norder') then
-         inorow=irow+inor/2
-         if(idimf.eq.1)then
-            geotemp=2.0d0
-         else
-            geotemp=1.0d0
-         end if
-         do irowc=irow,inorow
-            intemp=2*(irowc-irow)
-            do icol=1,ialpha
-               trix(irowc,icol)=(geotemp/(icol+intemp+idimf-1))
-            enddo
-            do icol=ialph1,imat
-               icltmp=icol-ialpha
-               twofix=((2**(icltmp+intemp+idimf-1))-1.d0)
-               trix(irowc,icol)=(geotemp/(icltmp+intemp+idimf-1))*twofix
-            enddo
-            if(irowc.eq.irow) then
-               gamma(irowc)=1.0d0/idimf
-            else
-               gamma(irowc)=0.0d0
-            end if
-         enddo
-         irow=irow+inor/2
-      end if
-c
-c--Invert Matrix by Gauss-Jordan Reduction
-c
-c
-      do i=1,irow
-         do j=1,imat
-            if(i.eq.j) then
-               trix1(i,j)=1.d0
-            else
-               trix1(i,j)=0.d0
-            end if
-         enddo
-      enddo
-      do i=1,irow
-         if(trix(i,i).ne.0.d0) then
-            go to 220
-         else
-            j=i+1
-  210       continue
-            if(trix(j,i).ne.0.d0) then
-               do itemp=1,imat
-                  temp=trix(i,itemp)
-                  trix(i,itemp)=trix(j,itemp)
-                  trix(j,itemp)=temp
-                  temp=trix1(i,itemp)
-                  trix1(i,itemp)=trix1(j,itemp)
-                  trix1(j,itemp)=temp
-               enddo
-               goto 220
-            else
-               j=j+1
-               if(j.gt.imat) then
-                  write(6,*)'singular matrix'
-                  stop
-               end if
-               go to 210
-            end if
-         end if
-  220    continue
-         sub=trix(i,i)
-         do idiv=1,imat
-            trix1(i,idiv)=trix1(i,idiv)/sub
-            trix(i,idiv)=trix(i,idiv)/sub
-         enddo
-         do isub=1,irow
-            if(isub.ne.i) then
-               sub0=trix(isub,i)
-               do irun=1,imat
-                  sub1=sub0*trix1(i,irun)
-                  trix1(isub,irun)=trix1(isub,irun)-sub1
-                  sub=sub0*trix(i,irun)
-                  trix(isub,irun)=trix(isub,irun)-sub
-               enddo
-            end if
-         enddo
-      enddo
-c
-c--Compute coefficients
-c
-      ncoef1=ialpha
-      do i=1,ncoef1
-         wcoef1(i)=0.0d0
-      enddo
-      ncoef2=ibeta
-      do i=1,ncoef2
-         wcoef2(i)=0.0d0
-      enddo
-c
-      do i=1,ncoef1
-         do j=1,imat
-            wcoef1(i)=wcoef1(i)+trix1(i,j)*gamma(j)
-         enddo
-      enddo
-c
-      do i=1,ncoef2
-         ishift=i+ialpha
-         do j=1,imat
-            wcoef2(i)=wcoef2(i)+trix1(ishift,j)*gamma(j)
-         enddo
-      enddo
-c
-   99 return
-      end
-c
-      subroutine factor(i,fac) 
+c  iflat=flat;
+      icompact = compact;
+      istiff = stiff;
+      ismooth = smfin;
+      c iorder == norder c - 1.333333333 0.666666666666 3 0 3 c c-- peaked kernel c iflat
+          = 'noflat' c icompact = 'compact' c istiff = 'stiff' c ismooth = 'sminf' c iorder
+          = 'norder' c stiff = 0. c wrstf = 2. c ismw = 3 c inor = 0 c idimf
+          = 2 c c-- 4rth order(sl) c iflat = 'noflat' c icompact = 'compact' c istiff
+          = 'stiff' c ismooth = 'sminf' c iorder = 'norder' c stiff = 0. c wrstf = 1.999999 c ismw
+          = 3 c inor = 2 c idimf = 2 c c-- yet another kernel(si01)
+      c iflat = 'flat' c icompact = 'compact' c istiff = 'stiff' c ismooth = 'smfin' c iorder
+          = 'norder' c stiff = 0.0 c wrstf = 2. c ismw = 3 c inor = 2 c idimf
+          = 2 c c-- another kernel(sk) iflat = 'flat' icompact = 'compact' istiff = 'stiff' ismooth
+          = 'smfin' iorder = 'norder' stiff = -1.75 wrstf = 0.3 ismw = 4 inor = 0 idimf
+          = 2 c c-- classic kernel c iflat = 'flat' c icompact = 'compact' c istiff
+          = 'stiff' c ismooth = 'smfin' c iorder = 'norder' c stiff = -10. / 7. c wrstf
+          = 0.66666666666666666666 c ismw = 3 c inor = 0 c idimf
+          = 2 c c-- Compute Size of Matrix c imat = 0 if (iflat(1 : 4).eq.'flat') then imat
+          = imat + 2 end if if (icompact(1 : 7).eq.'compact') then imat
+          = imat + 1 end if if (istiff(1 : 5).eq.'stiff') then imat
+          = imat + 1 end if if (iorder(1 : 6).eq.'norder') then imat
+          = imat + 1 + inor / 2 end if if (ismooth(1 : 5).eq.'sminf') then imat
+          = imat * 2 end if if (ismooth(1 : 5).eq.'smfin') then imat
+          = imat + ismw end if c c-- Compute number of alphas and betas c ibeta
+          = int(imat / 2.d0) ialpha = imat - ibeta ialph1 = ialpha + 1 c c-- Compute Matrix c irow
+          = 1 c c-- Flatness c if (iflat(1 : 4).eq.'flat') then do icol = 1,
+        ialpha if (icol.eq .2) then trix(irow, icol) = 1.d0 else trix(irow, icol)
+        = 0.d0 end if enddo do icol = ialph1,
+        imat trix(irow, icol) = 0.d0 enddo gamma(irow) = 0.d0 irow = irow + 1 do icol = 1,
+        ialpha trix(irow, icol) = 0.d0 enddo do icol = ialph1,
+        imat ibetr = ibeta + icol - imat - 1 trix(irow, icol)
+        = (ibetr) * (2 * *(ibetr - 1)) enddo gamma(irow) = 0.d0 irow
+        = irow + 1 end if c c-- Compactness c if (icompact(1 : 7).eq.'compact') then do icol = 1,
+        ialpha trix(irow, icol) = 0.d0 enddo do icol = ialph1,
+        imat ibetr = icol + ibeta - imat - 1 trix(irow, icol) = 2 * *(ibetr)enddo gamma(irow)
+        = 0.d0 irow = irow + 1 end if c c-- Stiffness c if (istiff(1 : 5).eq.'stiff') then do icol
+        = 1,
+        ialpha trix(irow, icol) = (icol - 1) * ((wrstf) * *(icol - 2)) enddo do icol = ialph1,
+        imat trix(irow, icol) = 0.d0 enddo gamma(irow) = stiff irow
+        = irow + 1 end if c c-- Smoothness c if (ismooth(1 : 5).eq.'sminf') then ismrow
+        = irow + ialpha - 1 do irowc = irow,
+        ismrow intemp = irowc - irow do icol = 1,
+        ialpha if (icol.le.intemp) then trix(irowc, icol) = 0.d0 else call factor(icol - 1, fac1)
+      call factor(icol - intemp - 1, fac2) trix(irowc, icol)
+          = fac1 / fac2 end if enddo do icol
+          = ialph1,
+          imat icltmp = icol - ialpha ifac
+          = icltmp - intemp - 1 if (icltmp.le.intemp) then trix(irowc, icol)
+          = 0.d0 else call factor(icltmp - 1, fac1)
+      call factor(ifac, fac2) trix(irowc, icol)
+          = -1.d0 * fac1 / fac2 end if enddo gamma(irowc)
+          = 0.d0 enddo irow = irow + ialpha end if c if (ismooth(1 : 5).eq.'smfin') then ismrow
+          = irow + ismw - 1 do irowc = irow,
+                       ismrow intemp = irowc - irow do icol = 1,
+                       ialpha if (icol.le.intemp) then trix(irowc, icol) = 0.d0 else ifac
+                       = icol - intemp - 1 call factor(icol - 1, fac1)
+      call factor(ifac, fac2) trix(irowc, icol) = fac1 / fac2 end if enddo do icol = ialph1,
+                                          imat icltmp = icol - ialpha ifac
+                                          = icltmp - intemp
+                                            - 1 if (icltmp.le.intemp) then trix(irowc, icol)
+                                          = 0.d0 else call factor(icltmp - 1, fac1)
+      call factor(ifac, fac2) trix(irowc, icol)
+          = -1.d0 * fac1 / fac2 end if enddo gamma(irowc)
+          = 0.d0 enddo irow
+          = irow + ismw end if c c-- Accuracy c if (iorder(1 : 6).eq.'norder') then inorow
+          = irow + inor / 2 if (idimf.eq .1) then geotemp
+          = 2.0d0 else geotemp
+          = 1.0d0 end if do irowc
+          = irow,
+          inorow intemp = 2 * (irowc - irow) do icol = 1,
+                 ialpha trix(irowc, icol) = (geotemp / (icol + intemp + idimf - 1)) enddo do icol
+                 = ialph1,
+                 imat icltmp = icol - ialpha twofix
+                 = ((2 * *(icltmp + intemp + idimf - 1)) - 1.d0) trix(irowc, icol)
+                 = (geotemp / (icltmp + intemp + idimf - 1))
+                   * twofix enddo if (irowc.eq.irow) then gamma(irowc)
+                 = 1.0d0 / idimf else gamma(irowc) = 0.0d0 end if enddo irow
+                 = irow + inor / 2 end if c c-- Invert Matrix by Gauss - Jordan Reduction c c do i
+                 = 1,
+                 irow do j = 1,
+                 imat if (i.eq.j) then trix1(i, j) = 1.d0 else trix1(i, j)
+                 = 0.d0 end if enddo enddo do i = 1,
+                 irow if (trix(i, i).ne .0.d0) then go to 220 else j
+                 = i + 1 210 continue if (trix(j, i).ne .0.d0) then do itemp = 1,
+                 imat temp = trix(i, itemp) trix(i, itemp) = trix(j, itemp) trix(j, itemp)
+                 = temp temp = trix1(i, itemp) trix1(i, itemp) = trix1(j, itemp) trix1(j, itemp)
+                 = temp enddo goto 220 else j
+                 = j
+                   + 1 if (j.gt.imat) then write(6, *) 'singular matrix' stop end if go to 210 end
+                   if end if 220 continue sub
+                 = trix(i, i) do idiv = 1,
+                 imat trix1(i, idiv) = trix1(i, idiv) / sub trix(i, idiv)
+                 = trix(i, idiv) / sub enddo do isub = 1,
+                 irow if (isub.ne.i) then sub0 = trix(isub, i) do irun = 1,
+                 imat sub1 = sub0 * trix1(i, irun) trix1(isub, irun) = trix1(isub, irun) - sub1 sub
+                 = sub0 * trix(i, irun) trix(isub, irun)
+                 = trix(isub, irun)
+                   - sub enddo end if enddo enddo c c-- Compute coefficients c ncoef1
+                 = ialpha do i = 1,
+                 ncoef1 wcoef1(i) = 0.0d0 enddo ncoef2 = ibeta do i = 1,
+                 ncoef2 wcoef2(i) = 0.0d0 enddo c do i = 1, ncoef1 do j = 1,
+                 imat wcoef1(i) = wcoef1(i) + trix1(i, j) * gamma(j)
+      enddo enddo c do i = 1, ncoef2 ishift = i + ialpha do j = 1,
+                       imat wcoef2(i) = wcoef2(i) + trix1(ishift, j) * gamma(j)
+      enddo enddo c 99 return end c subroutine factor(i, fac)
       implicit double precision (a-h,o-z)
       fac=1.d0
       do j=1,i

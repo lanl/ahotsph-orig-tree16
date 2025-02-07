@@ -2,11 +2,17 @@
 #define _RingDOTh
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
-void Ring(void *bptr, int bsize, int bnobj,
-     void *optr, int osize, int onobj, int oused, 
-     void initf(void *, void *), void interactf(void *, void *, int, int));
+void Ring(void *bptr,
+          int bsize,
+          int bnobj,
+          void *optr,
+          int osize,
+          int onobj,
+          int oused,
+          void initf(void *, void *),
+          void interactf(void *, void *, int, int));
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

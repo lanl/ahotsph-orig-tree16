@@ -443,7 +443,7 @@ c..   nse solver plus weak interactions......................
 c..   evaluate rates and put in sig array
          call rate(t9,rho,dtstar)
 
-         call screen(t9,rho)
+      call screen(t9, rho)
 
 cccccccccccccccccccccc
 
@@ -659,5 +659,3 @@ c     I'm guessing in original that was unnecessary since global array
       return
 
       end
-
-

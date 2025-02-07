@@ -2,7 +2,7 @@
 #define _FILESdotH
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 int fexists(const char *name);
 int fexists_and_unlink(const char *name);
@@ -15,4 +15,3 @@ int ForceStop(void);
 #endif /* __cplusplus */
 
 #endif
-

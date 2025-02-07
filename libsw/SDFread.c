@@ -1,20 +1,22 @@
+#include "SDFread.h"
+
+#include <math.h>
+#include <stdarg.h>
+#include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <stddef.h>
-#include <stdarg.h>
-#include "mpmy.h"
-#include "SDF.h"
+
 #include "Assert.h"
-#include "bigmalloc.h"
 #include "Msgs.h"
+#include "SDF.h"
+#include "bigmalloc.h"
 #include "error.h"
-#include "verify.h"
-#include "SDFread.h"
 #include "gc.h"
+#include "mpmy.h"
 #include "singlio.h"
 #include "timers.h"
+#include "verify.h"
 
 #define MAXNAMES 64
 
@@ -26,10 +28,12 @@ char *SDFread_datafile = "datafile";
 char *SDFread_hdrfile = "hdrfile";
 char *SDFread_npart = "npart";
 
-SDF *SDFread(SDF *csdfp, void **btabp, int *gnobjp, int *nobjp, 
-	    int stride,
-	    /* char *name, offset_t offset, int *confirm */...)
-{
+SDF *SDFread(SDF *csdfp,
+             void **btabp,
+             int *gnobjp,
+             int *nobjp,
+             int stride,
+             /* char *name, offset_t offset, int *confirm */...) {
     va_list ap;
     char name[256];
     int start;
@@ -48,98 +52,94 @@ SDF *SDFread(SDF *csdfp, void **btabp, int *gnobjp, int *nobjp,
 
     EnableTimer(&SDFreadTm, "SDFread");
     StartTimer(&SDFreadTm);
-    
-    if( !SDFread_datafile || !SDFhasname(SDFread_datafile, csdfp) ){
-	sdfp = csdfp;
-	SinglWarning("SDFread: Looking for data in 'control' file\n");
-	Nfiles = 1;
-    }else{
-	sdfp = NULL;
-	Nfiles = SDFnrecs(SDFread_datafile, csdfp);
-	if( Nfiles > MPMY_Nproc() || Nfiles < 0){
-	    SinglError("Sorry, bad Nfiles (%d)!\n", Nfiles);
-	}
+
+    if (!SDFread_datafile || !SDFhasname(SDFread_datafile, csdfp)) {
+        sdfp = csdfp;
+        SinglWarning("SDFread: Looking for data in 'control' file\n");
+        Nfiles = 1;
+    } else {
+        sdfp = NULL;
+        Nfiles = SDFnrecs(SDFread_datafile, csdfp);
+        if (Nfiles > MPMY_Nproc() || Nfiles < 0) {
+            SinglError("Sorry, bad Nfiles (%d)!\n", Nfiles);
+        }
     }
-       
+
     /* Pick out which file in the control file will be ours. */
     /* and which "section" of the file. */
-    procs_per_file = MPMY_Nproc()/Nfiles;
-    Verify(procs_per_file*Nfiles == MPMY_Nproc());
-    myfile = MPMY_Procnum()/procs_per_file;
-    mysection = MPMY_Procnum()%procs_per_file;
-    
-    if( sdfp == NULL ){
-	VerifySX(0==SDFseekrdvecs(csdfp, 
-				 SDFread_datafile, myfile, 1, name, sizeof(name),
-				 NULL),
-		SinglShout("%s", SDFerrstring));
-	if( SDFread_hdrfile )
-	    SDFgetstringOrDefault(csdfp, SDFread_hdrfile, hdrname, sizeof(hdrname), "");
-	else
-	    hdrname[0] = '\0';
+    procs_per_file = MPMY_Nproc() / Nfiles;
+    Verify(procs_per_file * Nfiles == MPMY_Nproc());
+    myfile = MPMY_Procnum() / procs_per_file;
+    mysection = MPMY_Procnum() % procs_per_file;
 
-	/* This was moved from above where it used name unitialized */
-	if (hdrname[0] && SDFissdf(name) ) {
-	    SinglWarning("Superfluous headerfile %s ignored\n", hdrname);
-	    hdrname[0] = '\0';
-	}
-	VerifySX(sdfp = SDFopen(hdrname, name),SinglShout("%s", SDFerrstring));
-    }else{
-	strncpy(name, "<SDF file>", sizeof(name));
+    if (sdfp == NULL) {
+        VerifySX(0 == SDFseekrdvecs(csdfp, SDFread_datafile, myfile, 1, name, sizeof(name), NULL),
+                 SinglShout("%s", SDFerrstring));
+        if (SDFread_hdrfile)
+            SDFgetstringOrDefault(csdfp, SDFread_hdrfile, hdrname, sizeof(hdrname), "");
+        else
+            hdrname[0] = '\0';
+
+        /* This was moved from above where it used name unitialized */
+        if (hdrname[0] && SDFissdf(name)) {
+            SinglWarning("Superfluous headerfile %s ignored\n", hdrname);
+            hdrname[0] = '\0';
+        }
+        VerifySX(sdfp = SDFopen(hdrname, name), SinglShout("%s", SDFerrstring));
+    } else {
+        strncpy(name, "<SDF file>", sizeof(name));
     }
 
-    if( SDFbyteorder(sdfp) == 0 ){
-	int swap;
-	/* The data/hdr file itself doesn't specify a byte order. */
-	SDFgetintOrDefault(csdfp, "swapbytes", &swap, 0);
-	if( swap )
-	    SDFswap(sdfp);
-	/* If there's no byteorder specified, then it won't swap */
+    if (SDFbyteorder(sdfp) == 0) {
+        int swap;
+        /* The data/hdr file itself doesn't specify a byte order. */
+        SDFgetintOrDefault(csdfp, "swapbytes", &swap, 0);
+        if (swap)
+            SDFswap(sdfp);
+        /* If there's no byteorder specified, then it won't swap */
     }
-    
-    if( SDFread_npart && SDFgetint(sdfp, SDFread_npart, &gnobj) ){
-	/* Hopefully calling va_start and va_end in here won't disturb */
-	/* the real loop over arguments below... */
-	va_start(ap, stride);
-	names[0] = va_arg(ap, char *);
-	gnobj = SDFnrecs(names[0], sdfp);
-	va_end(ap);
-	if( MPMY_Procnum() == 0 ){
-	    SinglShout("%s does not have an \"%s\".\n", name, SDFread_npart);
-	    SinglShout("Guessing %s=%d from SDFnrecs(., %s)\n", 
-		       SDFread_npart, gnobj, names[0]);
-	}
+
+    if (SDFread_npart && SDFgetint(sdfp, SDFread_npart, &gnobj)) {
+        /* Hopefully calling va_start and va_end in here won't disturb */
+        /* the real loop over arguments below... */
+        va_start(ap, stride);
+        names[0] = va_arg(ap, char *);
+        gnobj = SDFnrecs(names[0], sdfp);
+        va_end(ap);
+        if (MPMY_Procnum() == 0) {
+            SinglShout("%s does not have an \"%s\".\n", name, SDFread_npart);
+            SinglShout("Guessing %s=%d from SDFnrecs(., %s)\n", SDFread_npart, gnobj, names[0]);
+        }
     }
-    
+
     NobjInitial(gnobj, procs_per_file, mysection, &nobj, &start);
     btab = Calloc(nobj, stride);
-    Msgf(("Proc %d starting at %d in file, reading %d of %d\n",
-	  MPMY_Procnum(), start, nobj, gnobj));
+    Msgf(
+        ("Proc %d starting at %d in file, reading %d of %d\n", MPMY_Procnum(), start, nobj, gnobj));
 
     nnames = 0;
     va_start(ap, stride);
-    while(( names[nnames] = va_arg(ap, char *)) != NULL ){
-	assert(nnames < MAXNAMES);
-	addrs[nnames] = va_arg(ap, int) + (char *)btab;
-	confirm = va_arg(ap, int *);
-	if( !SDFhasname(names[nnames], sdfp) ){
-	    *confirm = 0;
-	    Msgf(("SDF file does not have %s\n", names[nnames]));
-	    continue;
-	}else{
-	    *confirm = 1;
-	}
-	starts[nnames] = start;
-	nobjs[nnames] = nobj;
-	strides[nnames] = stride;
-	nnames++;
+    while ((names[nnames] = va_arg(ap, char *)) != NULL) {
+        assert(nnames < MAXNAMES);
+        addrs[nnames] = va_arg(ap, int) + (char *)btab;
+        confirm = va_arg(ap, int *);
+        if (!SDFhasname(names[nnames], sdfp)) {
+            *confirm = 0;
+            Msgf(("SDF file does not have %s\n", names[nnames]));
+            continue;
+        } else {
+            *confirm = 1;
+        }
+        starts[nnames] = start;
+        nobjs[nnames] = nobj;
+        strides[nnames] = stride;
+        nnames++;
     }
     va_end(ap);
-    
-    VerifyX(0==SDFseekrdvecsarr(sdfp, nnames,
-			   names, starts, nobjs, addrs, strides),
-	    Shout("%s", SDFerrstring));
-    
+
+    VerifyX(0 == SDFseekrdvecsarr(sdfp, nnames, names, starts, nobjs, addrs, strides),
+            Shout("%s", SDFerrstring));
+
     *nobjp = nobj;
     *gnobjp = nobj;
     MPMY_Combine(nobjp, gnobjp, 1, MPMY_INT, MPMY_SUM);
@@ -148,8 +148,8 @@ SDF *SDFread(SDF *csdfp, void **btabp, int *gnobjp, int *nobjp,
     *btabp = btab;
     StopTimer(&SDFreadTm);
     OutputTimer(&SDFreadTm, singlPrintf); /* global sync and sets timer->max */
-    singlPrintf("read speed %.0f kb/s\n", gnobj*nnames*sizeof(float)/(1000.0*SDFreadTm.max));
+    singlPrintf("read speed %.0f kb/s\n",
+                gnobj * nnames * sizeof(float) / (1000.0 * SDFreadTm.max));
     DisableTimer(&SDFreadTm);
     return sdfp;
 }
-

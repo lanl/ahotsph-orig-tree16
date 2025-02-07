@@ -1,5 +1,5 @@
 /*
- * Copyright 1991, 1992, 1993 Michael S. Warren and John K. Salmon.  
+ * Copyright 1991, 1992, 1993 Michael S. Warren and John K. Salmon.
  *  All Rights Reserved.
  */
 
@@ -17,7 +17,7 @@ typedef struct {
     char *name;
     double min, max, mean;
 } Timer_t;
-    
+
 typedef struct {
     int enabled;
     unsigned int counter;
@@ -27,7 +27,7 @@ typedef struct {
 } Counter_t;
 
 #ifdef __cplusplus
-extern "C"{
+extern "C" {
 #endif /* __cplusplus */
 void StartTimer(Timer_t *t);
 void StopTimer(Timer_t *t);
@@ -58,10 +58,10 @@ int ReadCounter(Counter_t *c);
 #define EnableTimer(t, name) EnableCPUTimer(t, name)
 
 #ifdef NOTIMERS
-#define StartTimer(x) /**/
-#define StopTimer(x) /**/
+#define StartTimer(x)   /**/
+#define StopTimer(x)    /**/
 #define StartWCTimer(x) /**/
-#define StopWCTimer(x) /**/
+#define StopWCTimer(x)  /**/
 #endif
 
 #ifndef NOCOUNTERS

@@ -1,12 +1,11 @@
 #include <math.h>
 #include <stdio.h>
+
 #include "fastflpt.h"
 
-void
-main(int argc, char **argv)
-{
+void main(int argc, char **argv) {
     double s, c, x;
-    
+
     x = 1.0;
 
     sincos(x, &s, &c);

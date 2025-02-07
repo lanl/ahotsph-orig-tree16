@@ -1,37 +1,16 @@
-C********************************************************
-c
-c     Nadyozhin eos, obtained through Stan Woosley
-c
-c*******************************************************
-c
-      subroutine nados(tt,dd,zbar,abar,pel,eel,sel,
-     1                 ptot,etot,stot,dpt,det,dpd,ded,gamm,eta)
-      implicit real*8 (a-h,o-z)
-c..
-c..
-      double precision tt,dd,zbar,abar,pel,eel,sel
-c..
-c..communicate
-      common/arg/t,den,psi
-      common/iarg/lst,kentr,kpar,jurs,jkk
-      common/nz/nz
-      common/az/as,zs,scn
-      common/result/p,e,s,sk,pt,et,st
-      common/resel/pe,ee,se,sek,hpr
-      common/str/ppl,epl,spl,cp,gam,da,dpe,dse,dsp,beta
-      common/nzr/nzr
-c..
-c..t in 10**9 den in 10**7
-c     t   = tt * 1.0e-9
-      t   = tt 
-c     den = dd * 1.0d-7
-      den = dd 
-      as  = abar
-      zs  = zbar
-c..      scn = 10.063379
-      scn = 2.5 * log(abar)
-c
-c..get temp and density derivatives; get entropy; get number of pairs
+C ********************************************************c c Nadyozhin eos,
+    obtained through Stan Woosley c c *******************************************************c
+        subroutine
+        nados(tt, dd, zbar, abar, pel, eel, sel, 1 ptot, etot, stot, dpt, det, dpd, ded, gamm, eta)
+implicit real * 8(a - h, o - z) c..c..double precision tt, dd, zbar, abar, pel, eel,
+    sel c..c..communicate common / arg / t, den, psi common / iarg / lst, kentr, kpar, jurs,
+    jkk common / nz / nz common / az / as, zs, scn common / result / p, e, s, sk, pt, et,
+    st common / resel / pe, ee, se, sek, hpr common / str / ppl, epl, spl, cp, gam, da, dpe, dse,
+    dsp,
+    beta common / nzr / nzr c..c..t in 10 ** 9 den in 10 ** 7 c t = tt * 1.0e-9 t = tt c den
+    = dd * 1.0d - 7 den = dd as = abar zs = zbar c..scn = 10.063379 scn = 2.5 * log(abar)
+c c..get temp and density derivatives;
+get entropy; get number of pairs
 c-- we need the works
       nz    = 0
       jurs  = 0
@@ -1428,5 +1407,4 @@ c *** interpolation over temperature
   132 pt=pntt+vw5*(cu(15)*z2+cu(17)*vw3*z1) 
       et=entt+vw5*(cu(15)*y2+cu(17)*vw3*y1) 
       go to 133 
-      end 
-
+      end

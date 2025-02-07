@@ -13,17 +13,14 @@
 #define ITABLE 80000
 extern void Fortran(ktable)(void);
 /* common /table/ wij(0:itable), grwij(0:itable), dvtable */
-extern float Fortran(table)[ITABLE*2];
+extern float Fortran(table)[ITABLE * 2];
 
-main(int argc, char *argv)
-{
-  int i;
-  float *wij, *grwij;
+main(int argc, char *argv) {
+    int i;
+    float *wij, *grwij;
 
-  Fortran(ktable)();
-  wij = Fortran(table);
-  grwij = Fortran(table)+ITABLE+1;
-  for (i = 0; i < ITABLE; i++) {
-    printf("%5d %8g %8g\n", i, wij[i], grwij[i]);
-  }
+    Fortran(ktable)();
+    wij = Fortran(table);
+    grwij = Fortran(table) + ITABLE + 1;
+    for (i = 0; i < ITABLE; i++) { printf("%5d %8g %8g\n", i, wij[i], grwij[i]); }
 }
