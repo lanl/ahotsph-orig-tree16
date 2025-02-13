@@ -1,7 +1,8 @@
 /*
  * Copyright 1996 Michael S. Warren and John K. Salmon.  All Rights Reserved.
  */
-
+#ifndef physics_sph_dot_h
+#define physics_sph_dot_h
 #include "key.h"
 #include "ndim.h"
 #include "params.h"
@@ -499,3 +500,4 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x), double 
 void solven_(
     double *dtstar, double *temp, double *rho, double *y, double *deltah, int *rank, int *partid);
 void build_(int *rank, int *idbug, char *netrcfn);
+#endif

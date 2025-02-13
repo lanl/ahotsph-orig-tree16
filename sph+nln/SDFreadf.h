@@ -1,3 +1,4 @@
+#include "SDF.h"
 SDF *SDFreadf(char *name,
               void **btabp,
               int *gnobjp,
