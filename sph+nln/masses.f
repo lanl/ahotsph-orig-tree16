@@ -1,4 +1,4 @@
-subroutine masses(qq, w, itot, irank)
+      subroutine masses(qq,w,itot,irank)
       implicit none
 
 c..sets up the binding energies using Friedel's NETWInV file.
@@ -167,3 +167,6 @@ c..find them
 
       return
       end
+
+
+

@@ -40,23 +40,41 @@ c..limit fractional change in abundance:   tau(2)
       taug   = tau(1)
 
       if( nflag .eq. 0 )then
-c..   before leqs, so b(n)
-      is dY(n) / dt c..nuclei do n = 1,
-                                 itot - 3 if (y(n).gt.chimin) then fak
-                                 = b(n) if (fak.ne.0.0d0) then taug
-                                 = dabs(y(n) / fak) *delchi else taug
-                                 = tau(1) endif if (nucleu.eq.0 .or.taug.lt.tau(2)) then tau(2)
-                                 = taug nucleu = n endif endif enddo do n = itot - 2,
-                                 itot c if (y(n).gt.chimin * chimin) then
-                                 if (y(n).gt.chimin) then c..ignore neutrons on
-                                 explicit guess(it has large errors) fak
-                                 = b(n) if (fak.ne.0.0d0) then taug
-                                 = dabs(y(n) / fak) *delchi else taug
-                                 = tau(1) endif if (nucleu.eq.0 .or.taug.lt.tau(2)) then tau(2)
-                                 = taug nucleu = n endif endif enddo
+c..   before leqs, so b(n) is dY(n)/dt
+c..nuclei
+         do  n = 1, itot-3
+            if( y(n) .gt. chimin  )then
+               fak = b(n)
+               if( fak .ne. 0.0d0 )then
+                  taug  =  dabs( y(n)/fak )*delchi
+               else
+                  taug = tau(1)
+               endif
+               if( nucleu .eq. 0 .or. taug .lt. tau(2) )then
+                  tau(2) = taug
+                  nucleu = n
+               endif
+            endif
+         enddo
+         do  n = itot-2, itot
+c            if( y(n) .gt. chimin*chimin  )then
+            if( y(n) .gt. chimin )then
+c..ignore neutrons on explicit guess (it has large errors)
+               fak = b(n)
+               if( fak .ne. 0.0d0 )then
+                  taug  =  dabs( y(n)/fak )*delchi
+               else
+                  taug = tau(1)
+               endif
+               if( nucleu .eq. 0 .or. taug .lt. tau(2) )then
+                  tau(2) = taug
+                  nucleu = n
+               endif
+            endif
+         enddo
 
-                                                 else c..after leqs,
-                                 so b(n) is dY(n)
+      else
+c..   after leqs, so b(n) is dY(n)
          do  n = 1, itot-3
 c..   guess at best time step
             if( y(n) .gt. chimin )then
@@ -150,3 +168,4 @@ c      endif
 c      if(tin.gt.1.0d9)write(*,*)'dtnuc: found new dth =',dth1
       return
       end
+

@@ -1,5 +1,5 @@
 
-subroutine partfun(t9)
+      subroutine partfun(t9)
 
       implicit none
 

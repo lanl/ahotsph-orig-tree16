@@ -695,16 +695,32 @@ c..attempt to improve the solution.
         dxmax = max(dxmax,abs(x(i)))
 110    continue
 c..
-c..check the stopping criterion;
-end of iteration loop if (dd.lt.prec * dxmax)
-    go to 140 120 continue c..c..more than maxit iterations required.iflag
-    = -16 write(lp, 99999) iflag,
-    maxit go to 140 c..c..convergence rate unacceptably slow.130 iflag
-    = -17 conver = dd / d write(lp, 99998) iflag,
-          conver,
-          cgce c..c..the iterative process is terminated.140 errmax
-          = dd 150 continue 160 return end c..c..c..c..c..subroutine ma28dd(
-              n, a, licn, ivect, jvect, nz, icn, lenr, lenrl, 1 lenoff, ip, iq, iw1, iw, w1, iflag)
+c..check the stopping criterion; end of iteration loop
+       if (dd .lt. prec*dxmax) go to 140
+120   continue
+c..
+c..more than maxit iterations required.
+      iflag = -16
+      write (lp,99999) iflag,maxit
+      go to 140
+c..
+c..convergence rate unacceptably slow.
+130   iflag = -17
+      conver = dd/d
+      write (lp,99998) iflag,conver,cgce
+c..
+c..the iterative process is terminated.
+140   errmax = dd
+150   continue
+160   return
+      end
+c..
+c..
+c..
+c..
+c..
+      subroutine ma28dd(n,a,licn,ivect,jvect,nz,icn,lenr,lenrl,
+     1                  lenoff,ip,iq,iw1,iw,w1,iflag)
 c      include 'implno.dek'
 c..
 c..this subroutine need never be called by the user directly.
@@ -825,34 +841,29 @@ c..
        go to 170
 160    a(midpt) = a(midpt) + aa
 c..
-c..set flag for duplicate elements;
-end of big loop iflag = n
-                        + 1 170 continue c..c..reset icn array and zero elements in l
-                              / u but not in a.get max a element 180 w1
-    = zero do 200 i = 1,
-                idisp2 if (icn(i).lt.0) go to 190 a(i) = zero go to 200 190 icn(i) = -icn(i) w1
-                = max(w1, abs(a(i))) 200 continue return end c..c..c..c..c..subroutine
-                  ma30ad(nn,
-                         icn,
-                         a,
-                         licn,
-                         lenr,
-                         lenrl,
-                         idisp,
-                         ip,
-                         iq,
-                         1 irn,
-                         lirn,
-                         lenc,
-                         ifirst,
-                         lastr,
-                         nextr,
-                         lastc,
-                         2 nextc,
-                         iptr,
-                         ipc,
-                         u,
-                         iflag)
+c..set flag for duplicate elements; end of big loop
+       iflag = n + 1
+170   continue
+c..
+c..reset icn array  and zero elements in l/u but not in a. get max a element
+180   w1 = zero
+      do 200 i=1,idisp2
+       if (icn(i) .lt. 0) go to 190
+       a(i) = zero
+       go to 200
+190    icn(i) = -icn(i)
+       w1 = max(w1,abs(a(i)))
+200   continue
+      return
+      end
+c..
+c..
+c..
+c..
+c..
+      subroutine ma30ad(nn,icn,a,licn,lenr,lenrl,idisp,ip,iq,
+     1                  irn,lirn,lenc,ifirst,lastr,nextr,lastc,
+     2                  nextc,iptr,ipc,u,iflag)
 c      include 'implno.dek'
 c..
 c..
@@ -950,23 +961,24 @@ c..      permutation of the integers 1 to n.  on input to ma30a/ad, iq(j)
 c..      must be set to the column of a which is column j of p1*a*q1. on
 c..      output from ma30a/ad, the absolute value of iq(j) indicates the
 c..      column of a which is the j th in paq.  for rows, i say, in which
-c..      structural or numerical singularity is detected iq(i)
-is negated.c..c..irn is an integer array of length lirn used as workspace by ma30a
-            / ad.c..c..lirn is an integer variable.it should be greater than the c..largest number
-                  of non
-        - zeros in a diagonal block of p1 *a *q1 but c..need not be as large as licn.it is the
-              length of array irn
-    and c..should be large enough to hold the active part of any block,
-    c..plus some "elbow room",
-    the a posteriori adequacy of which can
-        c..be estimated by examining the size of common block variable irncp.c..c..lenc,
-    ifirst, lastr, nextr, lastc,
-    nextc c..are all integer arrays of length n which are used as workspace by c..ma30a
-            / ad.if nsrch is set to a value less than
-        or equal to n,
-    then c..arrays lastc and nextc are not referenced by ma30a / ad
-        and so can be c..dummied in the call to ma30a / ad.c..c..iptr,
-    ipc are integer arrays of length n; used as workspace by ma30a/ad.
+c..      structural or numerical singularity is detected iq(i) is negated.
+c..
+c..irn  is an integer array of length lirn used as workspace by ma30a/ad.
+c..
+c..lirn is an integer variable. it should be greater than the
+c..     largest number of non-zeros in a diagonal block of p1*a*q1 but
+c..     need not be as large as licn. it is the length of array irn and
+c..     should be large enough to hold the active part of any block,
+c..     plus some "elbow room", the  a posteriori  adequacy of which can
+c..     be estimated by examining the size of common block variable irncp.
+c..
+c..lenc,ifirst,lastr,nextr,lastc,nextc 
+c..     are all integer arrays of length n which are used as workspace by 
+c..     ma30a/ad.  if nsrch is set to a value less than or equal to n, then 
+c..     arrays lastc and nextc are not referenced by ma30a/ad and so can be 
+c..     dummied in the call to ma30a/ad.
+c..
+c..iptr,ipc are integer arrays of length n; used as workspace by ma30a/ad.
 c..
 c..u    is a real/double precision variable which should be set by the
 c..     user to a value between 0. and 1.0. if less than zero it is
@@ -3072,42 +3084,92 @@ c..
 c..if there is space to move up diagonal block portion of row go to 110
         if (iend-idisp(1) .ge. lenoff(iold)) go to 110
 c..
-c..in-line compress.;
-moves separated off - diagonal elements and untreated rows c..to front of storage.jnpos
-    = ibeg ilend = idisp(1) - 1 if (ilend.lt.ibeg) go to 190 do 90 j = ibeg,
-           ilend if (icn(j).eq.0) go to 90 icn(jnpos) = icn(j) a(jnpos) = a(j) jnpos
-           = jnpos + 1 90 continue idisp(1) = jnpos if (iend - jnpos.lt.lenoff(iold)) go to 190 ibeg
-           = licn + 1 c..c..reset pointers to the beginning of the rows.do 100 i = 2,
-           n iw1(i, 1) = iw1(i - 1, 1)
-                         + lenoff(i - 1) 100 continue c..c..row iold is now split into diag.and off
-                         - diag.parts.110 irowb
-           = iw1(iold, 1) leni = 0 irowe
-           = irowb + lenoff(iold)
-             - 1 c..c..backward scan of whole of row iold(in original matrix)
-                   .if (irowe.lt.irowb) go to 130 do 120 jj
-           = irowb,
-           irowe j = irowe - jj + irowb jold
-           = icn(j) c..c..iw(., 2) holds the inverse permutation to iq.;
-it was set to this in mc13d.jnew
-    = iw(jold, 2) c..c..if (jnew.lt.i1) then element is in off - diagonal block
-      and so is left in situ.if (jnew.lt.i1)
-              go to 120 c..c..element is in diagonal block and is moved to the end of the
-                  storage.iend
-    = iend - 1 a(iend) = a(j) icn(iend) = jnew ibeg = min0(ibeg, j) icn(j) = 0 leni
-    = leni + 1 120 continue lenoff(iold) = lenoff(iold) - leni 130 lenr(inew)
-    = leni 140 continue ip(i2) = -ip(i2) 150 continue c..c..resets ip(n)
-to positive value.c..idisp(2) is position of first element in diagonal blocks.ip(n)
-    = -ip(n) idisp(2)
-    = iend c..c..this compress used to move all off
-      - diagonal elements to the front of storage.if (ibeg.gt.licn) go to 230 jnpos
-    = ibeg ilend = idisp(1) - 1 do 160 j = ibeg,
-           ilend if (icn(j).eq.0) go to 160 icn(jnpos) = icn(j) a(jnpos) = a(j) jnpos
-           = jnpos + 1 160 continue c..c..idisp(1) is first position after last element of off
-             - diagonal blocks.idisp(1)
-           = jnpos go to 230 c..c..error return 170 if (lp.ne.0) write(lp, 180) numnz idisp(1)
-           = -1 go to 210 190 if (lp.ne.0) write(lp, 200) n idisp(1)
-           = -2 210 if (lp.ne.0) write(lp, 220) 230 return end c..c..c..c..c..subroutine
-              mc22ad(n, icn, a, nz, lenrow, ip, iq, iw, iw1)
+c..in-line compress.; moves separated off-diagonal elements and untreated rows 
+c..to front of storage.
+        jnpos = ibeg
+        ilend = idisp(1)-1
+        if (ilend .lt. ibeg) go to 190
+        do 90 j=ibeg,ilend
+         if (icn(j) .eq. 0) go to 90
+         icn(jnpos) = icn(j)
+         a(jnpos)   = a(j)
+         jnpos      = jnpos + 1
+90      continue
+        idisp(1) = jnpos
+        if (iend-jnpos .lt. lenoff(iold)) go to 190
+        ibeg = licn + 1
+c..
+c..reset pointers to the beginning of the rows.
+        do 100 i=2,n
+         iw1(i,1) = iw1(i-1,1) + lenoff(i-1)
+100     continue
+c..
+c..row iold is now split into diag. and off-diag. parts.
+110     irowb = iw1(iold,1)
+        leni  = 0
+        irowe = irowb+lenoff(iold)-1
+c..
+c..backward scan of whole of row iold (in original matrix).
+        if (irowe .lt. irowb) go to 130
+        do 120 jj=irowb,irowe
+         j    = irowe - jj + irowb
+         jold = icn(j)
+c..
+c..iw(.,2) holds the inverse permutation to iq.; it was set to this in mc13d.
+         jnew = iw(jold,2)
+c..
+c..if (jnew.lt.i1) then element is in off-diagonal block and so is left in situ.
+         if (jnew .lt. i1) go to 120
+c..
+c..element is in diagonal block and is moved to the end of the storage.
+         iend      = iend-1
+         a(iend)   = a(j)
+         icn(iend) = jnew
+         ibeg      = min0(ibeg,j)
+         icn(j)    = 0
+         leni      = leni + 1
+120     continue
+        lenoff(iold) = lenoff(iold) - leni
+130     lenr(inew)   = leni
+140    continue
+       ip(i2)        = -ip(i2)
+150   continue
+c..
+c..resets ip(n) to positive value.
+c..idisp(2) is position of first element in diagonal blocks.
+      ip(n)    = -ip(n)
+      idisp(2) = iend
+c..
+c..this compress used to move all off-diagonal elements to the front of storage.
+      if (ibeg .gt. licn) go to 230
+      jnpos = ibeg
+      ilend = idisp(1) - 1
+      do 160 j=ibeg,ilend
+       if (icn(j) .eq. 0) go to 160
+       icn(jnpos) = icn(j)
+       a(jnpos)   = a(j)
+       jnpos      = jnpos + 1
+160   continue
+c..
+c..idisp(1) is first position after last element of off-diagonal blocks.
+      idisp(1) = jnpos
+      go to 230
+c..
+c..error return
+170   if (lp .ne. 0) write(lp,180) numnz
+      idisp(1) = -1
+      go to 210
+190   if (lp .ne. 0) write(lp,200) n
+      idisp(1) = -2
+210   if (lp .ne. 0) write(lp,220)
+230   return
+      end
+c..
+c..
+c..
+c..
+c..
+      subroutine mc22ad(n,icn,a,nz,lenrow,ip,iq,iw,iw1)
 c      include 'implno.dek'
 c..
 c..reorders the off diagonal blocks based on the pivot information
@@ -3156,30 +3218,57 @@ c..set inverse permutation to iq in iw(.,2).
 30    continue
 c..
 c..permute a and icn in place, changing to new column numbers.
-c..main loop;
-each pass through this loop places a closed chain of column
-    c..indices in their new(and final) positions
-    ... this is recorded by c..setting the iw1 entry to zero so that any which are
-    subsequently c..encountered during this major scan can be bypassed.do 200 i
-    = 1,
-    nz iold = iw1(i) if (iold.eq.0) go to 200 ipos = i jval
-    = icn(i) c..c..if row iold is in same positions after permutation go to
-      150. if (iw(iold, 1).eq.0) go to 150 aval
-    = a(i) c..c..chain loop;
-each pass through this loop places one(permuted)
-column index c..in its final position..viz.ipos.c..newpos is the original position in a
-    / icn of the element to be placed c..in position
-          ipos.it is also the position of the next element in the chain.do 100 ichain
-    = 1,
-    nz newpos = ipos + iw(iold, 1) if (newpos.eq.i) go to 130 a(ipos) = a(newpos) jnum
-    = icn(newpos) icn(ipos) = iw(jnum, 2) ipos = newpos iold = iw1(ipos) iw1(ipos)
-    = 0 100 continue 130 a(ipos) = aval 150 icn(ipos)
-    = iw(jval, 2) 200 continue 1000 return end c..c..c..c..c..subroutine mc21a(
-        n, icn, licn, ip, lenr, iperm, numnz, iw)
-c include 'implno.dek' integer n, licn, ip(n), icn(licn), lenr(n), iperm(n), iw(n, 4),
-    numnz call
-    mc21b(n, icn, licn, ip, lenr, iperm, numnz, iw(1, 1), iw(1, 2), iw(1, 3), 1 iw(1, 4)) return end
-    c..c..c..c..c..subroutine mc21b(n, icn, licn, ip, lenr, iperm, numnz, pr, arp, cv, out)
+c..main loop; each pass through this loop places a closed chain of column 
+c..indices in their new (and final) positions ... this is recorded by
+c..setting the iw1 entry to zero so that any which are subsequently
+c..encountered during this major scan can be bypassed.
+      do 200 i=1,nz
+       iold = iw1(i)
+       if (iold .eq. 0) go to 200
+       ipos = i
+       jval = icn(i)
+c..
+c..if row iold is in same positions after permutation go to 150.
+       if (iw(iold,1) .eq. 0) go to 150
+       aval = a(i)
+c..
+c..chain loop; each pass through this loop places one (permuted) column index
+c..in its final position  .. viz. ipos.
+c..newpos is the original position in a/icn of the element to be placed
+c..in position ipos.  it is also the position of the next element in the chain.
+       do 100 ichain=1,nz
+        newpos = ipos + iw(iold,1)
+        if (newpos .eq. i) go to 130
+        a(ipos)   = a(newpos)
+        jnum      = icn(newpos)
+        icn(ipos) = iw(jnum,2)
+        ipos      = newpos
+        iold      = iw1(ipos)
+        iw1(ipos) = 0
+100    continue
+130    a(ipos)   = aval
+150    icn(ipos) = iw(jval,2)
+200   continue
+1000  return
+      end
+c..
+c..
+c..
+c..
+c..
+      subroutine mc21a(n,icn,licn,ip,lenr,iperm,numnz,iw)
+c      include 'implno.dek'
+      integer n,licn,ip(n),icn(licn),lenr(n),iperm(n),iw(n,4),numnz
+      call mc21b(n,icn,licn,ip,lenr,iperm,numnz,iw(1,1),iw(1,2),iw(1,3),
+     1           iw(1,4))
+      return
+      end
+c..
+c..
+c..
+c..
+c..
+      subroutine mc21b(n,icn,licn,ip,lenr,iperm,numnz,pr,arp,cv,out)
 c      include 'implno.dek'
 c..
 c..does a row permutation to make the diagonal zero free

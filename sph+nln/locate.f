@@ -1,4 +1,4 @@
-subroutine locate(xx, n, x, j)
+      subroutine locate(xx,n,x,j)
       implicit none
 c..   numerical receipes bisection algorithm
 c..   locate index j for variable x lying between j, j+1
