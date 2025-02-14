@@ -1,3 +1,7 @@
+For current build instructions, see the Wiki
+
+Old (kept for sentimental reasons):
+
 The treecode source is in ~mswarren/s/tree16
 
 cp -pr ~mswarren/s/tree16 to a suitable location.
