@@ -32,5 +32,5 @@ void* ptw(double* dt);
 void* calc_specific_heat();
 void* update_T();
 void* calc_tmelt();
-void* calc_shear_modulus();
+double* calc_shear_modulus(const double *temp, const double *tmelt);
 void* calc_flow_stress();
