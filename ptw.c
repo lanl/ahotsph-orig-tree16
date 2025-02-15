@@ -4,8 +4,23 @@ extern consts_t consts;
 extern params_t params;
 
 void* ptw(double* dt);
-void* calc_specific_heat();
-void* update_T();
+double* calc_specific_heat()
+{
+    return &(consts.Cv0);
+};
+void update_T(
+    double* temp, 
+    const double *stress, 
+    const double* edot, 
+    const double* dt,
+    const double* C_v,
+    const double* rho
+)
+{
+    const double edotcrit = 1.e-6;
+    int cond = (int)(*edot > edotcrit);
+    *temp += (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
+};
 void calc_tmelt()
 {
     return consts.TMelt0;

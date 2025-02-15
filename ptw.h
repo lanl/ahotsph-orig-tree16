@@ -29,8 +29,14 @@ consts_t consts;
 params_t params;
 
 void* ptw(double* dt);
-void* calc_specific_heat();
-void* update_T();
+double* calc_specific_heat();
+void *update_T(
+    double *temp,
+    const double *stress,
+    const double *edot,
+    const double *dt,
+    const double *C_v,
+    const double *rho);
 void* calc_tmelt();
 double* calc_shear_modulus(const double *temp, const double *tmelt);
 void* calc_flow_stress();
