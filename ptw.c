@@ -12,7 +12,12 @@ void calc_tmelt()
 };
 double* calc_shear_modulus(const double* temp, const double* tmelt)
 {
-    double shear = consts.G0 * (1.0 - consts.alpha * (*temp / *tmelt));
-    return &shear;
+    // Stein Shear Modulus
+    double aterm = 0.0;
+    double bterm = consts.sgB * (*temp - 300.0);
+    double gnow = consts.G0 * (1.0 + aterm - bterm);
+    if (*temp > *tmelt) gnow = 0.0;
+    if (gnow < 0.0) gnow = 0.0;
+    return &gnow;
 };
 void* calc_flow_stress();
