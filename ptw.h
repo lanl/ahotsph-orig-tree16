@@ -28,7 +28,12 @@ typedef struct consts_s {
 consts_t consts;
 params_t params;
 
-void* ptw(double* dt);
+double ptw(const double* dt,
+          const double* edot,
+          const double* temp,
+          const double* tmelt,
+          const double* shear,
+          const double* eps);
 double* calc_specific_heat();
 void *update_T(
     double *temp,

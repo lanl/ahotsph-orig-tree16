@@ -1,9 +1,70 @@
+#include<stdbool.h>
+#include<math.h>
 #include "ptw.h"
 
 extern consts_t consts;
 extern params_t params;
 
-void* ptw(double* dt);
+double ptw(const double* dt,
+          const double* edot,
+          const double* temp,
+          const double* tmelt,
+          const double* shear,
+          const double* eps) {
+    double scaled_stress = -999.0;
+    bool good = (params.sInf < params.s0) * (params.yInf < params.y0)
+                                     * (params.y0 < params.s0) * (params.yInf < params.sInf)
+                                     * (params.y1 > params.s0) * (params.y2 > consts.beta);
+    if (!good) {
+        printf("PTW bad val.");
+        return scaled_stress;
+    };
+
+    //convert to 1/s strain rate since PTW rate is in that unit
+    double edot_scaled = *edot * 1.0e6;
+    double t_hom = (*temp) / (*tmelt);
+    double afact = (4.0 / 3.0) * M_PI * consts.rho0 / consts.mAtomic;
+    double ainv = pow(afact, (1.0/3.0));
+    double xfact = sqrt(*shear / consts.rho0);
+    double xiDot = 0.5 * ainv * xfact * pow(6.022e29, (1.0/3.0)) * 1.0e4;
+    double argErf = params.kappa * t_hom * (params.lgamma + log(xiDot / (*edot)));
+    double saturation1 = params.s0 - (params.s0 - params.sInf) * erf(argErf);
+    double saturation2 = params.s0 * exp(consts.beta * (-params.lgamma + log((*edot) / xiDot)));
+    double tau_s;
+    if (saturation1 > saturation2) {
+        tau_s = saturation2;
+    } else {
+        tau_s = saturation1;
+    };
+    double ayield = params.y0 - (params.y0 - params.yInf) * erf(argErf);
+    double byield = params.y1 * exp(-params.y2 * (params.lgamma + log(xiDot / (*edot))));
+    double cyield = params.s0 * exp(-consts.beta * (params.lgamma + log(xiDot / (*edot))));
+    double dyield;
+    if (byield < cyield) {
+        dyield = byield;
+    } else {
+        dyield = cyield;
+    };
+    double tau_y;
+    if (ayield > dyield) {
+        tau_y = ayield;
+    } else {
+        tau_y = dyield;
+    };
+    const double small = 1.0e-10;
+    double scaled_stress = tau_s;
+    //?? - use the commented if block for this
+    int ind = (int)((params.p > small) * (fabs(tau_s - tau_y) > small));
+    double eArg1 = (params.p * (tau_s - tau_y) / (params.s0 - tau_y));
+    double eArg2 = ((*eps) * params.p * params.theta) / (params.s0 - tau_y) / (exp(eArg1) - 1.0);
+    double check_val = 1.0 - (1.0 - exp(-eArg1)) * exp(-eArg2);
+    if ((check_val <= 0.0) || (check_val != check_val)) printf("bad\n");
+    double theLog = log(check_val);
+    scaled_stress = (tau_s + (params.s0 - tau_y) * theLog / params.p);
+    int ind2 = (int)((params.p <= small) * tau_s > tau_y);
+    scaled_stress = (tau_s - (tau_s - tau_y) * exp(-(*eps) * params.theta / (tau_s - tau_y)));
+    return (scaled_stress * (*shear) * 2.0);
+};
 double* calc_specific_heat()
 {
     return &(consts.Cv0);
