@@ -3,8 +3,18 @@
 #include <math.h>
 #include <stdbool.h>
 
-extern consts_t consts;
-extern params_t params;
+const consts_t consts = {
+    .alpha = 0.2,
+    .beta = 0.33,
+    .mAtomic = 45.9,
+    .TMelt0 = 2110.0,
+    .rho0 = 4.419,
+    .Cv0 = 0.525e-5,
+    .G0 = 0.4,
+    .chi = 1.0,
+    .sgB = 6.44e-4
+};
+params_t params;
 
 double ptw(const double* dt,
            const double* edot,
@@ -77,7 +87,7 @@ void update_T(double* temp,
     int cond = (int)(*edot > edotcrit);
     *temp += (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
 };
-void calc_tmelt() { return consts.TMelt0; };
+double calc_tmelt() { return consts.TMelt0; };
 double* calc_shear_modulus(const double* temp, const double* tmelt) {
     // Stein Shear Modulus
     double aterm = 0.0;
