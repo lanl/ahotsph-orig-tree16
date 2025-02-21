@@ -1,10 +1,9 @@
-#include<stdlib.h>
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "ptw.h"
 
 int main(int argc, char* argv) {
-
     double dt = 0.1;
     params.theta = 0.1;
     params.p = 2.0;
