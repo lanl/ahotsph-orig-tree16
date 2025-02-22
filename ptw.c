@@ -5,13 +5,13 @@
 #include <stdio.h>
 
 const consts_t consts = {.alpha = 0.2,
-    .beta = 0.33,
-    .mAtomic = 45.9,
-    .TMelt0 = 2110.0,
-    .rho0 = 4.419,
-    .Cv0 = 0.525e-5,
-    .G0 = 0.4,
-    .chi = 1.0,
+                         .beta = 0.33,
+                         .mAtomic = 45.9,
+                         .TMelt0 = 2110.0,
+                         .rho0 = 4.419,
+                         .Cv0 = 0.525e-5,
+                         .G0 = 0.4,
+                         .chi = 1.0,
                          .sgB = 6.44e-4};
 params_t params;
 
@@ -35,18 +35,18 @@ double ptw(const double* edot,
     double ainv = pow(afact, (1.0 / 3.0));
     double xfact = sqrt(*shear / consts.rho0);
     double xiDot = 0.5 * ainv * xfact * pow(6.022e29, (1.0 / 3.0)) * 1.0e4;
-    double argErf = params.kappa * t_hom * (params.lgamma + log(xiDot / (*edot)));
+    double argErf = params.kappa * t_hom * (params.lgamma + log(xiDot / edot_scaled));
     double saturation1 = params.s0 - (params.s0 - params.sInf) * erf(argErf);
-    double saturation2 = params.s0 * exp(consts.beta * (-params.lgamma + log((*edot) / xiDot)));
+    double saturation2 = params.s0 * exp(consts.beta * (-params.lgamma + log(edot_scaled / xiDot)));
     double tau_s;
     if (saturation1 > saturation2) {
-        tau_s = saturation2;
-    } else {
         tau_s = saturation1;
+    } else {
+        tau_s = saturation2;
     };
     double ayield = params.y0 - (params.y0 - params.yInf) * erf(argErf);
-    double byield = params.y1 * exp(-params.y2 * (params.lgamma + log(xiDot / (*edot))));
-    double cyield = params.s0 * exp(-consts.beta * (params.lgamma + log(xiDot / (*edot))));
+    double byield = params.y1 * exp(-params.y2 * (params.lgamma + log(xiDot / edot_scaled)));
+    double cyield = params.s0 * exp(-consts.beta * (params.lgamma + log(xiDot / edot_scaled)));
     double dyield;
     if (byield < cyield) {
         dyield = byield;
