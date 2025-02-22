@@ -39,13 +39,12 @@ typedef struct state_s {
 extern const consts_t consts;
 extern params_t params;
 
-double ptw(const double* dt,
-           const double* edot,
+double ptw(const double* edot,
            const double* temp,
            const double* tmelt,
            const double* shear,
            const double* eps);
-double* calc_specific_heat();
+double calc_specific_heat();
 void update_T(double* temp,
                const double* stress,
                const double* edot,
@@ -53,5 +52,5 @@ void update_T(double* temp,
                const double* C_v,
                const double* rho);
 double calc_tmelt();
-double* calc_shear_modulus(const double* temp, const double* tmelt);
+double calc_shear_modulus(const double* temp, const double* tmelt);
 void* calc_flow_stress();

@@ -2,9 +2,9 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <stdio.h>
 
-const consts_t consts = {
-    .alpha = 0.2,
+const consts_t consts = {.alpha = 0.2,
     .beta = 0.33,
     .mAtomic = 45.9,
     .TMelt0 = 2110.0,
@@ -12,12 +12,10 @@ const consts_t consts = {
     .Cv0 = 0.525e-5,
     .G0 = 0.4,
     .chi = 1.0,
-    .sgB = 6.44e-4
-};
+                         .sgB = 6.44e-4};
 params_t params;
 
-double ptw(const double* dt,
-           const double* edot,
+double ptw(const double* edot,
            const double* temp,
            const double* tmelt,
            const double* shear,
@@ -62,7 +60,7 @@ double ptw(const double* dt,
         tau_y = dyield;
     };
     const double small = 1.0e-10;
-    double scaled_stress = tau_s;
+    scaled_stress = tau_s;
     //?? - use the commented if block for this
     int ind = (int)((params.p > small) * (fabs(tau_s - tau_y) > small));
     double eArg1 = (params.p * (tau_s - tau_y) / (params.s0 - tau_y));
@@ -76,7 +74,7 @@ double ptw(const double* dt,
     scaled_stress = (tau_s - (tau_s - tau_y) * exp(-(*eps) * params.theta / (tau_s - tau_y)));
     return (scaled_stress * (*shear) * 2.0);
 };
-double* calc_specific_heat() { return &(consts.Cv0); };
+double calc_specific_heat() { return (consts.Cv0); };
 void update_T(double* temp,
               const double* stress,
               const double* edot,
@@ -88,7 +86,7 @@ void update_T(double* temp,
     *temp += (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
 };
 double calc_tmelt() { return consts.TMelt0; };
-double* calc_shear_modulus(const double* temp, const double* tmelt) {
+double calc_shear_modulus(const double* temp, const double* tmelt) {
     // Stein Shear Modulus
     double aterm = 0.0;
     double bterm = consts.sgB * (*temp - 300.0);
@@ -97,6 +95,6 @@ double* calc_shear_modulus(const double* temp, const double* tmelt) {
         gnow = 0.0;
     if (gnow < 0.0)
         gnow = 0.0;
-    return &gnow;
+    return gnow;
 };
 void* calc_flow_stress();
