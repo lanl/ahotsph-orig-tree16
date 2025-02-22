@@ -25,6 +25,17 @@ typedef struct consts_s {
     const double sgB;
 } consts_t;
 
+typedef struct state_s {
+    double* stress;
+    double* strain;
+    double* strain_rate;
+    double* temp;
+    double* G;
+    double* rho;
+    double* time;
+    double* Tmelt;
+} state_t;
+
 extern const consts_t consts;
 extern params_t params;
 
