@@ -1,41 +1,42 @@
-#include <stdio.h>
-#include <math.h>
+#include "eos.h"
+
 #include <Msgs.h>
+#include <math.h>
+#include <stdio.h>
+
 #include "singlio.h"
 #include "units.h"
-#include "eos.h"
 
 #define MAX_ITER 200
 
 /* Need to change printf's to Msgfs or whatever */
 
-float newtraph(double xl, double xr, double prec, double (*f)(double x), 
-	     double (*df)(double x)) {
-    double xguess = 2.0*xl*xr/(xl+xr);
+float newtraph(double xl, double xr, double prec, double (*f)(double x), double (*df)(double x)) {
+    double xguess = 2.0 * xl * xr / (xl + xr);
     int i;
-   
-    if ((*f)(xl)*(*f)(xr) > 0.0) {
-	singlPrintf("Bisect: %1.1e and %1.1e do not bracket a root\n", xl, xr);
+
+    if ((*f)(xl) * (*f)(xr) > 0.0) {
+        singlPrintf("Bisect: %1.1e and %1.1e do not bracket a root\n", xl, xr);
         xguess = -99.0;
         return (float)xguess;
     }
 
-    for(i = 0; i <= MAX_ITER; i++) {
-	xguess = xguess - (*f)(xguess)/(*df)(xguess); /* Try Newton-Raphson */
+    for (i = 0; i <= MAX_ITER; i++) {
+        xguess = xguess - (*f)(xguess) / (*df)(xguess); /* Try Newton-Raphson */
 
-	if (xguess < xl || xguess > xr)
-	    xguess = (xl + xr) / 2.0; /* Fall back to bisection */
-    
-	if ( fabs((*f)(xguess)) < prec )
-	    break;
-	else if ((*f)(xl)*(*f)(xguess) < 0.0)
-	    xr = xguess;
-	else
-	    xl = xguess;
+        if (xguess < xl || xguess > xr)
+            xguess = (xl + xr) / 2.0; /* Fall back to bisection */
+
+        if (fabs((*f)(xguess)) < prec)
+            break;
+        else if ((*f)(xl) * (*f)(xguess) < 0.0)
+            xr = xguess;
+        else
+            xl = xguess;
     }
 
     if (i == MAX_ITER) {
-	singlPrintf("Bisect: max iterations exceeded\n");
+        singlPrintf("Bisect: max iterations exceeded\n");
         xguess = -99.0;
     }
 
@@ -46,25 +47,19 @@ float newtraph(double xl, double xr, double prec, double (*f)(double x),
 /* changed: these now need to be in cgs */
 #include "physics_sph.h"
 
-double uvst(double t) {
-    return 1.5*eos_n*(K_BOLTZ)*t + t*t*t*t*(A_RAD) - eos_u;
-}
+double uvst(double t) { return 1.5 * eos_n * (K_BOLTZ)*t + t * t * t * t * (A_RAD)-eos_u; }
 
 
-double duvst(double t) {
-    return 1.5*eos_n*(K_BOLTZ) + 4.0*t*t*t*(A_RAD);
-}
+double duvst(double t) { return 1.5 * eos_n * (K_BOLTZ) + 4.0 * t * t * t * (A_RAD); }
 
 /* pressure from different eos's */
 /* eta = rho/rho_0 */
 /* Schaefer et al. 2016, A&A */
-double liquid_eos (double k_bulk, double eta) {
-	return k_bulk * (eta - 1.0);
-}
+double liquid_eos(double k_bulk, double eta) { return k_bulk * (eta - 1.0); }
 
 /* Schaefer et al. 2016, A&A */
 double murnaghan_eos(double k_bulk, double n_M, double eta) {
-	return k_bulk / n_M * (pow (eta, n_M) - 1.0);
+    return k_bulk / n_M * (pow(eta, n_M) - 1.0);
 }
 
 /* possibly basalt? */
@@ -108,68 +103,66 @@ double murnaghan_eos(double k_bulk, double n_M, double eta) {
 //    m->cweib = 0.0;
 //}
 
-void tillotson_eos (double rho, double u, Material_t *m, double *pressure, double *cs) {
-	double PC = 0.; /* pressure, current */
-	double csC = 0.; /* sound speed, current */
-	double rho0m1 = 1. / m->rho0;
-	double rhom1 = 1. / rho;
-	double eta = rho * rho0m1;
-	double mu = eta - 1.;
-	double csmin = 0.25 * m->A * rho0m1;
-	double Pmin = 0.; /* set floor on pressure */
-	double c1 = u / (m->u0 * eta * eta);
-	double c2 = 1. / (c1 + 1.);
+void tillotson_eos(double rho, double u, Material_t *m, double *pressure, double *cs) {
+    double PC = 0.;  /* pressure, current */
+    double csC = 0.; /* sound speed, current */
+    double rho0m1 = 1. / m->rho0;
+    double rhom1 = 1. / rho;
+    double eta = rho * rho0m1;
+    double mu = eta - 1.;
+    double csmin = 0.25 * m->A * rho0m1;
+    double Pmin = 0.; /* set floor on pressure */
+    double c1 = u / (m->u0 * eta * eta);
+    double c2 = 1. / (c1 + 1.);
 
-	/* A. Brundage, 2013, 12th Hypervelocity Impact Symposium, 
-	 * Procedia Engineering, 58, 461-470 describes an implementation of this eos - CIE */
-	if (u > m->Eiv && eta < 1.) {
-		/* eq. 3, but there u> u_cv */
-		double d1 = m->rho0 * rhom1; /* = 1/eta ? */
-		double d2 = d1 - 1.;
-		double ex1 = (m->beta * d2 < 60) ? exp (- m->beta * d2) : 0.0;
-		double ex2 = (m->alpha * d2 * d2 < 60) ? exp (-m->alpha * d2 * d2) : 0.0;
-		*pressure = m->a * rho * u;
-		*pressure += ex2 * (m->b * rho * u * c2 + m->A * mu * ex1);
+    /* A. Brundage, 2013, 12th Hypervelocity Impact Symposium,
+     * Procedia Engineering, 58, 461-470 describes an implementation of this eos - CIE */
+    if (u > m->Eiv && eta < 1.) {
+        /* eq. 3, but there u> u_cv */
+        double d1 = m->rho0 * rhom1; /* = 1/eta ? */
+        double d2 = d1 - 1.;
+        double ex1 = (m->beta * d2 < 60) ? exp(-m->beta * d2) : 0.0;
+        double ex2 = (m->alpha * d2 * d2 < 60) ? exp(-m->alpha * d2 * d2) : 0.0;
+        *pressure = m->a * rho * u;
+        *pressure += ex2 * (m->b * rho * u * c2 + m->A * mu * ex1);
 
-		/* sound speed? */
-		*cs = m->b * u * (3. * c1 + 1.) * c2 * c2 + 2. * m->alpha * d2 * m->b * d1 * u * c2;
-		*cs += m->A * ex1 * ((2. * m->alpha * d2 + m->beta) * mu * d1 * rhom1 + rho0m1);
-		*cs = *cs * ex2 +  m->a * u;
-		*cs += *pressure * rhom1 * (m->a + m->b * c2 * c2 * ex2);
-		if (*cs < 0.) 
-			*cs = 0.;
-	}
+        /* sound speed? */
+        *cs = m->b * u * (3. * c1 + 1.) * c2 * c2 + 2. * m->alpha * d2 * m->b * d1 * u * c2;
+        *cs += m->A * ex1 * ((2. * m->alpha * d2 + m->beta) * mu * d1 * rhom1 + rho0m1);
+        *cs = *cs * ex2 + m->a * u;
+        *cs += *pressure * rhom1 * (m->a + m->b * c2 * c2 * ex2);
+        if (*cs < 0.)
+            *cs = 0.;
+    }
 
-	if (u < m->Ecv || eta >= 1.) {
-		/* eq. 2 */
-		PC = (m->a + m->b * c2) * rho * u + m->A * mu + m->B * mu * mu;
-		csC = m->a * u + rho0m1 * (m->A + 2. * m->B * mu) + m->b * u * (3. * c1 + 1.) * c2 * c2;
-		csC += PC * rhom1 * (m->a + m->b * c2 * c2);
+    if (u < m->Ecv || eta >= 1.) {
+        /* eq. 2 */
+        PC = (m->a + m->b * c2) * rho * u + m->A * mu + m->B * mu * mu;
+        csC = m->a * u + rho0m1 * (m->A + 2. * m->B * mu) + m->b * u * (3. * c1 + 1.) * c2 * c2;
+        csC += PC * rhom1 * (m->a + m->b * c2 * c2);
 
-		if (u > m->Eiv && u < m->Ecv && eta < 1) {
-			double e1 = m->Ecv - u;
-			double e2 = u - m->Eiv;
-			double e3 = 1. / (m->Ecv - m->Eiv);
-			/* eq. 5 */
-			*pressure = (e2 * *pressure + e1 * PC) * e3;
-			*cs = (e2 * *cs + e1 * csC) * e3;
-		} else {
-			*pressure = PC;
-			*cs = csC;
-		}
-	}
-	if (*cs < csmin)
-		*cs = csmin;
-	if (*pressure < Pmin) 
-		*pressure = Pmin;
-	*cs = sqrt (*cs);
-
+        if (u > m->Eiv && u < m->Ecv && eta < 1) {
+            double e1 = m->Ecv - u;
+            double e2 = u - m->Eiv;
+            double e3 = 1. / (m->Ecv - m->Eiv);
+            /* eq. 5 */
+            *pressure = (e2 * *pressure + e1 * PC) * e3;
+            *cs = (e2 * *cs + e1 * csC) * e3;
+        } else {
+            *pressure = PC;
+            *cs = csC;
+        }
+    }
+    if (*cs < csmin)
+        *cs = csmin;
+    if (*pressure < Pmin)
+        *pressure = Pmin;
+    *cs = sqrt(*cs);
 }
 
 /* Wikipedia on Anton-Schmidt equation of state */
 double anton_schmidt_eos(double k_bulk, double power_n, double eta) {
-	/* here, technically eta = Vol/Vol_0, but mass should be 
-	 * constant, so close enough */
-	return -k_bulk * pow (eta, power_n) * log (eta);
+    /* here, technically eta = Vol/Vol_0, but mass should be
+     * constant, so close enough */
+    return -k_bulk * pow(eta, power_n) * log(eta);
 }
-

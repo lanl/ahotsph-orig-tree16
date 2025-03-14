@@ -111,7 +111,8 @@ void *pqsort(sortresult_t *decompp, float (*weight)(const void *), Key_t (*getke
     assert(size > 0); /* otherwise it loops forever */
     while (p < q) {
         while (p < q && DestDecomp(p) == MPMY_Procnum()) { p += size; }
-        while (p < q && (q -= size, DestDecomp(q)) != MPMY_Procnum()) /* do nothing */;
+        while (p < q && (q -= size, DestDecomp(q)) != MPMY_Procnum()) /* do nothing */
+            ;
         if (p < q) {
             memcpy(tmp, p, size);
             memcpy(p, q, size);

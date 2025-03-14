@@ -991,7 +991,8 @@ int main(int argc, char *argv[]) {
                 /* Replace updated bodies */
                 r = SPHbtab;
                 for (q = SPHsinkbtab; q < SPHsinkbtab + SPHsinknobj; q++) {
-                    for (; KeyNEQ(r->key, q->key) && r < SPHbtab + SPHnobj; r++) /* NULL */;
+                    for (; KeyNEQ(r->key, q->key) && r < SPHbtab + SPHnobj; r++) /* NULL */
+                        ;
                     if (r->ident != q->ident) {
                         /* Keys can match if pos's are close enough */
                         for (; KeyNEQ(r->key, q->key) && r->ident != q->ident

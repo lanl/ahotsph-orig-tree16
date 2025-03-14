@@ -2,4 +2,3 @@
 
 /* number of terms for strain rate (epsilon-dot) tensor */
 #define SRTERMS 6
-
