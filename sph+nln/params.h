@@ -1,3 +1,5 @@
+#ifndef PARAMS_DOT_H
+#define PARAMS_DOT_H
 #include "SDF.h"
 #include "eos.h"
 #include "ndim.h"
@@ -117,6 +119,7 @@ typedef struct {
 typedef struct {
     float pos[NDIM];
     float vel[NDIM];
+    float acc[NDIM];
     float p[NDIM];
     float l[NDIM];
     float mass;
@@ -130,3 +133,5 @@ void print_initial_ctl(setup_params_t params);
 void read_absorb_bndry(SDF *sdfp, bndry_t *bndry);
 void print_absorb_bndry(bndry_t bndry);
 void set_material(SDF *sdfp, Material_t *mat);
+
+#endif /*PARAMS_DOT_H*/
