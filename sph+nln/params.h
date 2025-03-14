@@ -1,16 +1,18 @@
 #include "SDF.h"
 #include "ndim.h"
+#include "eos.h"
 
 #ifndef MAXCOEF
 #define MAXCOEF 16
 #endif
 
 typedef struct {
-    char name[256];          /* "datafile" */
-    char SPHdatafile[256];   /* "SPHdatafile" */
-    char template_name[256]; /* wind template */
-    char winddata_name[256]; /* "winddata_name" */
-    char outnamebase[256];
+    char name[256]; /* "datafile" */
+    char SPHdatafile[256]; /* "SPHdatafile" */
+	char template_name[256]; /* wind template */
+	char winddata_name[256]; /* "winddata_name" */
+	char outnamebase[256];
+	char defects_file[256]; /* sdf file with defects table */
     int timeout;
     int fail_if_slow;
     int do_restart;
@@ -30,6 +32,13 @@ typedef struct {
     int do_absorbing_bndry;
     int do_drag;
     int has_grav_data;
+	int do_strength;
+	int do_strength_test;
+	int do_plastic; /* include plasticity? 0 = perfectly elastic solid */
+	int make_brittle; /* add flaws to make solid break apart */
+	int defects_table_exists; /* switch to read in from table or create new flaws */
+	int Nflaws; /* set number of flaws in solid. should be ~ npart*ln(npart) */
+	int frac_model; /* 1=Weibull, 2=Mohr Coulomg, 3=1&2 */
     int windpartpershell;
     int old_winds;
     int const_winds;
@@ -40,9 +49,9 @@ typedef struct {
     int do_Bmax;
     int do_Arel;
     int nsteps;
-    int log_time;   /* if true, use dt \propto t */
-    int comov_eps;  /* if true, use comoving epsilon */
-    int save_first; /* save first step (for acc testing) */
+    int log_time;	/* if true, use dt \propto t */
+    int comov_eps;	/* if true, use comoving epsilon */
+    int save_first;	/* save first step (for acc testing) */
     int ntimer_detail;
     int exact_rho;
     int nbrcut_max;
@@ -51,21 +60,19 @@ typedef struct {
     int independent_dt;
     int dark_independent_dt;
     int default_nterms;
-    int tlow_cut;
-    int dt_short;
-    int dt_long;
-    int do_output;
-    int output_freq;
-    int short_output;
-    int timer_freq;
-    int image_freq;
-    int x_pixels;
-    int y_pixels;
-    int log_image;
+	int tlow_cut;
+	int dt_short;
+	int dt_long;
+	int do_output;
+	int output_freq;
+	int short_output;
+	int timer_freq;
+	int image_freq;
+	int x_pixels;
+	int y_pixels;
+	int log_image;
     int kernel_ncoef1;
     int kernel_ncoef2;
-    int poly_eos;
-    int limit_dt_on_acc;
     float new_h;
     float new_u;
     float r_inner;
@@ -78,13 +85,13 @@ typedef struct {
     float v_wind;
     float mdot_wind;
     float u_wind;
-    float eps; /* Plummer smoothing length */
-    float tol; /* MAC tolerance */
-               /* for big MAC, this is multiplied by M/(rsize*rsize) */
+    float eps;	/* Plummer smoothing length */
+    float tol;	/* MAC tolerance */
+		/* for big MAC, this is multiplied by M/(rsize*rsize) */
     float frac_tol;
     float CWfac;
     float SPHCWfac;
-    float dt;
+	float dt;
     float dark_dt;
     float comov_eps_epoch;
     float visc_alpha;
@@ -99,17 +106,17 @@ typedef struct {
     float fmassCF;
     float flenCF;
     float ftimeCF;
-    float dt_max;
-    float sort_tol;
+	float dt_max;
+	float sort_tol;
     double kernel_coef1[MAXCOEF];
     double kernel_coef2[MAXCOEF];
     float drag_coeff;
+    Material_t material;
 } setup_params_t;
 
-typedef struct {
+typedef struct{
     float pos[NDIM];
     float vel[NDIM];
-    float acc[NDIM];
     float p[NDIM];
     float l[NDIM];
     float mass;
@@ -118,7 +125,8 @@ typedef struct {
 
 extern setup_params_t params;
 
-void read_initial_ctl(SDF *sdfp, setup_params_t *params);
-void print_initial_ctl(setup_params_t params);
-void read_absorb_bndry(SDF *sdfp, bndry_t *bndry);
-void print_absorb_bndry(bndry_t bndry);
+void read_initial_ctl (SDF *sdfp, setup_params_t *params);
+void print_initial_ctl (setup_params_t params);
+void read_absorb_bndry (SDF *sdfp, bndry_t *bndry);
+void print_absorb_bndry (bndry_t bndry);
+void set_material (SDF *sdfp, Material_t *mat);

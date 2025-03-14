@@ -1,39 +1,40 @@
 #include <math.h>
-#include <stdio.h>
 #include <stdlib.h>
-
-#include "cool.h"
-#include "error.h"
-#include "fastflpt.h"
-#include "nrutil.h"
+#include <stdio.h>
 #include "physics_sph.h"
-#include "singlio.h"
-#include "timers.h"
-#include "units.h"
 #include "vop.h"
+#include "fastflpt.h"
+#include "timers.h"
+#include "error.h"
+#include "singlio.h"
+#include "nrutil.h"
+#include "units.h"
+#include "cool.h"
+#include "strength5-short.h"
+#include "strength.h"
 
 #ifndef M_1_PI
-#define M_1_PI 0.31830988618379067154
+#define	M_1_PI 0.31830988618379067154
 #endif
 #define NKERNEL_TABLE 80000
-#define MAX_INDEX (NKERNEL_TABLE + 2)
+#define MAX_INDEX (NKERNEL_TABLE+2)
 
 #define NO_UPDATE 2
 
 Counter_t SPHCnt, SPHrej, nbrMACCnt;
 
-static float dvtable;    /* == 0.0001 ... */
+static float dvtable; /* == 0.0001 ... */
 static float invdvtable; /* == 10000.0 ... */
 static float cnormk;
 static float wij[MAX_INDEX];
 static float grwij[MAX_INDEX];
 static float fmass[MAX_INDEX];
 static float fpoten[MAX_INDEX];
-static float Gamma;  /* = (float)(5.0/3.0);*/
-static float alpha;  /* = (float)1.0;*/
-static float beta;   /* = (float)2.5;*/
-static float epsil;  /* = (float)1e-2;*/
-static float heatf1; /* = (float)1.0;*/
+static float Gamma;/* = (float)(5.0/3.0);*/
+static float alpha;/* = (float)1.0;*/
+static float beta;/* = (float)2.5;*/
+static float epsil;/* = (float)1e-2;*/
+static float heatf1;/* = (float)1.0;*/
 static int ndim;
 static int Nobj;
 static int add_offset;
@@ -41,41 +42,63 @@ static float offset[NDIM];
 static float voffset[NDIM];
 static void (*bodyfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
 static void (*cellfunc)(SinkSPH *sink, hcell **src_vec, int *res, int n);
-float newtraph_tlo = 1.0e0;
-float newtraph_thi = 2.5e11;
-// extern int do_diffusion;
-// extern int do_cooling;
-// extern int do_burning;
 
-void SetSPHOffset(float *off, float *voff) {
+//extern int do_diffusion;
+//extern int do_cooling;
+//extern int do_burning;
+
+    void
+SetSPHOffset(float *off, float *voff)
+{
     VV(offset, = off);
     VV(voffset, = voff);
     add_offset = 1;
 }
 
-void UnSetSPHOffset(void) {
+    void
+UnSetSPHOffset(void)
+{
     VS(offset, = 0.0);
     VS(voffset, = 0.0);
     add_offset = 0;
 }
 
-void InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp) {
-    if (to == NULL) {
+    void 
+InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp)
+{
+	int i;
+    if( to == NULL ){
         SPHbody *bp = pp->ptr;
         if (from->isbody == NO_UPDATE)
             return;
         /* Must accumulate for periodic BC to work */
         /* Must initialize to zero appropriately */
         bp->rho += from->rho;
-        bp->du += from->du;     /* Why am I doing this? */
-        bp->du_r += from->du_r; /* Do I need to do anything else? */
+        bp->du += from->du;       /* Why am I doing this? */
+        bp->du_r += from->du_r;   /* Do I need to do anything else? */
+		/* strength quantities. which are needed? */
+		if (params.do_strength) {
+		for (i = 0; i < NDIM*NDIM; i++) {
+	//		bp->data.strengthbody.stress[i] = from->strengthbody.stress[i];
+			bp->data.strengthbody.dstressdt[i] += from->strengthbody.dstressdt[i];
+			//bp->data.strengthbody.dstressdt[i] = 0.0;
+		}
+		for (i = 0; i < SRTERMS; i++)
+			bp->data.strengthbody.dstraindt[i] += from->strengthbody.dstraindt[i];
+		//bp->data.strengthbody.rotation[i] += from->strengthbody.rotation[i];
+		bp->data.strengthbody.actv_defects += from->strengthbody.actv_defects;
+		bp->data.strengthbody.vonMises = from->strengthbody.vonMises;
+		bp->data.strengthbody.crack_len = from->strengthbody.crack_len;
+		bp->data.strengthbody.is_strength = from->strengthbody.is_strength;
+		bp->data.strengthbody.dmg = from->strengthbody.dmg;
+		}
         bp->drho_dt += from->drho_dt;
         bp->udot += from->udot;
         bp->nbrs += from->nbrs;
         VV(bp->acc, += from->M1);
         VV(bp->lvel, += from->lvel);
         bp->nterms += from->nterms;
-        bp->min_nbr_dt = from->min_nbr_dt; /* set dt to min of nbrs dt */
+        bp->min_nbr_dt = from->min_nbr_dt;   /* set dt to min of nbrs dt */
         if (from->interactions != Nobj)
             Error("Ninteract is %d, should be %d\n", from->interactions, Nobj);
         return;
@@ -117,8 +140,27 @@ void InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp) {
         to->temp = bp->temp;
         to->du = bp->du;
         to->u_r = bp->u_r;
-        to->du_r = bp->du_r; /* Or = (float)0.0; ? */
+        to->du_r = bp->du_r;  /* Or = (float)0.0; ? */
         to->D = bp->D;
+		/* strength quantities. which are needed? */
+		if (params.do_strength) {
+		for (i = 0; i < NDIM*NDIM; i++) {
+			to->strengthbody.stress[i] = bp->data.strengthbody.stress[i];
+			//Brandon sets this to zero. won't this prevent any change in stress??
+			//to->strengthbody.dstressdt[i] = bp->data.strengthbody.dstressdt[i];
+			to->strengthbody.dstressdt[i] = 0.0;
+		}
+		for (i = 0; i < SRTERMS; i++) {
+			to->strengthbody.dstraindt[i] = 0.0;//bp->data.strengthbody.strain[i];
+            to->strengthbody.strain[i] = bp->data.strengthbody.strain[i];
+        }
+		//to->strengthbody.rotation[i] = 0.0;
+		to->strengthbody.actv_defects = bp->data.strengthbody.actv_defects;
+		to->strengthbody.vonMises = bp->data.strengthbody.vonMises;
+		to->strengthbody.crack_len = bp->data.strengthbody.crack_len;
+		to->strengthbody.is_strength = bp->data.strengthbody.is_strength;
+		to->strengthbody.dmg = bp->data.strengthbody.dmg;
+		}
     }
 
     if (add_offset) {
@@ -131,9 +173,12 @@ void InheritSPH(const SinkSPH *from, SinkSPH *to, hcell *pp) {
     } else {
         to->interactions = 0;
     }
+
 }
 
-void SPHgate(SinkSPH *sink, hcell **src_vec, int *result, int n) {
+    void
+SPHgate(SinkSPH *sink, hcell **src_vec, int *result, int n)
+{
     int i;
 
     if (sink->isbody == NO_UPDATE) {
@@ -144,16 +189,21 @@ void SPHgate(SinkSPH *sink, hcell **src_vec, int *result, int n) {
         cellfunc(sink, src_vec, result, n);
 }
 
-void nbrMAC(SinkSPH *sink, hcell **source_vec, int *result, int n) {
+    void
+nbrMAC(SinkSPH *sink, hcell **source_vec, int *result, int n)
+{
     int i;
 
-    for (i = 0; i < n; i++) { /* This is about 20% less efficient */
+    for (i = 0; i < n; i++) {	/* This is about 20% less efficient */
         result[i] = MAC_SPLIT_SINK;
     }
 }
 
 
-void macRho(SinkSPH *sink, hcell **source_vec, int *result, int n) {
+/* calculate kernel table and initial rate of change terms */
+    void
+macRho(SinkSPH *sink, hcell **source_vec, int *result, int n)
+{
     const float extent_sink = sink->extent;
     VxdV(const float pos_sink, = sink->pos);
     const float h = sink->h;
@@ -181,7 +231,7 @@ void macRho(SinkSPH *sink, hcell **source_vec, int *result, int n) {
 
         if (Sub_Flags(source)) {
             const SPHcell *cp = source->ptr;
-            VxV(r, = cp->pos);
+            VxV(r, = cp->pos);	
             extent_src = cp->bmax + cp->lap;
             daughters = cp->daughters;
         } else {
@@ -191,10 +241,11 @@ void macRho(SinkSPH *sink, hcell **source_vec, int *result, int n) {
             daughters = 1;
         }
 
-        VxVx(r, -= pos_sink); /* 8 flops */
-        dr2 = Dotx(r, r);     /* == 400.0000000032623 */
+        VxVx(r, -= pos_sink);	/* 8 flops */
+        dr2 = Dotx(r, r); /* == 400.0000000032623 */
 
-        if ((rij = sqrtf_fast(dr2)) > extent_src + extent_sink || dr2 == (float)0.0) {
+        if ((rij = sqrtf_fast(dr2)) > extent_src + extent_sink
+                || dr2 == (float)0.0) {
             goto accept;
         } else if (daughters != 1) {
             goto failed;
@@ -205,28 +256,27 @@ void macRho(SinkSPH *sink, hcell **source_vec, int *result, int n) {
 
         v2 = dr2 * hmean21;
         index = v2 * invdvtable;
-        if (index >= MAX_INDEX)
-            Error("Index too large\n");
+        if (index >= MAX_INDEX) Error("Index too large\n");
         dxx = v2 - index * dvtable;
-        dwdx = (wij[index + 1] - wij[index]) * invdvtable;
-        wtij = (wij[index] + dwdx * dxx) * hmean21 * hmean11;
+        dwdx = (wij[index+1] - wij[index]) * invdvtable;
+        wtij = (wij[index] + dwdx * dxx ) * hmean21 * hmean11;
         /* if (wtij < (float)0.0) Error("Negative wtij (macRho) = %g\n", wtij); */
-        dgrwdx = (grwij[index + 1] - grwij[index]) * invdvtable;
+        dgrwdx = (grwij[index+1] - grwij[index]) * invdvtable;
         grwtij = (grwij[index] + dgrwdx * dxx) * hmean21 * hmean21;
 
         rhoi += bp->mass * wtij;
 
         /* velocity divergence times density */
-        VxVV(dv, = bp->vel, -sink->vel);
+        VxVV(dv, = bp->vel, - sink->vel);
         projv = grwtij * Dotx(dv, r) * recipsqrtf(dr2);
         divvi -= bp->mass * projv;
 
         nbrs++;
-    accept:
+accept:
         interactions += daughters;
         result[i] = MAC_ACCEPT;
         continue;
-    failed:
+failed:
         result[i] = MAC_SPLIT_SRC;
     }
 
@@ -237,7 +287,9 @@ void macRho(SinkSPH *sink, hcell **source_vec, int *result, int n) {
 }
 
 
-void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
+    void
+macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n)
+{
     const float extent_sink = sink->extent;
     VxdV(const float pos_sink, = sink->pos);
     VxdV(const float v, = sink->vel);
@@ -251,6 +303,24 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
     Vxd(float f);
     Vxd(float dv);
     Vxd(float smv);
+	float stress_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
+	float stress_j[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
+	float dstressdt_i[NDIM*NDIM] = {0,0,0,0,0,0,0,0,0};
+	float strain_i[SRTERMS] = {0,0,0,0,0,0};
+	float dstraindt[SRTERMS] = {0,0,0,0,0,0};
+	double dstraindt_i[SRTERMS] = {0,0,0,0,0,0};
+	float gshear = (float)(params.material.G_shear);
+	double yieldstr = (double)(params.material.yield);
+	double umelt = (double)(params.material.umelt);
+	Vxd(double dr_i);
+	Vxd(double dv_i);
+	float dmg_i, dmg_j, u_i;
+	double drot_i[NDIM], drot[NDIM];
+	float rot_i[NDIM]; 
+	float vonMises_i;
+	float df_i[3]; /* acceleration due to stress */
+	float robar;
+	double grpm_dbl, robar1_dbl;
     float min_nbr_dt = sink->min_nbr_dt;
     float extent_src;
     int daughters;
@@ -280,9 +350,19 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
 
         if (Sub_Flags(source)) {
             const SPHcell *cp = source->ptr;
-            VxV(r, = cp->pos);
+            VxV(r, = cp->pos);	
             extent_src = cp->bmax + cp->lap;
             daughters = cp->daughters;
+			stress_j[0] = 0.0;
+			stress_j[1] = 0.0;
+			stress_j[2] = 0.0;
+			stress_j[3] = 0.0;
+			stress_j[4] = 0.0;
+			stress_j[5] = 0.0;
+			stress_j[6] = 0.0;
+			stress_j[7] = 0.0;
+			stress_j[8] = 0.0;
+
         } else {
             bp = source->ptr;
             VxV(r, = bp->pos);
@@ -292,33 +372,32 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
                 Error("RhoEst is <= 0 for %s\n", hcellPrint(source));
         }
 
-        VxVx(r, -= pos_sink); /* 8 flops */
+        VxVx(r, -= pos_sink);	/* 8 flops */
         dr2 = Dotx(r, r);
 
         sink->nterms += 1;
 
-        if ((rij = sqrtf_fast(dr2)) > extent_src + extent_sink || dr2 == (float)0.0) {
+        if ((rij = sqrtf_fast(dr2)) > extent_src + extent_sink
+                || dr2 == (float)0.0) {
             goto accept;
         } else if (daughters != 1) {
             goto failed;
         }
 
-        if (bp->dt_next < min_nbr_dt)
-            min_nbr_dt = bp->dt_next;
+        if (bp->dt_next < min_nbr_dt) min_nbr_dt = bp->dt_next;
 
         hmean11 = (float)2.0 / (h + bp->h);
         hmean21 = hmean11 * hmean11;
 
-        vv2 = dr2 * hmean21; /* v2 and v renamed to avoid conflict */
+        vv2 = dr2 * hmean21;	/* v2 and v renamed to avoid conflict */
         index = vv2 * invdvtable;
-        if (index >= MAX_INDEX)
-            Error("Index too large\n");
+        if (index >= MAX_INDEX) Error("Index too large\n");
         vv = rij * hmean11;
         dxx = vv2 - index * dvtable;
-        dwdx = (wij[index + 1] - wij[index]) * invdvtable;
+        dwdx = (wij[index+1] - wij[index]) * invdvtable;
         wtij = (wij[index] + dwdx * dxx) * hmean21 * hmean11;
         /* if (wtij < (float)0.0) Error("Negative wtij (macSPH) = %g\n", wtij); */
-        dgrwdx = (grwij[index + 1] - grwij[index]) * invdvtable;
+        dgrwdx = (grwij[index+1] - grwij[index]) * invdvtable;
         grwtij = (grwij[index] + dgrwdx * dxx) * hmean21 * hmean21;
 
         rapm = mass / bp->mass;
@@ -329,8 +408,8 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
         poro2 = grpm * (pro2 + bp->pr / (bp->rho_est * bp->rho_est));
         rij1 = (float)1.0 / rij;
         VxVx(runi, = rij1 * r);
-        VxVx(f, += poro2 * runi);
-        VxVVx(dv, = bp->vel, -v);
+        //VxVx(f, += poro2 * runi);
+        VxVVx(dv, = bp->vel, - v);
         VxVx(smv, += robar1 * wpm * dv);
         projv = Dotx(dv, runi);
 
@@ -353,21 +432,182 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
         }
         /* flux-limited diffusion */
         if (params.do_diffusion)
-            if (grpm < 0.0) { /* What does this condition really mean? */
-                float Dmeanr = 2.0 * rij1 * sink->D / (sink->D + bp->D) * bp->D;
-                clight = C_LIGHT * tdivlCF * rij1;
+            if (grpm < 0.0) {  /* What does this condition really mean? */
+                float Dmeanr = 2.0*rij1*sink->D/(sink->D+bp->D)*bp->D;
+                clight = C_LIGHT*tdivlCF* rij1;
 
-                sink->du_r += ((clight < Dmeanr) ? clight : Dmeanr) * (sink->u_r - bp->u_r) * grpm
-                              / bp->rho_est;
+                sink->du_r += ( (clight < Dmeanr) ? clight : Dmeanr ) *
+                    (sink->u_r - bp->u_r) * grpm / bp->rho_est;
+            }
+		/* strength calculation, only if both sink and source feel strength */
+		/* reference: Benz & Asphaug 1995, Computer Physics Communications Vol. 87 */
+		if (params.do_strength && bp->data.strengthbody.is_strength && sink->strengthbody.is_strength) {
+			/* this is way faster! */
+			stress_j[0] = bp->data.strengthbody.stress[0];
+			stress_j[1] = bp->data.strengthbody.stress[1];
+			stress_j[2] = bp->data.strengthbody.stress[2];
+			stress_j[3] = bp->data.strengthbody.stress[3];
+			stress_j[4] = bp->data.strengthbody.stress[4];
+			stress_j[5] = bp->data.strengthbody.stress[5];
+			stress_j[6] = bp->data.strengthbody.stress[6];
+			stress_j[7] = bp->data.strengthbody.stress[7];
+			stress_j[8] = bp->data.strengthbody.stress[8];
+			stress_i[0] = sink->strengthbody.stress[0];
+			stress_i[1] = sink->strengthbody.stress[1];
+			stress_i[2] = sink->strengthbody.stress[2];
+			stress_i[3] = sink->strengthbody.stress[3];
+			stress_i[4] = sink->strengthbody.stress[4];
+			stress_i[5] = sink->strengthbody.stress[5];
+			stress_i[6] = sink->strengthbody.stress[6];
+			stress_i[7] = sink->strengthbody.stress[7];
+			stress_i[8] = sink->strengthbody.stress[8];
+			
+			/* equilibrium, no strain */
+			strain_i[0] = sink->strengthbody.strain[0];
+			strain_i[1] = sink->strengthbody.strain[1];
+			strain_i[2] = sink->strengthbody.strain[2];
+			strain_i[3] = sink->strengthbody.strain[3];
+			strain_i[4] = sink->strengthbody.strain[4];
+			strain_i[5] = sink->strengthbody.strain[5];
+			dmg_i = sink->strengthbody.dmg;
+			dmg_j = bp->data.strengthbody.dmg;
+			VxVx(dr_i, = r);
+			VxVx(dv_i, = dv);
+			VS(rot_i, = 0.); /* equilibrium, no rotation */
+			VS(drot_i, = 0.);
+			u_i = u;
+			grpm_dbl = (double)grpm;
+			robar = 1. / robar1;
+			
+			/* compute gradients of strain rate and rotation. for ... ? */
+			/* i.e. sets dstraindt_* and drot_* */
+			straintensor_(&grpm_dbl,
+					&dv_i0,
+					&dv_i1,
+					&dv_i2, 
+					&dr_i0,
+					&dr_i1,
+					&dr_i2,
+					&(dstraindt_i[0]),
+					&(dstraindt_i[1]),
+					&(dstraindt_i[2]),
+					&(dstraindt_i[3]),
+					&(dstraindt_i[4]),
+					&(dstraindt_i[5]),
+					&(drot_i[0]),
+					&(drot_i[1]),
+					&(drot_i[2]));
+
+			//strain_i[0] = 1.0e-3;
+			dstraindt[0] += (float)dstraindt_i[0];
+			dstraindt[1] += (float)dstraindt_i[1];
+			dstraindt[2] += (float)dstraindt_i[2];
+			dstraindt[3] += (float)dstraindt_i[3];
+			dstraindt[4] += (float)dstraindt_i[4];
+			dstraindt[5] += (float)dstraindt_i[5];
+
+			drot[0] = 0.0;//+= drot_i[0];
+			drot[1] = 0.0;//+= drot_i[1];
+			drot[2] = 0.0;//+= drot_i[2];
+
+			/* calculate rate of change of stress tensor */
+            /* in update_intermediate
+			deviator_(&gshear,
+					&stress_j[0],
+					&stress_j[4],
+					&stress_j[8],
+					&stress_j[1],
+					&stress_j[2],
+					&stress_j[5],
+					&strain_i[0],
+					&strain_i[1],
+					&strain_i[2],
+					&strain_i[3],
+					&strain_i[4],
+					&strain_i[5],
+					&rot_i[0],
+					&rot_i[1],
+					&rot_i[2],
+					&dstressdt_i[0],
+					&dstressdt_i[4],
+					&dstressdt_i[8],
+					&dstressdt_i[1],
+					&dstressdt_i[2],
+					&dstressdt_i[5]);
+                    */
+			//dstressdt_i[4] = 1.5e+4;
+            /*
+			if (isfinite(dstressdt_i[0]))
+			sink->strengthbody.dstressdt[0] += (float)dstressdt_i[0];
+			if (isfinite(dstressdt_i[1]))
+			sink->strengthbody.dstressdt[1] += (float)dstressdt_i[1];
+			if (isfinite(dstressdt_i[2]))
+			sink->strengthbody.dstressdt[2] += (float)dstressdt_i[2];
+			if (isfinite(dstressdt_i[3]))
+			sink->strengthbody.dstressdt[3] += (float)dstressdt_i[3];
+			if (isfinite(dstressdt_i[4]))
+			sink->strengthbody.dstressdt[4] += (float)dstressdt_i[4];
+			if (isfinite(dstressdt_i[5]))
+			sink->strengthbody.dstressdt[5] += (float)dstressdt_i[5];
+			if (isfinite(dstressdt_i[6]))
+			sink->strengthbody.dstressdt[6] += (float)dstressdt_i[6];
+			if (isfinite(dstressdt_i[7]))
+			sink->strengthbody.dstressdt[7] += (float)dstressdt_i[7];
+			if (isfinite(dstressdt_i[8]))
+			sink->strengthbody.dstressdt[8] += (float)dstressdt_i[8];
+            */
+
+			/*
+             * subtract out any non-stress acceleration?!?
+			VVx(df_i, = f);
+			VxV(f, -= df_i);
+			*/
+			strengthforce_(&grpm,
+					&robar,
+					&(stress_i[0]),
+					&(stress_i[4]),
+					&(stress_i[8]),
+					&(stress_i[1]),
+					&(stress_i[2]),
+					&(stress_i[5]),
+					&(stress_j[0]),
+					&(stress_j[4]),
+					&(stress_j[8]),
+					&(stress_j[1]),
+					&(stress_j[2]),
+					&(stress_j[5]),
+					&dmg_i,
+					&dmg_j,
+					&r0,
+					&r1,
+					&r2,
+					&(df_i[0]),
+					&(df_i[1]),
+					&(df_i[2]));
+			/* add to force of particle */
+            if (!isfinite (df_i[0])) {
+                printf ("df_i[0] not finite: %g\n", df_i[0]);
+                printf ("dmg_i = %f, dmg_j = %f\n", dmg_i, dmg_j);
+            }
+            if (!isfinite (df_i[1])) {
+                printf ("df_i[1] not finite: %g\n", df_i[1]);
+                printf ("dmg_i = %f, dmg_j = %f\n", dmg_i, dmg_j);
+            }
+            if (!isfinite (df_i[2])) {
+                printf ("df_i[2] not finite: %g\n", df_i[2]);
+                printf ("dmg_i = %f, dmg_j = %f\n", dmg_i, dmg_j);
             }
 
+			VxV(f, += df_i);
+		}
+
         nbrs++;
-    accept:
+accept:
         IncrCounter(&SPHrej);
         interactions += daughters;
         result[i] = MAC_ACCEPT;
         continue;
-    failed:
+failed:
         IncrCounter(&SPHrej);
         result[i] = MAC_SPLIT_SRC;
     }
@@ -377,19 +617,23 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
     sink->udot += (float)0.5 * dq;
     VVx(sink->M1, += f);
     VVx(sink->lvel, += smv);
+	//for (i = 0; i < NDIM*NDIM; i++)
+	//	sink->strengthbody.stress[i] += (float)stress_j[i];
+	sink->strengthbody.dstraindt[0] += dstraindt[0];
+	sink->strengthbody.dstraindt[1] += dstraindt[1];
+	sink->strengthbody.dstraindt[2] += dstraindt[2];
+	sink->strengthbody.dstraindt[3] += dstraindt[3];
+	sink->strengthbody.dstraindt[4] += dstraindt[4];
+	sink->strengthbody.dstraindt[5] += dstraindt[5];
     sink->nbrs += nbrs;
-    sink->nterms += nbrs * 8;
+    sink->nterms += nbrs*8;
     sink->min_nbr_dt = min_nbr_dt;
 }
 
-void SetSPH(float visc_alpha,
-            float visc_beta,
-            float visc_epsilon,
-            float heat_f1,
-            float eos_gamma,
-            int gnobj,
-            void bfunc(),
-            void cfunc()) {
+    void
+SetSPH(float visc_alpha, float visc_beta, float visc_epsilon, float heat_f1,
+        float eos_gamma, int gnobj,  void bfunc(), void cfunc())
+{
     Nobj = gnobj;
     alpha = visc_alpha;
     beta = visc_beta;
@@ -398,9 +642,12 @@ void SetSPH(float visc_alpha,
     Gamma = eos_gamma;
     bodyfunc = bfunc;
     cellfunc = cfunc;
+
 }
 
-void SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2) {
+    void
+SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2)
+{
     double v2max;
     double v, v2;
     double w, dw;
@@ -422,113 +669,122 @@ void SPH_setup(int dim, int ncoef1, double *wcoef1, int ncoef2, double *wcoef2) 
     dvtable = ddvtable;
 
     /* normalization constant */
-    if (ndim == 3)
+    if (ndim == 3) 
         cnormk = M_1_PI;
     else if (ndim == 2)
-        cnormk = M_1_PI * 10.0 / 7.0;
+        cnormk = M_1_PI*10.0/7.0;
     else if (ndim == 1)
-        cnormk = 2.0 / 3.0;
+        cnormk = 2.0/3.0;
     else
         Error("Bad ndim in sph_ktable\n");
 
     /* build tables */
     /* a) v less than 1 */
 
-    wij[0] = cnormk * wcoef1[0];
+    wij[0] = cnormk*wcoef1[0];
     grwij[0] = 0.0;
     fmass[0] = 0.0;
     fpoten[0] = 0.0;
-    for (j = 0; j <= ncoef1 - 1; j++)
-        fpoten[0] += wcoef1[j] / (j + 2.0) + wcoef2[j] / (j + 2.) * (pow(2.0, j + 2.0) - 1.0);
-    fpoten[0] *= 4. * M_PI * cnormk;
+    for (j = 0; j <= ncoef1-1; j++) 
+        fpoten[0] += wcoef1[j]/(j+2.0) +
+            wcoef2[j]/(j+2.) * (pow(2.0, j+2.0)-1.0);
+    fpoten[0]*=4.*M_PI*cnormk;
 
     i1 = 1.0 / ddvtable;
     for (i = 1; i <= i1; i++) {
         v2 = i * ddvtable;
         v = sqrt(v2);
-        w = wcoef1[ncoef1 - 1];
-        for (j = ncoef1 - 1; j >= 1; j--) w = w * v + wcoef1[j - 1];
-        dw = (ncoef1 - 1.0) * wcoef1[ncoef1 - 1];
-        for (j = ncoef1 - 2; j >= 1; j--) dw = dw * v + j * wcoef1[j];
+        w = wcoef1[ncoef1-1];
+        for (j = ncoef1-1; j >= 1 ; j--)
+            w = w * v + wcoef1[j-1];
+        dw = (ncoef1 - 1.0) * wcoef1[ncoef1-1];
+        for (j = ncoef1-2; j >= 1; j--)
+            dw = dw * v + j * wcoef1[j];
         wij[i] = cnormk * w;
         grwij[i] = cnormk * dw;
 
         /* Enclosed mass now for m=1, h=1*/
-        dm = wcoef1[ncoef1 - 1] / (ncoef1 - 1 + 3);
-        for (j = ncoef1 - 2; j >= 0; j--) dm = dm * v + wcoef1[j] / (j + 3.);
-        fmass[i] = 4 * M_PI * cnormk * v * v * v * dm;
+        dm = wcoef1[ncoef1-1]/(ncoef1-1+3);
+        for (j = ncoef1-2; j >= 0; j--)
+            dm = dm * v + wcoef1[j]/(j+3.);
+        fmass[i]=4*M_PI*cnormk*v*v*v*dm;
 
         /* Potential now: fpoten is potential for G=1, m=1, h=1*/
-        fpoten[i] = (double)0.;
-        for (j = 0; j <= ncoef1 - 1; j++)
-            fpoten[i] += wcoef1[j] / (j + 3.) * pow(v, (j + 2.))
-                         + wcoef1[j] / (j + 2.) * (1 - pow(v, (j + 2.)))
-                         + wcoef2[j] / (j + 2.) * (pow(2., (j + 2.)) - 1.);
-        fpoten[i] *= 4. * M_PI * cnormk;
+        fpoten[i]=(double)0.;
+        for (j = 0;j <= ncoef1-1; j++) 
+            fpoten[i]+=wcoef1[j]/(j+3.)*pow(v,(j+2.))+
+                wcoef1[j]/(j+2.)*(1-pow(v,(j+2.)))+
+                wcoef2[j]/(j+2.)*(pow(2.,(j+2.))-1.);
+        fpoten[i]*=4.*M_PI*cnormk;
     }
 
-    v = 1.;
-    dm1 = wcoef2[ncoef2 - 1] / (ncoef2 - 1 + 3.);
-    for (j = ncoef2 - 2; j >= 0; j--) dm1 = dm1 * v + wcoef2[j] / (j + 3.);
-    dm1 = fmass[i1] - 4 * M_PI * dm1 * cnormk * v * v * v;
+    v=1.;
+    dm1=wcoef2[ncoef2-1]/(ncoef2-1+3.);
+    for (j=ncoef2-2; j>=0;j--)  
+        dm1=dm1*v + wcoef2[j]/(j+3.);      
+    dm1=fmass[i1]-4*M_PI*dm1*cnormk*v*v*v;
 
     /*  b) v greater than 1 */
-    for (i = i1 + 1; i <= NKERNEL_TABLE; i++) {
+    for (i = i1+1; i <= NKERNEL_TABLE; i++) {
         v2 = i * ddvtable;
         v = sqrt(v2);
-        w = wcoef2[ncoef2 - 1];
-        for (j = ncoef2 - 1; j >= 1; j--) w = w * v + wcoef2[j - 1];
-        dw = (ncoef2 - 1.0) * wcoef2[ncoef2 - 1];
-        for (j = ncoef2 - 2; j >= 1; j--) dw = dw * v + j * wcoef2[j];
+        w = wcoef2[ncoef2-1];
+        for (j = ncoef2-1; j >= 1 ; j--)
+            w = w * v + wcoef2[j-1];
+        dw = (ncoef2 - 1.0) * wcoef2[ncoef2-1];
+        for (j = ncoef2-2; j >= 1; j--)
+            dw = dw * v + j * wcoef2[j];
         wij[i] = cnormk * w;
         grwij[i] = cnormk * dw;
 
         /* Enclosed mass now */
-        dm = wcoef2[ncoef2 - 1] / (ncoef2 - 1 + 3);
-        for (j = ncoef2 - 2; j >= 0; j--) dm = dm * v + wcoef2[j] / (j + 3.);
-        fmass[i] = 4 * M_PI * cnormk * v * v * v * dm + dm1;
+        dm = wcoef2[ncoef2-1]/(ncoef2-1+3);
+        for (j = ncoef2-2; j >= 0; j--)
+            dm = dm * v + wcoef2[j]/(j+3.);
+        fmass[i]=4*M_PI*cnormk*v*v*v*dm+dm1;
 
         /* Potential now: fpoten is potential for G=1, m=1, h=1*/
-        fpoten[i] = (double)0.;
-        for (j = 0; j <= ncoef2 - 1; j++)
-            fpoten[i] += 1. / v * wcoef1[j] / (j + 3.)
-                         + 1. / v * wcoef2[j] / (j + 3.) * (pow(v, (j + 3.)) - 1.)
-                         + wcoef2[j] / (j + 2.) * (pow(2., (j + 2.)) - pow(v, (j + 2.)));
-        fpoten[i] *= 4. * M_PI * cnormk;
+        fpoten[i]=(double) 0.;
+        for (j=0; j <= ncoef2-1; j++)
+            fpoten[i]+=1./v*wcoef1[j]/(j+3.)+
+                1./v*wcoef2[j]/(j+3.)*(pow(v,(j+3.))-1.)+
+                wcoef2[j]/(j+2.)*(pow(2.,(j+2.))-pow(v,(j+2.)));
+        fpoten[i]*=4.*M_PI*cnormk;
     }
 
     /* Make sure the mass is perfectly normalized, don't generate mass */
-    for (i = 0; i <= NKERNEL_TABLE; i++) { fmass[i] /= fmass[NKERNEL_TABLE]; }
+    for (i = 0; i <= NKERNEL_TABLE; i++) {
+        fmass[i]/=fmass[NKERNEL_TABLE];
+    }
 
     /* For interpolation of last table entry */
-    wij[NKERNEL_TABLE + 1] = grwij[NKERNEL_TABLE + 1] = 0.0;
-    fpoten[NKERNEL_TABLE + 1] = (double)0.5;
-    fmass[NKERNEL_TABLE + 1] = (double)1.0;
+    wij[NKERNEL_TABLE+1] = grwij[NKERNEL_TABLE+1] = 0.0;
+    fpoten[NKERNEL_TABLE+1]=(double)0.5;
+    fmass[NKERNEL_TABLE+1]=(double)1.0;
 }
 
 #include "Msgs.h"
 double eos_n, eos_u;
 
-
-void update_final(SPHbody *btab,
-                  int nobj,
-                  int Gridpts,
-                  const int Nel,
-                  float dt,
-                  int *limit_high,
-                  int *limit_low,
-                  int rank,
-                  float tpos,
-                  float R0) {
+    void
+update_final(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt, int *limit_high, int *limit_low, int rank, float tpos, float R0)
+{
     SPHbody *p;
-    int i, j, k; /*coupla indices for loops*/
+    int i,j,k; /*coupla indices for loops*/
+	int nflawi;
     double u, n, lcool, deltah, dt_cool;
     double *molfrac; /*float or double?? */
-    double dt_tot, udot_tot, dt_sub, dt_save, udot, frac = 0.05, minfrac = 0.001;
-    double temp, rho, dt_cgs, ndens = 0., ne = 0.;
+    double dt_tot,udot_tot,dt_sub,dt_save,udot,frac=0.05, minfrac=0.001;
+    double temp,rho, dt_cgs, ndens = 0., ne=0.;
     double tlo, tup, mfp, radius;
-    int decr, notprinted;
-    long cycles = 0, countc;
+	float stress[NDIM*NDIM];
+	float strain[SRTERMS];
+	float xmi, crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
+	float epsmini, eyoung;
+	float iv_Weibull_m = 1./params.material.material_m;
+    float stress_max;
+    int decr,notprinted;
+    long cycles=0, countc; 
     static long cycled = 0;
     int temp_ok, partid;
 
@@ -539,156 +795,306 @@ void update_final(SPHbody *btab,
 
     notprinted = 1;
 
-    for (p = btab; p < btab + nobj; p++) {
+    for (p = btab; p < btab+nobj; p++) {
         /********* checking udot and hdot ***********/
-        if (!SPH_need_update(p))
-            continue;
+        if (!SPH_need_update(p)) continue;
         VV(p->acc, += p->grav_acc);
         /* Changed cnormk to wij[0] to allow for non-standard kernels; thanks Steven */
-        p->rho += wij[0] * p->mass / (p->h * p->h * p->h);
-        p->hdot = (float)(-1.0 / 3.0) * p->h * p->drho_dt / p->rho;
+        p->rho += wij[0] * p->mass / (p->h * p->h * p->h); 
+        p->hdot = (float)(-1.0/3.0) * p->h * p->drho_dt / p->rho;
         if (p->hdot * dt > p->h) {
             SeriousWarning("Hdot limit (high)\n%s\n", PrintSPHBodyContents(p));
-            p->hdot = p->h / dt;
+            p->hdot = p->h/dt;
             ++*limit_high;
         }
-        if (p->hdot * dt < -0.5 * p->h) {
+        if (p->hdot * dt < -0.5*p->h) {
             SeriousWarning("Hdot limit (low)\n%s\n", PrintSPHBodyContents(p));
-            p->hdot = -0.5 * p->h / dt;
+            p->hdot = -0.5*p->h/dt;
             ++*limit_low;
         }
 
-        p->udot += p->drho_dt * p->pr / (p->rho * p->rho)
-                   + ((params.do_diffusion) ? (p->du_r / p->rho) /* Diffusion */
-                                            : 0.0);
+        p->udot += p->drho_dt * p->pr / (p->rho * p->rho) + 
+            ( (params.do_diffusion) ? (p->du_r/p->rho) /* Diffusion */
+              : 0.0 );
 
-        if (!isfinite(p->udot))
+        if (!finite(p->udot)) 
             Error("%d Bad value for udot: drho/dt=%.4E pr=%.4E rho=%.4E\n",
-                  p->ident,
-                  p->drho_dt,
-                  p->pr,
-                  p->rho);
+                    p->ident,p->drho_dt,p->pr,p->rho);
 
         /* Are these limits appropriate? */
         /* Does this enforce the Courant limit correctly with diffusion? */
-        if ((p->udot * dt > p->u) && !(p->ident & (1 << 30))) {
-            p->udot = p->u / dt;
+        if ( (p->udot * dt > p->u) && !(p->ident & (1<<30)) ) {
+            p->udot = p->u/dt;
             ++*limit_high;
         }
-        if ((p->udot * dt < -0.333 * p->u) && !(p->ident & (1 << 30))) {
-            p->udot = -0.333 * p->u / dt;
+        if ( (p->udot * dt < -0.333*p->u) && !(p->ident & (1<<30)) ) {
+            p->udot = -0.333*p->u/dt;
             ++*limit_low;
         }
 
-        if (!params.poly_eos) {
-            /************* update T, eos_n, eos_u *************/
-            if (params.do_cooling || params.do_burning) {
-                temp_ok = prep_cool_burn(p, newtraph_tlo, newtraph_thi, Gridpts, Nel, 0);
-            } else {
-                /* Calculate temperature from u, then "create" photons (a*T^4) */
-                eos_n = (double)(p->rho) * ivlenCF3 * massCF;
-                eos_n /= (double)28 * MH;
-                eos_u = ((double)(p->u)) * ((double)(p->rho));
-                eos_u *= massCF * ivlenCF * ivtimeCF2;
+        /************* update T, eos_n, eos_u *************/
+		if (params.do_cooling || params.do_burning)
+			temp_ok = prep_cool_burn(p, 1.e1, 2.5e11, Gridpts, Nel, 0);
 
-                /* Figure out good upper and lower limits for temp */
-                p->temp = newtraph(4.0e3, 1.5e11, eos_u * 1.0e-6, uvst, duvst);
-            }
+        /********** do the burning ***********/
+        if(params.do_burning && temp_ok)
+            deltah = burning(p, dt, rank);
 
-            /********** do the burning ***********/
-            if (params.do_burning && temp_ok)
-                deltah = burning(p, dt, rank);
-
-            /********** do the cooling ***********/
-            if (params.do_cooling
-                && (tpos >= 2.62980e6 * ivtimeCF)) { /*(tstar > 0.5 * M_PI*1.e7 / t)) */
-                dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
-                /*
-                   if ( iter%interval == 0) {
-                   print_ionization_state();
-                   }
-                   */
-            }
+        /********** do the cooling ***********/
+        if (params.do_cooling && (tpos >= 2.62980e6*ivtimeCF) ) {/*(tstar > 0.5 * M_PI*1.e7 / t)) */
+            dt_cool = cooling(p, dt, frac, Gridpts, Nel, &notprinted);
+            /*
+               if ( iter%interval == 0) {
+               print_ionization_state();
+               }
+               */
         }
+
+		if (params.do_strength) {
+			p->temp = 306.0; /* fix temp for now */
+			for (i = 0; i < NDIM*NDIM; i++)
+				stress[i] = (double)p->data.strengthbody.stress[i];
+			
+			for (i = 0; i < SRTERMS; i++)
+				strain[i] = (double)p->data.strengthbody.strain[i];
+			dmg = (double)p->data.strengthbody.dmg;
+			rho_i = (double)p->rho;
+			if (params.make_brittle) {
+				nflawi = flaw_actv_tbl_lookup[ p->ident * 2 + 1 ];
+                if (p->data.strengthbody.actv_defects == 0) /* none activated yet */
+				    epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[ p->ident*2 ] ];
+                else /* get currently active epsmini */
+				    epsmini = flaw_actv_tbl[ flaw_actv_tbl_lookup[ p->ident*2 ] + p->data.strengthbody.actv_defects - 1 ];
+				pr_i = (double)p->pr;
+				crack_len = 0.4 * sqrt ((params.material.A + 4. / 3. * params.material.G_shear)/params.material.rho0) / (2. * p->h);
+                p->data.strengthbody.crack_len = (float) crack_len;
+				eyoung = (double)params.material.E_Young;
+				fracture_(&stress[0],
+						&stress[4],
+						&stress[8],
+						&stress[1],
+						&stress[2],
+						&stress[5],
+						&(pr_i),
+						&(dmg),
+						&(nflawi),
+						&(params.frac_model),
+						&(eyoung),
+						&(epsmini),
+						&iv_Weibull_m,
+						&(crack_len),
+						&ddmgdt,
+                        &stress_max);
+                p->padding = (float) stress_max;
+                p->data.strengthbody.ddmgdt = (float) ddmgdt;
+                while (stress_max > (flaw_actv_tbl[flaw_actv_tbl_lookup[ p->ident * 2] +
+                        p->data.strengthbody.actv_defects]
+                        && p->data.strengthbody.actv_defects <= nflawi)) {
+                    p->data.strengthbody.actv_defects += 1;
+                }
+			}
+
+			strengthdu_(&(rho_i),
+					&stress[0],
+					&stress[4],
+					&stress[8],
+					&stress[1],
+					&stress[2],
+					&stress[5],
+					&strain[0],
+					&strain[1],
+					&strain[3],
+					&strain[4],
+					&strain[5],
+					&strain[2], /* not a typo! */
+					&(dmg),
+					&dudt);
+			p->D = dudt;
+            p->udot += dudt;
+		}
     }
 }
 
 
-void update_intermediate(SPHbody *btab,
-                         int nobj,
-                         int Gridpts,
-                         const int Nel,
-                         float dt_last,
-                         int flag,
-                         int *limit,
-                         float R0) {
-    float kes, kff; /* Opacities (Thomson, free-free) */
+    void
+update_intermediate(SPHbody *btab, int nobj, int Gridpts, const int Nel, float dt_last, int flag, int *limit, float R0)
+{
+    float kes, kff;  /* Opacities (Thomson, free-free) */
     float pgas, prad;
     float ne, rho, max_rad, r2;
-    double P_ratio, Gammai;
+    double P_ratio, Gammai; 
     double tlo = 1.e0, tup = 2.5e11;
+    double pr_d, rho_d, u_d, cs_d;
+	float rho0 = 1;
     int j, temp_ok;
     SPHbody *p;
+	Material_t mat;
+	float stress[NDIM*NDIM], dstressdt[NDIM*NDIM];
+	float strain[SRTERMS];
+	float rot[NDIM];
+	float dmg_i;
+	float vonMises, u_i;
+	float umelt = (float)(params.material.umelt);
+	float gshear = (float)(params.material.G_shear);
+	float yieldstr = (float)(params.material.yield); 
+	int i;
 
-    max_rad = 0.95 * R0 * R0;
+    max_rad = 0.95*R0*R0;
 
-    for (p = btab; p < btab + nobj; p++) {
-        if (!SPH_need_update(p))
-            continue;
-        if (flag)
-            p->rho_est = p->rho + p->drho_dt * dt_last;
-        else
-            p->rho_est = p->rho;
-        if (p->rho_est <= (float)0.0)
+    for (p = btab; p < btab+nobj; p++) {
+        if (!SPH_need_update(p)) continue;
+        if (flag) p->rho_est = p->rho + p->drho_dt * dt_last;
+        else p->rho_est = p->rho;
+        if (p->rho_est <= (float)0.0) 
             Error("Rho_est is 0\n%s\n", PrintSPHBodyContents(p));
 
-        /* keep these in cgs-units */
-        if (params.do_cooling || params.do_burning)
-            temp_ok = prep_cool_burn(p, newtraph_tlo, newtraph_thi, Gridpts, Nel, 1);
-        else if (params.poly_eos) {
-            p->pr = POLY_EOS_K * pow(p->rho_est, POLY_EOS_GAMMA);
-            p->vsound = sqrtf_fast(p->pr / p->rho_est);
-        } else {
-            /* Calculate temperature from u, then "create" photons (a*T^4) */
-            eos_n = (double)(p->rho_est) * ivlenCF3 * massCF;
-            eos_n /= (double)28 * MH;
-            eos_u = ((double)(p->u)) * ((double)(p->rho_est));
-            eos_u *= massCF * ivlenCF * ivtimeCF2;
+		if (params.do_cooling || params.do_burning) {
+	        /* keep these in cgs-units */
+	        temp_ok = prep_cool_burn(p, 1.e1, 1.0e11, Gridpts, Nel, 1);
+	
+	        /* calculate the total pressure by calculating the respective 
+	           contributions of gas and radiation pressure */
+	        pgas = prad = 0.d;
+	        pgas = (double)(eos_n * K_BOLTZ * p->temp);
+			prad = 0.0;
+	        if( 20.*p->h > p->data.nucnetw.mfp) 
+	            prad = (double)(0.33333333333*A_RAD * p->temp*p->temp*p->temp*p->temp);
+	        p->pr = (float)(pgas + prad)*lenCF*timeCF2*ivmassCF;
+	
+	        /* this is still using Gamma. Perhaps could calculate gamma 
+	           at this point? */
+	        P_ratio = (double)pgas / (double)(pgas+prad);
+	        /* from D. Clayton's Stellar Evolution book, p.119 */
+	        Gammai = (double)(32. - 24.*P_ratio - 3.*P_ratio*P_ratio) / 
+	            (double)(24. - 18.*P_ratio - 3.*P_ratio*P_ratio);
+	        p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est); /*code-units*/
+		} else if (params.do_strength) {
+			if (p->data.strengthbody.is_strength) {
 
-            /* Figure out good upper and lower limits for temp */
-            p->temp = newtraph(4.0e3, 1.5e11, eos_u * 1.0e-6, uvst, duvst);
-            p->mfp = p->h;
-        }
+			for (i = 0; i < NDIM*NDIM; i++) {
+				stress[i] = (double)p->data.strengthbody.stress[i];
+                dstressdt[i] = 0.0;
+			}
+            for (i = 0; i < SRTERMS; i++) 
+                strain[i] = (double)p->data.strengthbody.strain[i];
+            rot[0] = 0.0;//p->data.strengthbody.rotation[0];
+            rot[1] = 0.0;//p->data.strengthbody.rotation[1];
+            rot[2] = 0.0;//p->data.strengthbody.rotation[2];
+			/* calculate rate of change of stress tensor */
+			deviator_(&gshear,
+					&stress[0],
+					&stress[4],
+					&stress[8],
+					&stress[1],
+					&stress[2],
+					&stress[5],
+					&strain[0],
+					&strain[1],
+					&strain[2],
+					&strain[3],
+					&strain[4],
+					&strain[5],
+					&rot[0],
+					&rot[1],
+					&rot[2],
+					&dstressdt[0],
+					&dstressdt[4],
+					&dstressdt[8],
+					&dstressdt[1],
+					&dstressdt[2],
+					&dstressdt[5]);
+			//dstressdt_i[4] = 1.5e+4;
+			if (isfinite(dstressdt[0]))
+			p->data.strengthbody.dstressdt[0] = (float)dstressdt[0];
+			if (isfinite(dstressdt[1]))
+			p->data.strengthbody.dstressdt[1] = (float)dstressdt[1];
+			if (isfinite(dstressdt[2]))
+			p->data.strengthbody.dstressdt[2] = (float)dstressdt[2];
+			if (isfinite(dstressdt[3]))
+			p->data.strengthbody.dstressdt[3] = (float)dstressdt[3];
+			if (isfinite(dstressdt[4]))
+			p->data.strengthbody.dstressdt[4] = (float)dstressdt[4];
+			if (isfinite(dstressdt[5]))
+			p->data.strengthbody.dstressdt[5] = (float)dstressdt[5];
+			if (isfinite(dstressdt[6]))
+			p->data.strengthbody.dstressdt[6] = (float)dstressdt[6];
+			if (isfinite(dstressdt[7]))
+			p->data.strengthbody.dstressdt[7] = (float)dstressdt[7];
+			if (isfinite(dstressdt[8]))
+			p->data.strengthbody.dstressdt[8] = (float)dstressdt[8];
 
-        /* calculate the total pressure by calculating the respective
-           contributions of gas and radiation pressure */
-        pgas = prad = 0.0;
-        pgas = (double)(eos_n * K_BOLTZ * p->temp);
-        if (20. * p->h > p->mfp)
-            prad = (double)(0.33333333333 * A_RAD * p->temp * p->temp * p->temp * p->temp);
-        p->pr = (float)(pgas + prad) * lenCF * timeCF2 * ivmassCF;
-
-        /* this is still using Gamma. Perhaps could calculate gamma
-           at this point? */
-        P_ratio = (double)pgas / (double)(pgas + prad);
-        /* from D. Clayton's Stellar Evolution book, p.119 */
-        Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
-                 / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
-        /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
-        p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
+			dmg_i = p->data.strengthbody.dmg;
+			u_i = p->u;
+			vonMises = p->data.strengthbody.vonMises;
+			
+			if (params.do_plastic) {
+				/* calculate von Mises yielding factor ('f' in eq. 9),
+				 * and calcuate reduced stress terms, viz. eq. 8 */
+				plastic_(&stress[0], 
+						&stress[4], 
+						&stress[8], 
+						&stress[1],
+						&stress[2],
+						&stress[5],
+						&u_i,
+						&dmg_i,
+						&umelt,
+						&yieldstr,
+						&vonMises);
+				for (i = 0; i < NDIM*NDIM; i++)
+					p->data.strengthbody.stress[i] = (float)stress[i];
+			} else {
+				vonMises = 1.0;
+			}
+			p->data.strengthbody.vonMises = (float)vonMises;
+			
+			//p->data.strengthbody.is_strength = has_strength (*p);
+			/* calculate pressure, sound speed */
+            rho_d = (double)p->rho_est;
+            u_d = (double)p->u;
+			tillotson_eos (rho_d, u_d, &(params.material), &(pr_d), &(cs_d));
+            p->pr = (float)pr_d;
+            p->vsound = (float)cs_d;
+			if (p->pr != 0.0) {
+            //    printf ("pr not zero: %g\n",pr_d);
+			//	p->pr = 0.0;
+				/* try to guess a stress tensor, assume diag. terms = 0 cuz equil */
+				/*
+				p->data.strengthbody.stress[0] = p->pr;
+				p->data.strengthbody.stress[1] = -0.5*p->pr;
+				p->data.strengthbody.stress[2] = -0.5*p->pr;
+				p->data.strengthbody.stress[3] = -0.5*p->pr;
+				p->data.strengthbody.stress[4] = p->pr;
+				p->data.strengthbody.stress[5] = -0.5*p->pr;
+				p->data.strengthbody.stress[6] = 0.5*p->pr;
+				p->data.strengthbody.stress[7] = 0.5*p->pr;
+				p->data.strengthbody.stress[8] = -2.0*p->pr;
+				*/
+			}
+			}
+		} else {
+			p->pr = p->rho_est * p->u * (params.Gamma - 1);
+			eos_u = p->u * p->rho_est * massCF * ivlenCF * ivtimeCF2 ;
+			eos_n = p->rho_est * massCF * ivlenCF3 / MH * 0.25; /* guess that in stars the average particles mass is 4*m_H */
+			p->temp = newtraph (1.e1, 2.5e11, eos_u*1.e-6, uvst, duvst);
+			p->vsound = sqrtf_fast (params.Gamma * p->pr / p->rho_est);
+		}
 
         if (params.do_diffusion) {
             /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
             /* Calculate temperature from u, then "create" photons (a*T^4) */
             /* Figure out good upper and lower limits for temp */
-            p->u_r = A_RAD * p->temp * p->temp * p->temp * p->temp * lenCF * timeCF2 * ivmassCF;
+            p->u_r = A_RAD*p->temp*p->temp*p->temp*p->temp*
+                lenCF*timeCF2*ivmassCF;
             p->du_r = 0.0;
 
             /* Calculate diffusion coefficient in user-units */
-            kes = KES_COEFF / MH * (massCF * ivlenCF2);
-            kff = (KFF_COEFF)*p->rho_est * pow(p->temp, -3.5) * (massCF * ivlenCF);
-            p->D = C_LIGHT * tdivlCF / (3.0 * (kes + kff) * p->rho_est);
+            kes = KES_COEFF/MH *(massCF * ivlenCF2);
+            kff = (KFF_COEFF) * p->rho_est*pow(p->temp, -3.5)*
+                (massCF * ivlenCF); 
+            p->D = C_LIGHT * tdivlCF /
+                ( 3.0*(kes+kff)*p->rho_est );
 
             /* Also, eventually, handle lightbulb approximation here */
         }
@@ -697,7 +1103,10 @@ void update_intermediate(SPHbody *btab,
 
 #include "physics.h"
 
-void update_point_SPHmass(SPHbody *btab, int SPHnobj, void *pp, float smooth2, float newt) {
+    void
+update_point_SPHmass(SPHbody *btab, int SPHnobj, 
+        void *pp, float smooth2, float newt)
+{
     SPHbody *r;
     body *p = pp;
     float dr2, oneor, oneor2;
@@ -707,16 +1116,16 @@ void update_point_SPHmass(SPHbody *btab, int SPHnobj, void *pp, float smooth2, f
 
     VxV(ppos, = p->pos);
 
-    for (r = btab; r < btab + SPHnobj; r++) {
-        VxVVx(r, = r->pos, -ppos); /* 3 flops */
+    for (r = btab; r < btab+SPHnobj; r++) {
+        VxVVx(r, = r->pos, - ppos); /* 3 flops */
 
-        dr2 = Dotx(r, r); /* 5 flops */
-        if (dr2 != (float)0.0) {
+        dr2 = Dotx(r, r);	/* 5 flops */
+        if (dr2 != (float)0.0) {	
             dr2 += smooth2;
 
-            oneor = recipsqrtf(dr2); /* 8 flops */
+            oneor = recipsqrtf(dr2);	/* 8 flops */
 
-            oneor2 = oneor * oneor; /* 17 flops */
+            oneor2 = oneor * oneor;	/* 17 flops */
             phii = newt * oneor * p->mass;
             r->phi -= phii;
             VVx(r->acc, -= oneor2 * phii * r);
@@ -728,25 +1137,28 @@ void update_point_SPHmass(SPHbody *btab, int SPHnobj, void *pp, float smooth2, f
 }
 
 
-void update_point_SPHmass2(SPHbody *btab, int SPHnobj, float smooth2, float newt, float mass) {
+    void
+update_point_SPHmass2(SPHbody *btab, int SPHnobj, float smooth2, float newt, 
+        float mass)
+{
     SPHbody *r;
     float dr2, oneor, oneor2;
     float phii;
     Vxd(float r);
     Vxd(float ppos);
 
-    VxS(ppos, = (float)0.0); /* Body fixed at origin */
+    VxS(ppos, = (float)0.0);  /* Body fixed at origin */
 
-    for (r = btab; r < btab + SPHnobj; r++) {
-        VxVVx(r, = r->pos, -ppos); /* 3 flops */
+    for (r = btab; r < btab+SPHnobj; r++) {
+        VxVVx(r, = r->pos, - ppos); /* 3 flops */
 
-        dr2 = Dotx(r, r); /* 5 flops */
-        if (dr2 != (float)0.0) {
+        dr2 = Dotx(r, r);	/* 5 flops */
+        if (dr2 != (float)0.0) {	
             dr2 += smooth2;
 
-            oneor = recipsqrtf(dr2); /* 8 flops */
+            oneor = recipsqrtf(dr2);	/* 8 flops */
 
-            oneor2 = oneor * oneor; /* 17 flops */
+            oneor2 = oneor * oneor;	/* 17 flops */
             phii = newt * oneor * mass;
             r->phi -= phii;
             VVx(r->acc, -= oneor2 * phii * r);
@@ -755,20 +1167,24 @@ void update_point_SPHmass2(SPHbody *btab, int SPHnobj, float smooth2, float newt
 }
 
 
-void update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, bndry_t bndry) {
+    void
+update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, 
+        bndry_t bndry)
+{
     SPHbody *r;
     float dr2, oneor, oneor2;
     float phii;
     Vxd(float r);
 
-    for (r = btab; r < btab + SPHnobj; r++) {
-        VxVV(r, = r->pos, -bndry.pos); /* 3 flops */
+    for (r = btab; r < btab+SPHnobj; r++) {
 
-        dr2 = Dotx(r, r); /* 5 flops */
+        VxVV(r, = r->pos, - bndry.pos); /* 3 flops */
 
-        oneor = recipsqrtf(dr2); /* 8 flops */
+        dr2 = Dotx(r, r);	/* 5 flops */
 
-        oneor2 = oneor * oneor; /* 17 flops */
+        oneor = recipsqrtf(dr2);	/* 8 flops */
+
+        oneor2 = oneor * oneor;	/* 17 flops */
         phii = newt * oneor * bndry.mass;
         r->phi -= phii;
         VVx(r->acc, -= oneor2 * phii * r);
@@ -776,14 +1192,10 @@ void update_point_SPHmass_bndry(SPHbody *btab, int SPHnobj, float newt, bndry_t 
 }
 
 
-void do_SPHgrav(const float *p,
-                const float *end,
-                const float *pos0,
-                float *mass0,
-                float *acc0,
-                float *phi0,
-                const float *eps2p,
-                int *ncut) {
+    void 
+do_SPHgrav(const float *p, const float *end, const float *pos0, float *mass0, 
+        float *acc0, float *phi0, const float *eps2p, int *ncut)
+{
     float dr2, h, h2, dxx, dphidx, dmassdx, v2;
     Vxd(float r);
     float phii, mor3, mass;
@@ -803,26 +1215,27 @@ void do_SPHgrav(const float *p,
         r2 = *p++;
         h = *p++;
 
-        h = (h + eps2) / 2.0;
+        h=(h+eps2)/2.0;
 
-        h2 = h * h;
-        VxVx(r, -= ppos);   /* 3 flops */
-        dr2 = Dotx(r, r);   /* 5 flops */
+        h2= h * h;
+        VxVx(r, -= ppos);	    /* 3 flops */
+        dr2 = Dotx(r, r);	    /* 5 flops */
         total_mass += mass; /* Hmm, do I need total mass or enclosed
                                here?  If enclosed, put this statement
                                after if clause*/
 
-        if (dr2 >= 4. * h2) {       /* Beyond 2h, point source for phi and acc! */
+        if (dr2 >= 4.*h2) { /* Beyond 2h, point source for phi and acc! */
             phii = recipsqrtf(dr2); /* 8 flops */
-            mor3 = phii * phii;     /* 5 flops */
+            mor3 = phii * phii;	    /* 5 flops */
             phii *= mass;
             mor3 *= phii;
-        } else if (dr2 > (float)0.) { /* Within 2h, use SPH particle
-                                         smoothing for gravity */
+        } 
+        else if (dr2 > (float) 0.) { /* Within 2h, use SPH particle
+                                        smoothing for gravity */
             v2 = dr2 / h2;
             index = v2 * invdvtable;
-            phii = fpoten[index] * mass / h;
-            mor3 = mass * fmass[index] / dr2 * recipsqrtf(dr2);
+            phii=fpoten[index]*mass/h;
+            mor3=mass*fmass[index]/dr2*recipsqrtf(dr2);
         }
         phi -= phii;
         VxVx(a, += mor3 * r); /* 6 flops */

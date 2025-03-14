@@ -139,7 +139,7 @@ void init_CoolTable(int *Gridpts, int *Nel) {
  *   to calculate the cooling term for a given temperature and 		*
  *   composition, and return the cooling value to the calling routine.	*
  *   Returns total cooling term in erg*cm^3/s.				*
- *   The composition is taken directly from SPHbody->abund[i] and	*
+ *   The composition is taken directly from SPHbody->data.nucnetw.abund[i] and	*
  *   converted from mass fraction to number density.			*
  *   									*
  * NOTE:								*
@@ -152,9 +152,9 @@ void init_CoolTable(int *Gridpts, int *Nel) {
  *   - extrapolate or return analytic cooling term if outside table	*
  *   - calculate cooling term for each element/ion and sum over those	*
  *   - uses NR polint to interpolate over the tables. 			*
- *   - it populates X_el from SPHbody->abund[i] and puts elements in 	*
+ *   - it populates X_el from SPHbody->data.nucnetw.abund[i] and puts elements in 	*
  *     ascending order of Z, and also sums over isotopes. Thus the order*
- *     of isotopes/elements in SPHbody->abund does not matter. 		*
+ *     of isotopes/elements in SPHbody->data.nucnetw.abund does not matter. 		*
  ************************************************************************/
 
 
@@ -244,7 +244,7 @@ double calc_lcool1(float abundarr[],
     for (n = 0; n < NISO; n++) { /*sum individual isotopes*/
         /*exclude bare neutrons;in tablep/ionfracp index=0 is H*/
         /* this also puts X_el in order of ascending Z, if an element
-         * does not exist in abund[i], it is just zero in X_el */
+         * does not exist in data.nucnetw.abund[i], it is just zero in X_el */
         if (nparr[n] > 0) {
             X_el[nparr[n] - 1] += abundarr[n] * rho * N_AVOG / ((float)(nnarr[n] + nparr[n]));
         }
@@ -373,7 +373,7 @@ double find_ne(
     for (n = 0; n < NISO; n++) { /*sum individual isotopes*/
         /* exclude bare neutrons;in tablep/ionfracp index=0 is H*/
         /* this also puts X_el in order of ascending Z, if an element
-         * does not exist in abund[i], it is just zero in X_el */
+         * does not exist in data.nucnetw.abund[i], it is just zero in X_el */
         if (nparr[n] > 0) {
             X_el[nparr[n] - 1] += abundarr[n] * rho * N_AVOG / ((float)(nnarr[n] + nparr[n]));
         }
@@ -623,23 +623,26 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
     /* calc mean-free-path mfp=1/(rho*kappa_tot); convert from cgs to code units */
 
     /* free-bound opacity; hydrogen mass fraction = X = 'f19' */
-    /*    opacity = KBF_COEFF*(1. - p->abund[18] - p->abund[19])*(1.+ p->abund[18]);*/
+    /*    opacity = KBF_COEFF*(1. - p->data.nucnetw.abund[18] - p->data.nucnetw.abund[19])*(1.+
+     * p->data.nucnetw.abund[18]);*/
     /* free-free opacity */
-    /*    opacity = (opacity + KFF_COEFF*(p->abund[18]+p->abund[19])*(p->abund[18]+1.0))*
+    /*    opacity = (opacity +
+       KFF_COEFF*(p->data.nucnetw.abund[18]+p->data.nucnetw.abund[19])*(p->data.nucnetw.abund[18]+1.0))*
                      rho*rho*pow(temp,-3.5);*/
     /* Thomson scattering opacity */
     /*    opacity += ne * KES_COEFF;*/    /* this is kappa_tot * rho */
     /*    mfp = 1.0/opacity * ivlenCF; */ /* also convert to code units. here or next line? */
 
     mfp = 0.4 * rho; /* actually, 1/mfp; assume Thomson opacity = 0.20*(1+X) cm^2/g */
-    p->mfp = (float)(1. / mfp) * ivlenCF;
+    p->data.nucnetw.mfp = (float)(1. / mfp) * ivlenCF;
 
     op_depth = 2. * p->h * mfp * lenCF;
 
     /* count nuclei for particle number density */
     eos_n = 0;
     for (j = 0; j < NNW; j++)
-        eos_n += ((double)(rho)) * N_AVOG / (double)(nparr[j] + nnarr[j]) * p->abund[j];
+        eos_n
+            += ((double)(rho)) * N_AVOG / (double)(nparr[j] + nnarr[j]) * p->data.nucnetw.abund[j];
 
 
     /* do everything assuming gas is and remains fully ionized until the SN shock
@@ -648,12 +651,12 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 
     if (op_depth < 0.1) { /* optically thin */
 
-        ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
+        ne = find_ne(p->data.nucnetw.abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
         eos_n += ne; /* add any free electrons */
         p->temp = 0.6666666666667 * eos_u / (K_BOLTZ * eos_n);
 
     } else {
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        ne = find_ne(p->data.nucnetw.abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
         eos_n += ne; /* add any free electrons */
         p->temp = newtraph(tlo, tup, eos_u * 1.0e-6, uvst, duvst);
 
@@ -696,13 +699,13 @@ float burning(SPHbody *p, float dt, int rank) {
     for (i = 0; i < NNW; i++) {
         for (j = 0; j < NISO; j++) {
             if ((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])) {
-                molfrac[i] = p->abund[j];
+                molfrac[i] = p->data.nucnetw.abund[j];
                 j = NISO; /* get out, so we don't overwrite molfrac
                            * with junk from trailing abund columns */
             }
         }
     }
-    molfrac[NNW] = (double)p->Y_el;
+    molfrac[NNW] = (double)p->data.nucnetw.Y_el;
 
     partid = p->ident;
     /* deltah= erg/g for this timestep */
@@ -713,11 +716,11 @@ float burning(SPHbody *p, float dt, int rank) {
     for (i = 0; i < NNW; i++) {
         for (j = 0; j < NISO; j++) {
             if ((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])) {
-                p->abund[j] = molfrac[i];
+                p->data.nucnetw.abund[j] = molfrac[i];
             }
         }
     }
-    p->Y_el = (float)molfrac[NNW];
+    p->data.nucnetw.Y_el = (float)molfrac[NNW];
 
     free(molfrac); /* expensive? necessary? */
     return deltah;
@@ -750,12 +753,13 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     r2 = Dot(p->pos, p->pos);
 
     /* bail if "optically thick" (= diameter of sph particle) */
-    if (p->mfp < 2. * p->h)
+    if (p->data.nucnetw.mfp < 2. * p->h)
         return 0.;
 
     rho = (double)p->rho * (massCF * ivlenCF3);
     m_kboltz = 0.;
-    for (i = 0; i < NISO; i++) m_kboltz += p->abund[i] / ((float)(nparr[i] + nnarr[i]));
+    for (i = 0; i < NISO; i++)
+        m_kboltz += p->data.nucnetw.abund[i] / ((float)(nparr[i] + nnarr[i]));
     m_kboltz = (float)(MH / (double)(m_kboltz * K_BOLTZ));
 
     /*            while ( cycles < countc ) */
@@ -773,7 +777,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
             *notprinted = 0;
 
             /* lcool contains energy lost as positive value */
-            lcool = calc_lcool1(p->abund, nparr, nnarr, temp, rho, Gridpts, Nel, 1);
+            lcool = calc_lcool1(p->data.nucnetw.abund, nparr, nnarr, temp, rho, Gridpts, Nel, 1);
 
             /* trying to catch any NaN's */
             if (lcool != lcool)
@@ -816,7 +820,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
 
     dt = dt_save;
     p->udot += (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
-    p->Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
+    p->data.nucnetw.Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
 
     /*printf("%d of %d cycles completed\n",cycles,countc);*/
 
