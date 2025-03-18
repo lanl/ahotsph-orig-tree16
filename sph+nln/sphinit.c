@@ -348,64 +348,64 @@ void *SPHReadA(char *name,
         /* or .... */
         /* let's do this the dummest, ugliest, most painful way possible. he. he. he. -CIE */
         "f1",
-        offsetof(SPHbody, abund[0]),
+        offsetof(SPHbody, data.nucnetw.abund[0]),
         &f1conf,
         "f2",
-        offsetof(SPHbody, abund[1]),
+        offsetof(SPHbody, data.nucnetw.abund[1]),
         &f1conf,
         "f3",
-        offsetof(SPHbody, abund[2]),
+        offsetof(SPHbody, data.nucnetw.abund[2]),
         &f1conf,
         "f4",
-        offsetof(SPHbody, abund[3]),
+        offsetof(SPHbody, data.nucnetw.abund[3]),
         &f1conf,
         "f5",
-        offsetof(SPHbody, abund[4]),
+        offsetof(SPHbody, data.nucnetw.abund[4]),
         &f1conf,
         "f6",
-        offsetof(SPHbody, abund[5]),
+        offsetof(SPHbody, data.nucnetw.abund[5]),
         &f1conf,
         "f7",
-        offsetof(SPHbody, abund[6]),
+        offsetof(SPHbody, data.nucnetw.abund[6]),
         &f1conf,
         "f8",
-        offsetof(SPHbody, abund[7]),
+        offsetof(SPHbody, data.nucnetw.abund[7]),
         &f1conf,
         "f9",
-        offsetof(SPHbody, abund[8]),
+        offsetof(SPHbody, data.nucnetw.abund[8]),
         &f1conf,
         "f10",
-        offsetof(SPHbody, abund[9]),
+        offsetof(SPHbody, data.nucnetw.abund[9]),
         &f1conf,
         "f11",
-        offsetof(SPHbody, abund[10]),
+        offsetof(SPHbody, data.nucnetw.abund[10]),
         &f1conf,
         "f12",
-        offsetof(SPHbody, abund[11]),
+        offsetof(SPHbody, data.nucnetw.abund[11]),
         &f1conf,
         "f13",
-        offsetof(SPHbody, abund[12]),
+        offsetof(SPHbody, data.nucnetw.abund[12]),
         &f1conf,
         "f14",
-        offsetof(SPHbody, abund[13]),
+        offsetof(SPHbody, data.nucnetw.abund[13]),
         &f1conf,
         "f15",
-        offsetof(SPHbody, abund[14]),
+        offsetof(SPHbody, data.nucnetw.abund[14]),
         &f1conf,
         "f16",
-        offsetof(SPHbody, abund[15]),
+        offsetof(SPHbody, data.nucnetw.abund[15]),
         &f1conf,
         "f17",
-        offsetof(SPHbody, abund[16]),
+        offsetof(SPHbody, data.nucnetw.abund[16]),
         &f1conf,
         "f18",
-        offsetof(SPHbody, abund[17]),
+        offsetof(SPHbody, data.nucnetw.abund[17]),
         &f1conf,
         "f19",
-        offsetof(SPHbody, abund[18]),
+        offsetof(SPHbody, data.nucnetw.abund[18]),
         &f1conf,
         "f20",
-        offsetof(SPHbody, abund[19]),
+        offsetof(SPHbody, data.nucnetw.abund[19]),
         &f1conf,
         /*
            "f21", offsetof(SPHbody, abund[20]), &f1conf,
@@ -490,6 +490,171 @@ void *SPHReadA(char *name,
         for (p = btab; p < btab + nobj; p++) p->u = new_u;
     } else if (uconf == 0) {
         SinglError("No u in data file\n");
+    }
+    return sdfp;
+}
+
+/*read in file with strength data */
+void *SPHRead_strength(char *name,
+                       void *csdfp,
+                       SPHbody **btabp,
+                       int *gnobjp,
+                       int *nobjp,
+                       int set_id,
+                       int setpvel,
+                       float new_h,
+                       float new_u) {
+    SDF *sdfp;
+    int massconf, xconf, yconf, zconf;
+    int vxconf, vyconf, vzconf;
+    int hconf, uconf;
+    int identconf;
+    int n_defectsconf, total_defectsconf, is_strengthconf, act_thresholdconf;
+    int dmgconf, ddmgdtconf, stressconf[9], dstressdtconf[9];
+    SPHbody *btab, *p;
+    int nobj, gnobj;
+    int i;
+
+    singlPrintf("SPHReading \"%s\"\n", name);
+    sdfp = SDFreadf(name,
+                    (void **)btabp,
+                    gnobjp,
+                    nobjp,
+                    sizeof(SPHbody),
+                    "mass",
+                    offsetof(SPHbody, mass),
+                    &massconf,
+                    "x",
+                    offsetof(SPHbody, pos[0]),
+                    &xconf,
+                    "y",
+                    offsetof(SPHbody, pos[1]),
+                    &yconf,
+                    "z",
+                    offsetof(SPHbody, pos[2]),
+                    &zconf,
+                    "vx",
+                    offsetof(SPHbody, vel[0]),
+                    &vxconf,
+                    "vy",
+                    offsetof(SPHbody, vel[1]),
+                    &vyconf,
+                    "vz",
+                    offsetof(SPHbody, vel[2]),
+                    &vzconf,
+                    "u",
+                    offsetof(SPHbody, u),
+                    &uconf,
+                    "h",
+                    offsetof(SPHbody, h),
+                    &hconf,
+                    "ident",
+                    offsetof(SPHbody, ident),
+                    &identconf,
+                    "actv_defects",
+                    offsetof(SPHbody, data.strengthbody.actv_defects),
+                    &n_defectsconf,
+                    "is_strength",
+                    offsetof(SPHbody, data.strengthbody.is_strength),
+                    &is_strengthconf,
+                    "dmg",
+                    offsetof(SPHbody, data.strengthbody.dmg),
+                    &dmgconf,
+                    "ddmgdt",
+                    offsetof(SPHbody, data.strengthbody.ddmgdt),
+                    &ddmgdtconf,
+                    "stressxx",
+                    offsetof(SPHbody, data.strengthbody.stress[0]),
+                    &stressconf[0],
+                    "stressxy",
+                    offsetof(SPHbody, data.strengthbody.stress[1]),
+                    &stressconf[1],
+                    "stressxz",
+                    offsetof(SPHbody, data.strengthbody.stress[2]),
+                    &stressconf[2],
+                    "stressyx",
+                    offsetof(SPHbody, data.strengthbody.stress[3]),
+                    &stressconf[3],
+                    "stressyy",
+                    offsetof(SPHbody, data.strengthbody.stress[4]),
+                    &stressconf[4],
+                    "stressyz",
+                    offsetof(SPHbody, data.strengthbody.stress[5]),
+                    &stressconf[5],
+                    "stresszx",
+                    offsetof(SPHbody, data.strengthbody.stress[6]),
+                    &stressconf[6],
+                    "stresszy",
+                    offsetof(SPHbody, data.strengthbody.stress[7]),
+                    &stressconf[7],
+                    "stresszz",
+                    offsetof(SPHbody, data.strengthbody.stress[8]),
+                    &stressconf[8],
+                    "dstressxxdt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[0]),
+                    &dstressdtconf[0],
+                    "dstressxydt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[1]),
+                    &dstressdtconf[1],
+                    "dstressxzdt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[2]),
+                    &dstressdtconf[2],
+                    "dstressyxdt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[3]),
+                    &dstressdtconf[3],
+                    "dstressyydt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[4]),
+                    &dstressdtconf[4],
+                    "dstressyzdt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[5]),
+                    &dstressdtconf[5],
+                    "dstresszxdt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[6]),
+                    &dstressdtconf[6],
+                    "dstresszydt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[7]),
+                    &dstressdtconf[7],
+                    "dstresszzdt",
+                    offsetof(SPHbody, data.strengthbody.dstressdt[8]),
+                    &dstressdtconf[8],
+                    NULL);
+    nobj = *nobjp;
+    gnobj = *gnobjp;
+    btab = *btabp;
+    Msgf(("Data read, SPHnobj=%d, SPHgnobj=%d\n", *nobjp, *gnobjp));
+    Msgf(("Nproc:%d, Procnum: %d, Doc: %d\n", MPMY_Nproc(), MPMY_Procnum(), ilog2(MPMY_Nproc())));
+    if (massconf == 0 || xconf == 0 || yconf == 0 || zconf == 0) {
+        SinglError("Could not find %s %s %s %s in data file!\n",
+                   (massconf == 0) ? "mass" : "",
+                   (xconf == 0) ? "x" : "",
+                   (yconf == 0) ? "y" : "",
+                   (zconf == 0) ? "z" : "");
+    }
+    if (vxconf != vyconf || vxconf != vzconf) {
+        if (setpvel)
+            SinglError("Missing velocity components!\n");
+    }
+    if (identconf == 0 || set_id) {
+        SinglWarning("No \"ident\" in file, numbering sequentially\n");
+        SPHFixId(btab, nobj, gnobj);
+    }
+    if (new_h != (float)0.0) {
+        singlPrintf("Setting h to %f\n", new_h);
+        for (p = btab; p < btab + nobj; p++) p->h = new_h;
+    } else if (hconf == 0) {
+        SinglError("No h in data file\n");
+    }
+    if (new_u != (float)0.0) {
+        singlPrintf("Setting u to %f\n", new_u);
+        for (p = btab; p < btab + nobj; p++) p->u = new_u;
+    } else if (uconf == 0) {
+        SinglError("No u in data file\n");
+    }
+    for (i = 0; i < 9; i++) {
+        if (stressconf[i] == 0)
+            SinglWarning("Missing stress tensor component %d.\n", i);
+        if (dstressdtconf[i] == 0)
+            SinglWarning("Missing stress tensor rate of change component %d.\n", i);
     }
     return sdfp;
 }

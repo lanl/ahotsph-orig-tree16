@@ -632,14 +632,14 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
     /*    mfp = 1.0/opacity * ivlenCF; */ /* also convert to code units. here or next line? */
 
     mfp = 0.4 * rho; /* actually, 1/mfp; assume Thomson opacity = 0.20*(1+X) cm^2/g */
-    p->mfp = (float)(1. / mfp) * ivlenCF;
+    p->data.nucnetw.mfp = (float)(1. / mfp) * ivlenCF;
 
     op_depth = 2. * p->h * mfp * lenCF;
 
     /* count nuclei for particle number density */
     eos_n = 0;
     for (j = 0; j < NNW; j++)
-        eos_n += ((double)(rho)) * N_AVOG / (double)(nparr[j] + nnarr[j]) * p->abund[j];
+        eos_n += ((double)(rho)) * N_AVOG / (double)(nparr[j] + nnarr[j]) * p->data.nucnetw.abund[j];
 
 
     /* do everything assuming gas is and remains fully ionized until the SN shock
@@ -648,12 +648,12 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 
     if (op_depth < 0.1) { /* optically thin */
 
-        ne = find_ne(p->abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
+        ne = find_ne(p->data.nucnetw.abund, nparr, nnarr, 1.e9, rho, Gridpts, Nel);
         eos_n += ne; /* add any free electrons */
         p->temp = 0.6666666666667 * eos_u / (K_BOLTZ * eos_n);
 
     } else {
-        ne = find_ne(p->abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
+        ne = find_ne(p->data.nucnetw.abund, nparr, nnarr, p->temp, rho, Gridpts, Nel);
         eos_n += ne; /* add any free electrons */
         p->temp = newtraph(tlo, tup, eos_u * 1.0e-6, uvst, duvst);
 
@@ -696,13 +696,13 @@ float burning(SPHbody *p, float dt, int rank) {
     for (i = 0; i < NNW; i++) {
         for (j = 0; j < NISO; j++) {
             if ((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])) {
-                molfrac[i] = p->abund[j];
+                molfrac[i] = p->data.nucnetw.abund[j];
                 j = NISO; /* get out, so we don't overwrite molfrac
                            * with junk from trailing abund columns */
             }
         }
     }
-    molfrac[NNW] = (double)p->Y_el;
+    molfrac[NNW] = (double)p->data.nucnetw.Y_el;
 
     partid = p->ident;
     /* deltah= erg/g for this timestep */
@@ -713,11 +713,11 @@ float burning(SPHbody *p, float dt, int rank) {
     for (i = 0; i < NNW; i++) {
         for (j = 0; j < NISO; j++) {
             if ((nparr[j] == inNW[0][i]) && (nnarr[j] == inNW[1][i])) {
-                p->abund[j] = molfrac[i];
+                p->data.nucnetw.abund[j] = molfrac[i];
             }
         }
     }
-    p->Y_el = (float)molfrac[NNW];
+    p->data.nucnetw.Y_el = (float)molfrac[NNW];
 
     free(molfrac); /* expensive? necessary? */
     return deltah;
@@ -750,12 +750,12 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
     r2 = Dot(p->pos, p->pos);
 
     /* bail if "optically thick" (= diameter of sph particle) */
-    if (p->mfp < 2. * p->h)
+    if (p->data.nucnetw.mfp < 2. * p->h)
         return 0.;
 
     rho = (double)p->rho * (massCF * ivlenCF3);
     m_kboltz = 0.;
-    for (i = 0; i < NISO; i++) m_kboltz += p->abund[i] / ((float)(nparr[i] + nnarr[i]));
+    for (i = 0; i < NISO; i++) m_kboltz += p->data.nucnetw.abund[i] / ((float)(nparr[i] + nnarr[i]));
     m_kboltz = (float)(MH / (double)(m_kboltz * K_BOLTZ));
 
     /*            while ( cycles < countc ) */
@@ -773,7 +773,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
             *notprinted = 0;
 
             /* lcool contains energy lost as positive value */
-            lcool = calc_lcool1(p->abund, nparr, nnarr, temp, rho, Gridpts, Nel, 1);
+            lcool = calc_lcool1(p->data.nucnetw.abund, nparr, nnarr, temp, rho, Gridpts, Nel, 1);
 
             /* trying to catch any NaN's */
             if (lcool != lcool)
@@ -816,7 +816,7 @@ float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notpr
 
     dt = dt_save;
     p->udot += (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
-    p->Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
+    p->data.nucnetw.Y_el = (u - u_last) / dt * ivlenCF2 * timeCF2 * timeCF;
 
     /*printf("%d of %d cycles completed\n",cycles,countc);*/
 

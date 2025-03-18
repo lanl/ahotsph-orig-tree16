@@ -38,6 +38,7 @@
 #include "randoms.h"
 #include "ring.h"
 #include "singlio.h"
+#include "strength.h"
 #include "timers.h"
 #include "tree.h"
 #include "units.h"
@@ -68,6 +69,7 @@ static void set_vels(body *p, int n, float real_time);
 static void Output(body *btab, int nobj, const char *outname, int iter);
 static void SPHOutput(SPHbody *btab, int nobj, const char *outname, int iter);
 static void SPHOutputA(SPHbody *btab, int nobj, const char *outname, int iter);
+static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outname, int iter);
 static void WindOutput(
     SPHbody *btab, int nobj, windbody *windbtab, int windnobj, const char *outname, int iter);
 static void ShortWindOutput(
@@ -257,6 +259,16 @@ int nparr[NISO], nnarr[NISO];
 float **tablep;   /*array to hold cooling curve table values*/
 float **ionfracp; /*array to hold ionfraction table values*/
 
+/* for strength */
+double *flaw_actv_tbl;
+int *flaw_actv_tbl_lookup;
+double vol_scaling;
+double G_shear;
+double E_Young;
+double K_bulk;
+double YieldStr;
+double u_melt;
+
 /*
 int **inNW;
 int nparr[NISO], nnarr[NISO];
@@ -346,6 +358,11 @@ int main(int argc, char *argv[]) {
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
+    double vol;
+    SDF *defects_sdfp = NULL;
+    Material_t mat;
+    float rad;
+    float acc_0 = 1.e8;
 
     /*
         argv[1]="/scratch/cellinge/runsnsph/casa16run4.ctl";
@@ -407,6 +424,16 @@ int main(int argc, char *argv[]) {
                             SDFgetintOrDie(sdfp, pnames[i], &nparr[i]);
                             SDFgetintOrDie(sdfp, nnames[i], &nnarr[i]);
                         }
+                    } else if (params.do_strength) {
+                        sdfp = SPHRead_strength(iname,
+                                                csdfp,
+                                                &SPHbtab,
+                                                &SPHgnobj,
+                                                &SPHnobj,
+                                                params.set_id,
+                                                params.setpvel,
+                                                params.new_h,
+                                                params.new_u);
                     } else {
                         sdfp = SPHRead(iname,
                                        csdfp,
@@ -577,6 +604,14 @@ int main(int argc, char *argv[]) {
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
 
+    //	if (params.do_strength) {
+    //		G_shear = params.material.G_shear * ivmassCF * lenCF * timeCF2; /* to code units */
+    //		E_Young = params.material.E_Young * ivmassCF * lenCF * timeCF2; /* to code units */
+    //		K_bulk = params.material.K_bulk * ivmassCF * lenCF * timeCF2; /* to code units */
+    //		YieldStr = params.material.YieldStr * ivmassCF * lenCF * timeCF2; /* to code units
+    //*/ 		u_melt = params.material.umelt * ivmassCF * ivlenCF2 * timeCF2; /* to code units */
+    //	}
+
     singlPrintf("float params.dt = %g;\n", params.dt);
     singlPrintf("int iter = %d;\n", iter);
     singlPrintf("int nproc = %d;\n", MPMY_Nproc());
@@ -688,6 +723,111 @@ int main(int argc, char *argv[]) {
         q->phi = 0.0;
     }
 
+    float stress_mag = 1.0e+2;
+    /* Testing initialization */
+    for (q = SPHbtab; q < SPHbtab + SPHnobj; q++) {
+        VS(q->acc, = 0.0);
+        VS(q->acc_last, = 0.0);
+        VS(q->grav_acc, = 0.0);
+        q->phi = 0.0;
+        /* dev: (re-)set strength quantities */
+        if (params.do_strength_test) {
+            q->u = 1.5e-0;
+            q->temp = 1.0;
+            q->pr = 0.0;
+            q->data.strengthbody.actv_defects = 0;
+            q->data.strengthbody.is_strength = 1;
+            q->data.strengthbody.dmg = 0.0;
+            q->data.strengthbody.ddmgdt = 0.0;
+            q->data.strengthbody.vonMises = 1.0;
+            q->data.strengthbody.crack_len = 0.0;
+            for (i = 0; i < NDIM * NDIM; i++) {
+                q->data.strengthbody.dstressdt[i] = 0.0;
+                q->data.strengthbody.dstressdt_last[i] = 0.0;
+            }
+            for (i = 0; i < SRTERMS; i++) {
+                q->data.strengthbody.strain[i] = 0.0;
+                q->data.strengthbody.dstraindt[i] = 0.0;
+                q->data.strengthbody.dstraindt_last[i] = 0.0;
+            }
+            rad = sqrt(q->pos[0] * q->pos[0] + q->pos[1] * q->pos[1] + q->pos[2] * q->pos[2]);
+            if (q->pos[2] < 1.0) {
+                q->acc[2] = -acc_0;
+                // q->vel[1] = 1.0e+2;
+                //} else if (q->pos[2] > 1.5 && q->pos[2] < 2.5) {
+                //    q->acc[1] = -1.0e+4;
+                // q->vel[1] = -1.0e+2;
+            } else if (q->pos[2] > 3.0) {
+                q->acc[2] = acc_0;
+                // q->vel[1] = 1.0e+2;
+            }
+            /* hopefully equil stress terms? */
+            /* diag. terms = normal stresses, off-diag. terms = shear stresses */
+            // q->data.strengthbody.stress[0] = 1.0*stress_mag;// * q->pos[0] / rad;
+            // q->data.strengthbody.stress[1] = 1.0*stress_mag;
+            // q->data.strengthbody.stress[2] = 1.0*stress_mag;
+            // q->data.strengthbody.stress[3] = 0.5*stress_mag;
+            // q->data.strengthbody.stress[4] = -1.0*stress_mag * q->pos[1] / rad;
+            // q->data.strengthbody.stress[5] = 0.5*stress_mag;
+            // q->data.strengthbody.stress[6] = 1.0*stress_mag;
+            // q->data.strengthbody.stress[7] = 0.5*stress_mag;
+            // q->data.strengthbody.stress[8] = -1.0*stress_mag * q->pos[2] / rad;
+            // q->data.strengthbody.dstressdt[8] = -0.0001;
+            /*
+            q->data.strengthbody.stress[0] = -1.0e12;
+            q->data.strengthbody.stress[4] = 1.0e12;
+            q->data.strengthbody.stress[8] = 2.0e12;
+            q->data.strengthbody.dstressdt_last[0] = -1.0e12;
+            q->data.strengthbody.dstressdt_last[4] = -1.0e12;
+            q->data.strengthbody.dstressdt_last[8] = 2.0e12;
+            */
+        }
+    }
+
+    /* turn on to get strength data output */
+    if (params.do_strength_test)
+        params.do_strength = 1;
+
+    /* add flaws if doing a brittle solid */
+    if (params.do_strength && params.make_brittle) {
+        if (params.defects_table_exists) {
+            /* note: on all ranks */
+            defects_sdfp = SDFopen(NULL, params.defects_file);
+            read_defects_table(
+                defects_sdfp, &(params.Nflaws), &flaw_actv_tbl, &flaw_actv_tbl_lookup);
+            SDFclose(defects_sdfp);
+        } else {
+            if (params.Nflaws < 0)
+                params.Nflaws = SPHgnobj * log(SPHgnobj);
+            flaw_actv_tbl = (double *)malloc(params.Nflaws * sizeof(double));
+            flaw_actv_tbl_lookup = (int *)malloc(2 * SPHgnobj * sizeof(int));
+
+            /* let only rank 0 calculate the table, then send to all other ranks,
+             * to make sure each ranks sees the same data.
+             * Better: let each rank calculate a chunk in the tables, then send to all
+             * other ranks. */
+            if (MPMY_Procnum() == 0) {
+                init_defects_table(SPHgnobj,
+                                   params.Nflaws,
+                                   &flaw_actv_tbl,
+                                   &flaw_actv_tbl_lookup,
+                                   params.material.material_k * params.material.Vol0,
+                                   params.material.material_m);
+                sprintf(params.defects_file, "%s_flaws.sdf", params.outnamebase);
+                write_defects_table(params.defects_file,
+                                    SPHgnobj,
+                                    params.Nflaws,
+                                    flaw_actv_tbl,
+                                    flaw_actv_tbl_lookup);
+            }
+            MPMY_Bcast(flaw_actv_tbl, params.Nflaws, MPMY_DOUBLE, 0);
+            MPMY_Bcast(flaw_actv_tbl_lookup, 2 * SPHgnobj, MPMY_INT, 0);
+        }
+
+        singlPrintf("int Nflaws = %d;\n", params.Nflaws);
+    }
+
+    /* main loop over time steps */
     for (params.nsteps += iter; iter <= params.nsteps; iter++) {
         if (params.timeout > 0)
             MPMY_TimeoutReset(params.timeout);
@@ -1296,11 +1436,19 @@ int main(int argc, char *argv[]) {
                         else
                             WindOutput(
                                 SPHbtab, SPHnobj, windbtab, windnobj, params.outnamebase, iter);
-                    } else
-                        SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
+                    } else {
+                        if (params.do_burning || params.do_cooling)
+                            SPHOutputA(SPHbtab, SPHnobj, params.outnamebase, iter);
+                        else if (params.do_strength)
+                            SPHOutput_strength(SPHbtab, SPHnobj, params.outnamebase, iter);
+                        else
+                            SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
+                    }
                 } else {
-                    if (params.do_cooling || params.do_burning)
+                    if (params.do_burning || params.do_cooling)
                         SPHOutputA(SPHbtab, SPHnobj, params.outnamebase, iter);
+                    else if (params.do_strength)
+                        SPHOutput_strength(SPHbtab, SPHnobj, params.outnamebase, iter);
                     else
                         SPHOutput(SPHbtab, SPHnobj, params.outnamebase, iter);
                 }
@@ -1428,6 +1576,51 @@ int main(int argc, char *argv[]) {
                    SPHnobj,
                    dt,
                    dt_last);
+        if (params.do_strength) {
+            for (i = 0; i < NDIM * NDIM; i++) {
+                if (!isfinite(SPHbtab[0].data.strengthbody.stress[i]))
+                    singlPrintf("stress not finite\n");
+                if (!isfinite(SPHbtab[0].data.strengthbody.dstressdt[i]))
+                    singlPrintf("dstressdt not finite\n");
+                if (!isfinite(SPHbtab[0].data.strengthbody.strain[i]))
+                    singlPrintf("strain not finite\n");
+
+                ABUpdateXs(&SPHbtab[0].data.strengthbody.stress[i],
+                           SPHstride,
+                           &SPHbtab[0].data.strengthbody.dstressdt[i],
+                           SPHstride,
+                           &SPHbtab[0].data.strengthbody.dstressdt_last[i],
+                           SPHstride,
+                           &SPHbtab[0].ident,
+                           SPHstride3,
+                           SPHnobj,
+                           dt,
+                           dt_last);
+            }
+            for (i = 0; i < SRTERMS; i++) {
+                ABUpdateXs(&SPHbtab[0].data.strengthbody.strain[i],
+                           SPHstride,
+                           &SPHbtab[0].data.strengthbody.dstraindt[i],
+                           SPHstride,
+                           &SPHbtab[0].data.strengthbody.dstraindt_last[i],
+                           SPHstride,
+                           &SPHbtab[0].ident,
+                           SPHstride3,
+                           SPHnobj,
+                           dt,
+                           dt_last);
+            }
+
+            UpdateSXs(&SPHbtab[0].data.strengthbody.dmg,
+                      SPHstride,
+                      &SPHbtab[0].data.strengthbody.ddmgdt,
+                      SPHstride,
+                      &SPHbtab[0].ident,
+                      SPHstride3,
+                      SPHnobj,
+                      dt,
+                      dt_last);
+        }
         /* One must be careful with this integration scheme, since v */
         /* is a derived variable.  To really adjust v, change pos_last */
 #ifdef POS_IS_DOUBLE
@@ -2457,8 +2650,8 @@ static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter
         output_btab[i].nbrs = btab[i].nbrs;
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
-        output_btab[i].Y_el = btab[i].Y_el;
-        output_btab[i].mfp = btab[i].mfp;
+        output_btab[i].Y_el = btab[i].data.nucnetw.Y_el;
+        output_btab[i].mfp = btab[i].data.nucnetw.mfp;
     }
     /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
     Msgf(("Doing output of %d bodies\n", output_nobj));
@@ -2678,10 +2871,10 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
         output_btab[i].nbrs = btab[i].nbrs;
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
-        output_btab[i].Y_el = btab[i].Y_el;
-        output_btab[i].mfp = btab[i].mfp;
+        output_btab[i].nucnetw.Y_el = btab[i].data.nucnetw.Y_el;
+        output_btab[i].nucnetw.mfp = btab[i].data.nucnetw.mfp;
         for (j = 0; j < NISO; j++) { /*will this work? -CIE: so far, it compiled and runs*/
-            output_btab[i].abund[j] = btab[i].abund[j];
+            output_btab[i].nucnetw.abund[j] = btab[i].data.nucnetw.abund[j];
             /*
                output_btab[i].np[j] = btab[i].np[j];
                output_btab[i].nn[j] = btab[i].nn[j];
@@ -2971,6 +3164,162 @@ static void SPHOutputA(SPHbody *btab, int nobj, const char *outnamebase, int ite
                 pnames[21], SDF_INT, nparr[21];
                 nnames[21], SDF_INT, nnarr[21];
                 */
+             NULL);
+    Free(output_btab);
+    singlPrintf("\nOutput done.\n");
+#ifndef __DELTA__
+    if (MPMY_Procnum() == 0) {
+        char name[256];
+        sprintf(name, "%s_sph.restart", outnamebase);
+        if (unlink(name))
+            Shout("unlink of %s failed, errno=%d\n", name, errno);
+        if (symlink(outname, name))
+            Shout("symlink of %s failed, errno=%d\n", outname, errno);
+    }
+#endif
+}
+
+static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase, int iter) {
+    SPHbody *p;
+    int i, j;
+    sortresult_t outputsort;
+    SPHoutbody_strength *output_btab;
+    int output_nobj = nobj;
+    float tpos_out = tpos;
+    float tvel_out = tvel; /* changed in Integrate() */
+    float twind_out = params.t_wind;
+    double ke, pe, te;
+    MPMY_Comm_request req;
+    int output_gnobj;
+    float output_z, output_h, output_R0;
+    char outname[256];
+
+    sprintf(outname, "%s_sph.%04d", outnamebase, iter);
+    pe = ke = te = 0.0;
+    for (p = btab; p < btab + nobj; p++) {
+        ke += (float)0.5 * p->mass * Dot(p->vel, p->vel);
+        te += p->mass * p->u;
+        pe += (float)0.5 * p->mass * p->phi;
+    }
+    output_btab = Malloc(output_nobj * sizeof(SPHoutbody_strength));
+    for (i = 0; i < output_nobj; i++) {
+        output_btab[i].mass = btab[i].mass;
+        VV(output_btab[i].pos, = btab[i].pos);
+        VV(output_btab[i].vel, = btab[i].vel);
+        output_btab[i].u = btab[i].u;
+        output_btab[i].h = btab[i].h;
+        output_btab[i].rho = btab[i].rho;
+        output_btab[i].drho_dt = btab[i].drho_dt;
+        output_btab[i].udot = btab[i].udot;
+#ifdef SPH_SAVE_ACC
+        VV(output_btab[i].acc, = btab[i].acc);
+        VV(output_btab[i].acc_last, = btab[i].acc_last);
+        output_btab[i].phi = btab[i].D;
+        output_btab[i].dt = btab[i].dt;
+#endif
+        output_btab[i].pr = btab[i].pr;
+        output_btab[i].nbrs = btab[i].nbrs;
+        output_btab[i].ident = btab[i].ident;
+        output_btab[i].temp = btab[i].temp;
+        output_btab[i].padding = btab[i].padding;
+        output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
+        output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
+        output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
+        output_btab[i].strengthbody.vonMises = btab[i].data.strengthbody.vonMises;
+        for (j = 0; j < NDIM * NDIM; j++) {
+            output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
+        }
+        for (j = 0; j < SRTERMS; j++)
+            output_btab[i].strengthbody.strain[j] = btab[i].data.strengthbody.strain[j];
+    }
+    /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
+    Msgf(("Doing output of %d bodies\n", output_nobj));
+    singlPrintf("Trying to sort output\n");
+    pqsortsetup_order(
+        &outputsort, output_btab, output_nobj, sizeof(SPHoutbody_strength), 0.1F, 1, Realloc_f);
+    output_btab = pqsort(&outputsort, UnityCost, (pq_keyproto)SPHOutIdentKey);
+    output_nobj = outputsort.nobj;
+    /*     Msg("output", ("After pqsort, %d outbodies\n", output_nobj)); */
+    Msgf(("After pqsort, %d outbodies\n", output_nobj));
+    MPMY_ICombine_Init(&req);
+    MPMY_ICombine(&ke, &ke, 1, MPMY_DOUBLE, MPMY_SUM, req);
+    MPMY_ICombine(&pe, &pe, 1, MPMY_DOUBLE, MPMY_SUM, req);
+    MPMY_ICombine(&te, &te, 1, MPMY_DOUBLE, MPMY_SUM, req);
+    MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
+    MPMY_ICombine_Wait(req);
+    if (params.cosmology) {
+        output_z = Znow(tpos_out);
+        output_h = Hnow(tpos_out);
+        output_R0 = R0;
+    } else {
+        output_z = 0.0;
+        output_h = 0.0;
+        output_R0 = sysradius;
+    }
+    /* I'm guessing this writes whatever is in output_btab, matched to SPHOUTBODYDESC -CIE */
+    SDFwrite(outname,
+             output_gnobj,
+             output_nobj,
+             output_btab,
+             sizeof(SPHoutbody_strength),
+             STRENGTHOUTBODYDESC,
+             "npart",
+             SDF_INT,
+             output_gnobj,
+             "iter",
+             SDF_INT,
+             iter,
+             "dt",
+             SDF_FLOAT,
+             dt,
+             "eps",
+             SDF_FLOAT,
+             this_eps,
+             "Gnewt",
+             SDF_FLOAT,
+             cosmo.GNewt,
+             "tolerance",
+             SDF_FLOAT,
+             this_tol,
+             "frac_tolerance",
+             SDF_FLOAT,
+             params.frac_tol,
+             "ndim",
+             SDF_INT,
+             NDIM,
+             "tpos",
+             SDF_FLOAT,
+             tpos_out,
+             "tvel",
+             SDF_FLOAT,
+             tvel_out,
+             "R0",
+             SDF_FLOAT,
+             output_R0,
+             "gamma",
+             SDF_FLOAT,
+             params.Gamma,
+             "massCF",
+             SDF_FLOAT,
+             massCF,
+             "lenCF",
+             SDF_FLOAT,
+             lenCF,
+             "timeCF",
+             SDF_FLOAT,
+             timeCF,
+             "centmass",
+             SDF_FLOAT,
+             params.centmass,
+             "ke",
+             SDF_DOUBLE,
+             ke,
+             "pe",
+             SDF_DOUBLE,
+             pe,
+             "te",
+             SDF_DOUBLE,
+             te,
              NULL);
     Free(output_btab);
     singlPrintf("\nOutput done.\n");

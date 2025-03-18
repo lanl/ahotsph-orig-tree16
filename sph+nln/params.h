@@ -1,5 +1,6 @@
 #include "SDF.h"
 #include "ndim.h"
+#include "strength.h"
 
 #ifndef MAXCOEF
 #define MAXCOEF 16
@@ -11,6 +12,7 @@ typedef struct {
     char template_name[256]; /* wind template */
     char winddata_name[256]; /* "winddata_name" */
     char outnamebase[256];
+    char defects_file[256]; /* sdf file with defects table */
     int timeout;
     int fail_if_slow;
     int do_restart;
@@ -30,6 +32,13 @@ typedef struct {
     int do_absorbing_bndry;
     int do_drag;
     int has_grav_data;
+    int do_strength;
+    int do_strength_test;
+    int do_plastic;           /* include plasticity? 0 = perfectly elastic solid */
+    int make_brittle;         /* add flaws to make solid break apart */
+    int defects_table_exists; /* switch to read in from table or create new flaws */
+    int Nflaws;               /* set number of flaws in solid. should be ~ npart*ln(npart) */
+    int frac_model;           /* 1=Weibull, 2=Mohr Coulomg, 3=1&2 */
     int windpartpershell;
     int old_winds;
     int const_winds;
@@ -104,6 +113,7 @@ typedef struct {
     double kernel_coef1[MAXCOEF];
     double kernel_coef2[MAXCOEF];
     float drag_coeff;
+    Material_t material;
 } setup_params_t;
 
 typedef struct {
@@ -122,3 +132,4 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params);
 void print_initial_ctl(setup_params_t params);
 void read_absorb_bndry(SDF *sdfp, bndry_t *bndry);
 void print_absorb_bndry(bndry_t bndry);
+void set_material(SDF *sdfp, Material_t *mat);

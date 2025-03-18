@@ -30,6 +30,42 @@
 #define POLY_EOS_K 0.5f
 #define POLY_EOS_GAMMA 1.5f
 
+/* specific physics data goes into its own struct */
+/* make sure these contain an even number of 4-byte data types
+ * so all of SPHbody is aligned to an 8-byte boundary */
+typedef struct nuc_network_s {
+    float Y_el;
+    float mfp;
+    float abund[NISO];
+} nuc_network_data_t;
+
+typedef struct strength_s {
+    int actv_defects; /* number of activated defects in particle */
+    int is_strength;
+    float dmg;                         /* damage parameter */
+    float ddmgdt;                      /* rate of change of damage */
+    float vonMises;                    /* von Mises yielding factor */
+    float crack_len;                   /* length of longest crack */
+    float stress[NDIM * NDIM];         /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
+    float dstressdt[NDIM * NDIM];      /* stress tensor */
+    float dstressdt_last[NDIM * NDIM]; /* stress tensor, previous step */
+    float strain[SRTERMS];    /* strain tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy,
+                                 xz, yz */
+    float dstraindt[SRTERMS]; /* rate of change in strain tensor */
+    float dstraindt_last[SRTERMS];
+} strength_data_t;
+
+typedef struct strength_out_s {
+    int actv_defects; /* number of activated defects in particle */
+    int is_strength;
+    float dmg;                 /* damage parameter */
+    float vonMises;            /* von Mises yielding factor */
+    float crack_len;           /* length of longest crack */
+    float stress[NDIM * NDIM]; /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
+    float strain[SRTERMS]; /* strain tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy,
+                              xz, yz */
+} strength_data_out_t;
+
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -50,6 +86,10 @@ typedef struct {
     float temp;      /* temperature, used to enforce LTE */
     float du;        /* change in internal energy this timestep */
     float dt_next;
+    union {
+        nuc_network_data_t nucnetw;
+        strength_data_t strengthbody;
+    } data;
     /* Things declared above this line are communicated between processors */
     /* so they can be used in in the loop over nbrs in FindRho and ForceSPH */
     /* Don't add anything above this line unless you fix TBODYSZ */
@@ -80,9 +120,7 @@ typedef struct {
     float dt;
     float min_nbr_dt;
     unsigned int windid;
-    float Y_el;
-    float mfp;
-    float abund[NISO];
+    float padding;
 } SPHbody;
 
 
@@ -168,10 +206,35 @@ typedef struct {
     unsigned int ident; /* unique? identifier */
     unsigned int windid;
     float temp;
-    float Y_el;
-    float mfp;
-    float abund[NISO];
+    nuc_network_data_t nucnetw;
 } SPHoutbody_NW;
+
+typedef struct {
+#ifdef POS_IS_DOUBLE
+    double pos[NDIM]; /* position of body */
+#else
+    float pos[NDIM]; /* position of body */
+#endif
+    float mass;      /* mass of body */
+    float vel[NDIM]; /* velocity of body */
+    float u;
+    float h;
+    float rho;
+    float drho_dt;
+    float udot;
+#ifdef SPH_SAVE_ACC
+    float acc[NDIM];
+    float acc_last[NDIM];
+    float phi;
+    float dt;
+#endif
+    float pr;
+    float temp;
+    unsigned int nbrs;
+    unsigned int ident; /* unique? identifier */
+    strength_data_out_t strengthbody;
+    float padding;
+} SPHoutbody_strength;
 
 typedef struct {
 #ifdef POS_IS_DOUBLE
@@ -237,6 +300,46 @@ typedef struct {
     float mfp;			/* mean free path */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
 }"
+#define STRENGTHOUTBODYDESC \
+    "struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float ax, ay, az;		/* acceleration */\n\
+    float lax, lay, laz;	/* acceleration at tpos-dt */\n\
+    float phi;			/* potential */\n\
+    float idt;			/* timestep */\n\
+    float pr;		/* pressure */\n\
+    float temp;                 /* temperature */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+	int actv_defects;			/* local number of defects */\n\
+	int is_strength;		/* does particle feel strength? */\n\
+    float dmg;                  /* damage parameter */\n\
+	float vonMises;			/* von Mises yielding factor */\n\
+	float crack_len;		/* length of longest crack */\n\
+    float stressxx;        /* stress tensor, el. 0 */\n\
+    float stressxy;        /* stress tensor, el. 1 */\n\
+    float stressxz;        /* stress tensor, el. 2 */\n\
+    float stressyx;        /* stress tensor, el. 3 */\n\
+    float stressyy;        /* stress tensor, el. 4 */\n\
+    float stressyz;        /* stress tensor, el. 5 */\n\
+    float stresszx;        /* stress tensor, el. 6 */\n\
+    float stresszy;        /* stress tensor, el. 7 */\n\
+    float stresszz;        /* stress tensor, el. 8 */\n\
+	float strainxx;		/* strain tensor */\n\
+	float strainyy;		/* strain tensor */\n\
+	float strainzz;		/* strain tensor */\n\
+	float strainxy;		/* strain tensor */\n\
+	float strainxz;		/* strain tensor */\n\
+	float strainyz;		/* strain tensor */\n\
+	float padding;\n\
+}"
 #define SPHSHORTOUTBODYDESC \
     "struct {\n\
     double x, y, z;		/* position of body */\n\
@@ -286,6 +389,58 @@ typedef struct {
     float Y_el;                  /* for alignment */\n\
     float mfp;			/* mean free path */\n\
     float f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14,f15,f16,f17,f18,f19,f20; \n\
+}"
+#define STRENGTHOUTBODYDESC \
+    "struct {\n\
+    double x, y, z;		/* position of body */\n\
+    float mass;			/* mass of body */\n\
+    float vx, vy, vz;		/* velocity of body */\n\
+    float u;			/* internal energy */\n\
+    float h;			/* smoothing length */\n\
+    float rho;			/* density */\n\
+    float drho_dt;              /* time derivative of rho */\n\
+    float udot;			/* time derivative of u */\n\
+    float pr;		/* pressure */\n\
+    float temp;                 /* temperature */\n\
+    unsigned int nbrs;          /* number of neighbors */\n\
+    unsigned int ident;		/* unique identifier */\n\
+	int n_defects;			/* local number of defects */\n\
+	int is_strength;		/* does particle feel strength? */\n\
+    float dmg;                  /* damage */\n\
+    float ddmgdt;			/* rate of change of damage */\n\
+    float stressxx;        /* stress tensor, el. 0 */\n\
+    float stressxy;        /* stress tensor, el. 1 */\n\
+    float stressxz;        /* stress tensor, el. 2 */\n\
+    float stressyx;        /* stress tensor, el. 3 */\n\
+    float stressyy;        /* stress tensor, el. 4 */\n\
+    float stressyz;        /* stress tensor, el. 5 */\n\
+    float stresszx;        /* stress tensor, el. 6 */\n\
+    float stresszy;        /* stress tensor, el. 7 */\n\
+    float stresszz;        /* stress tensor, el. 8 */\n\
+    float dstressxxdt;      /* rate of change of stress tensor */\n\
+    float dstressxydt;      /* rate of change of stress tensor */\n\
+    float dstressxzdt;      /* rate of change of stress tensor */\n\
+    float dstressyxdt;      /* rate of change of stress tensor */\n\
+    float dstressyydt;      /* rate of change of stress tensor */\n\
+    float dstressyzdt;      /* rate of change of stress tensor */\n\
+    float dstresszxdt;      /* rate of change of stress tensor */\n\
+    float dstresszydt;      /* rate of change of stress tensor */\n\
+    float dstresszzdt;      /* rate of change of stress tensor */\n\
+    float stressxx_last;        /* stress tensor, el. 0 */\n\
+    float stressxy_last;        /* stress tensor, el. 1 */\n\
+    float stressxz_last;        /* stress tensor, el. 2 */\n\
+    float stressyx_last;        /* stress tensor, el. 3 */\n\
+    float stressyy_last;        /* stress tensor, el. 4 */\n\
+    float stressyz_last;        /* stress tensor, el. 5 */\n\
+    float stresszx_last;        /* stress tensor, el. 6 */\n\
+    float stresszy_last;        /* stress tensor, el. 7 */\n\
+    float stresszz_last;        /* stress tensor, el. 8 */\n\
+	float strainxx;		/* strain tensor */\n\
+	float strainyy;		/* strain tensor */\n\
+	float strainzz;		/* strain tensor */\n\
+	float strainxy;		/* strain tensor */\n\
+	float strainxz;		/* strain tensor */\n\
+	float strainyz;		/* strain tensor */\n\
 }"
 #define SPHSHORTOUTBODYDESC \
     "struct {\n\
@@ -358,6 +513,7 @@ typedef struct {
     unsigned int nterms;
     int interactions;
     float min_nbr_dt;
+    strength_data_t strengthbody;
 } SinkSPH;
 
 typedef struct {
@@ -462,6 +618,15 @@ void *SPHReadA(char *name,
                int setpvel,
                float new_h,
                float new_u);
+void *SPHRead_strength(char *name,
+                       void *csdfp,
+                       SPHbody **btabp,
+                       int *gnobjp,
+                       int *nobjp,
+                       int set_id,
+                       int setpvel,
+                       float new_h,
+                       float new_u);
 void SPHTestData(void *csdfp, SPHbody **btabp, int *gnobjp, int *nobjp, int periodic);
 void *InitRead(char *name,
                void *csdfp,
@@ -492,6 +657,12 @@ void GravMinusSPH(void **btab, int *nobj, accbody **atab, int *anobj);
 /* In eos.c */
 double uvst(double t);
 double duvst(double t);
+double liquid_eos(double k_bulk, double eta);
+double murnaghan_eos(double k_bulk, double n_M, double eta);
+// void setconst1(Material_t *m);
+// void setconst2(Material_t *m);
+void tillotson_eos(double rho, double u, Material_t *m, double *pressure, double *cs);
+double anton_schmidt_eos(double k_bulk, double power_n, double eta);
 
 /* In newtraph.c */
 float newtraph(double xl, double xr, double prec, double (*f)(double x), double (*df)(double x));

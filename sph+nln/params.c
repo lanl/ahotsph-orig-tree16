@@ -42,8 +42,15 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
     SDFgetintOrDefault(sdfp, "do_absorbing_bndry", &(params->do_absorbing_bndry), 0);
     SDFgetintOrDefault(sdfp, "do_drag", &(params->do_drag), 0);
     SDFgetintOrDefault(sdfp, "has_grav_data", &(params->has_grav_data), params->do_grav);
+    SDFgetintOrDefault(sdfp, "do_strength", &(params->do_strength), 0);
+    SDFgetintOrDefault(sdfp, "do_strength_test", &(params->do_strength_test), 0);
 
     SDFgetintOrDefault(sdfp, "poly_eos", &(params->poly_eos), 0);
+
+    /* make strength and network stuff mutually exclusive for now */
+    if (params->do_strength && (params->do_burning || params->do_cooling)) {
+        Error("Strength stuff and network stuff is currently not allowed together.\n");
+    }
 
     if (params->do_sph || params->do_grav) {
         if (SDFhasname("SPHdatafile", sdfp))
@@ -121,6 +128,21 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
         else
             SDFgetfloatOrDie(sdfp, "errtol", &(params->tol));
         SDFgetfloatOrDefault(sdfp, "frac_tol", &(params->frac_tol), 0.0);
+    }
+
+    if (params->do_strength || params->do_strength_test) {
+        SDFgetintOrDefault(sdfp, "do_plastic", &(params->do_plastic), 0);
+        SDFgetintOrDefault(sdfp, "make_brittle", &(params->make_brittle), 0);
+        SDFgetintOrDefault(sdfp, "defects_table_exists", &(params->defects_table_exists), 0);
+        /* if reading from flaws table, make sure solid is brittle */
+        if (params->defects_table_exists) {
+            params->make_brittle = 1;
+            SDFgetstringOrDie(
+                sdfp, "defects_file", params->defects_file, sizeof(params->defects_file));
+        }
+        SDFgetintOrDefault(sdfp, "Nflaws", &(params->Nflaws), -1);
+        SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
+        set_material(sdfp, &(params->material));
     }
 
     SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);
@@ -303,6 +325,42 @@ void print_initial_ctl(setup_params_t params) {
     singlPrintf("int do_cooling = %d;\n", params.do_cooling);
     singlPrintf("int do_diffusion = %d;\n", params.do_diffusion);
     singlPrintf("int do_burning = %d;\n", params.do_burning);
+    singlPrintf("int do_strength = %d;\n", params.do_strength);
+    singlPrintf("int do_strength_test = %d;\n", params.do_strength_test);
+    if (params.do_strength) {
+        singlPrintf("int do_plastic = %d;\n", params.do_plastic);
+        singlPrintf("int make_brittle = %d;\n", params.make_brittle);
+        singlPrintf("int defects_table_exists = %d;\n", params.defects_table_exists);
+        if (!params.defects_table_exists && params.Nflaws < 0)
+            singlPrintf("int Nflaws = %d; /*Nflaws will be set to 'npart * ln (npart)'*/\n",
+                        params.Nflaws);
+        else if (params.defects_table_exists && params.Nflaws < 0)
+            singlPrintf("int Nflaws = %d; /*Nflaws will be set from existing defects table*/\n",
+                        params.Nflaws);
+        else
+            singlPrintf("int Nflaws = %d;\n", params.Nflaws);
+        if (params.defects_table_exists)
+            singlPrintf("char defects_file[] = %s;\n", params.defects_file);
+        singlPrintf("int frac_model = %d;\n", params.frac_model);
+        singlPrintf("float G_shear = %g;\n", params.material.G_shear);
+        singlPrintf("float E_Young = %g;\n", params.material.E_Young);
+        singlPrintf("float yield = %g;\n", params.material.yield);
+        singlPrintf("float umelt = %g;\n", params.material.umelt);
+        singlPrintf("float material_k = %g;\n", params.material.material_k);
+        singlPrintf("float material_m = %g;\n", params.material.material_m);
+        singlPrintf("float Vol0 = %g;\n", params.material.Vol0);
+        singlPrintf("float rho0 = %g;\n", params.material.rho0);
+        singlPrintf("float u0 = %g;\n", params.material.u0);
+        singlPrintf("float A = %g;\n", params.material.A);
+        singlPrintf("float B = %g;\n", params.material.B);
+        singlPrintf("float a = %g;\n", params.material.a);
+        singlPrintf("float b = %g;\n", params.material.b);
+        singlPrintf("float alpha = %g;\n", params.material.alpha);
+        singlPrintf("float beta = %g;\n", params.material.beta);
+        singlPrintf("float Eiv = %g;\n", params.material.Eiv);
+        singlPrintf("float Ecv = %g;\n", params.material.Ecv);
+        singlPrintf("float mu = %g;\n", params.material.mu);
+    }
 
     if (params.do_output) {
         if (params.short_output)
