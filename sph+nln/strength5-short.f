@@ -138,12 +138,12 @@ c
      $     2.*syzi*ryzi
       dszzi=xmu2*(epszzi-div3)-2.*sxzi*rxzi+
      $     2.*syzi*ryzi
-      dsxyi=xmu2*epsxyi+(syyi-sxxi)*rxyi+
+      dsxyi=xmu2*epsxyi+(syyi-sxxi)*rxyi-
      $     sxzi*ryzi+syzi*rxzi
       dsxzi=xmu2*epsxzi+(szzi-sxxi)*rxzi-
      $     sxyi*ryzi+syzi*rxyi
       dsyzi=xmu2*epsyzi+(szzi-syyi)*ryzi-
-     $     sxyi*rxzi-sxzi*rxyi
+     $     sxyi*rxzi+sxzi*rxyi
 c
       return
       end
