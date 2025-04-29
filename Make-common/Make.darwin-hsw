@@ -13,9 +13,9 @@ YACC:=bison -y
 include $(treedir)/Make-common/Make.default
 
 swsrc:=lsv.c swampi.c
-asmdir:=asm-sse
-asmsrc=do_grav_sse64_noswiz.s do_grav_sse64_noswiz_eps.s do_grav_sse64_nr.s
-cppasmsrc=do_grav_sse16_ivec.S
+#asmdir:=asm-sse
+#asmsrc=do_grav_sse64_noswiz.s do_grav_sse64_noswiz_eps.s do_grav_sse64_nr.s
+#cppasmsrc=do_grav_sse16_ivec.S
 
 LOADLIBES=-lrt
 
