@@ -599,7 +599,7 @@ int main(int argc, char *argv[]) {
     ivlenCF2 = ivlenCF * ivlenCF;
     ivlenCF3 = ivlenCF * ivlenCF * ivlenCF;
 
-    cosmo.GNewt = GRAV_C * ((double)massCF * ivlenCF * tdivlCF * tdivlCF);
+    cosmo.GNewt = 1.0;//GRAV_C * ((double)massCF * ivlenCF * tdivlCF * tdivlCF);
 
     grav_c = cosmo.GNewt;
     c_light = C_LIGHT * tdivlCF;
