@@ -461,6 +461,7 @@ c
          if (yst.le.tiny) then
             sxxi=0.d0
             syyi=0.d0
+            szzi=0.d0
             sxyi=0.d0
             sxzi=0.d0
             syzi=0.d0
