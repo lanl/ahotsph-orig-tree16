@@ -1,3 +1,6 @@
+#ifndef PARAMS_DOT_H
+#define PARAMS_DOT_H
+
 #include "SDF.h"
 #include "ndim.h"
 #include "strength.h"
