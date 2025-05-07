@@ -826,6 +826,8 @@ void update_final(SPHbody *btab,
             /************* update T, eos_n, eos_u *************/
             if (params.do_cooling || params.do_burning) {
                 temp_ok = prep_cool_burn(p, newtraph_tlo, newtraph_thi, Gridpts, Nel, 0);
+            } else if (params.do_strength && p->data.strengthbody.is_strength) {
+                eos_n=1; // do an operation. TODO: do correct calculations
             } else {
                 /* Calculate temperature from u, then "create" photons (a*T^4) */
                 eos_n = (double)(p->rho) * ivlenCF3 * massCF;
@@ -1066,6 +1068,29 @@ void update_intermediate(SPHbody *btab,
                     p->data.strengthbody.stress[8] = -2.0*p->pr;
                     */
                 }
+                // p->temp = 306.0; /* TODO: update with calculation */
+            } else { 
+                eos_u = ((double)(p->u)) * ((double)(p->rho_est));
+                eos_u *= massCF * ivlenCF * ivtimeCF2;
+
+                /* Figure out good upper and lower limits for temp */
+                p->temp = newtraph(4.0e3, 1.5e11, eos_u * 1.0e-6, uvst, duvst);
+                /* calculate the total pressure by calculating the respective
+                contributions of gas and radiation pressure */
+                pgas = prad = 0.0;
+                pgas = (double)(eos_n * K_BOLTZ * p->temp);
+                if (20. * p->h > p->data.nucnetw.mfp)
+                    prad = (double)(0.33333333333 * A_RAD * p->temp * p->temp * p->temp * p->temp);
+                p->pr = (float)(pgas + prad) * lenCF * timeCF2 * ivmassCF;
+
+                /* this is still using Gamma. Perhaps could calculate gamma
+                at this point? */
+                P_ratio = (double)pgas / (double)(pgas + prad);
+                /* from D. Clayton's Stellar Evolution book, p.119 */
+                Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
+                        / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
+                /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
+                p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
             }
         } else {
             /* Calculate temperature from u, then "create" photons (a*T^4) */
@@ -1077,39 +1102,40 @@ void update_intermediate(SPHbody *btab,
             /* Figure out good upper and lower limits for temp */
             p->temp = newtraph(4.0e3, 1.5e11, eos_u * 1.0e-6, uvst, duvst);
             p->data.nucnetw.mfp = p->h;
-        }
+       
 
-        /* calculate the total pressure by calculating the respective
-           contributions of gas and radiation pressure */
-        pgas = prad = 0.0;
-        pgas = (double)(eos_n * K_BOLTZ * p->temp);
-        if (20. * p->h > p->data.nucnetw.mfp)
-            prad = (double)(0.33333333333 * A_RAD * p->temp * p->temp * p->temp * p->temp);
-        p->pr = (float)(pgas + prad) * lenCF * timeCF2 * ivmassCF;
+            /* calculate the total pressure by calculating the respective
+            contributions of gas and radiation pressure */
+            pgas = prad = 0.0;
+            pgas = (double)(eos_n * K_BOLTZ * p->temp);
+            if (20. * p->h > p->data.nucnetw.mfp)
+                prad = (double)(0.33333333333 * A_RAD * p->temp * p->temp * p->temp * p->temp);
+            p->pr = (float)(pgas + prad) * lenCF * timeCF2 * ivmassCF;
 
-        /* this is still using Gamma. Perhaps could calculate gamma
-           at this point? */
-        P_ratio = (double)pgas / (double)(pgas + prad);
-        /* from D. Clayton's Stellar Evolution book, p.119 */
-        Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
-                 / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
-        /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
-        p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
+            /* this is still using Gamma. Perhaps could calculate gamma
+            at this point? */
+            P_ratio = (double)pgas / (double)(pgas + prad);
+            /* from D. Clayton's Stellar Evolution book, p.119 */
+            Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
+                    / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
+            /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
+            p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
 
-        if (params.do_diffusion) {
-            /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
+            if (params.do_diffusion) {
+                /* NOTE: MOST LIKELY VERY BROKEN!!!! DON'T DIFFUSE!! */
 
-            /* Calculate temperature from u, then "create" photons (a*T^4) */
-            /* Figure out good upper and lower limits for temp */
-            p->u_r = A_RAD * p->temp * p->temp * p->temp * p->temp * lenCF * timeCF2 * ivmassCF;
-            p->du_r = 0.0;
+                /* Calculate temperature from u, then "create" photons (a*T^4) */
+                /* Figure out good upper and lower limits for temp */
+                p->u_r = A_RAD * p->temp * p->temp * p->temp * p->temp * lenCF * timeCF2 * ivmassCF;
+                p->du_r = 0.0;
 
-            /* Calculate diffusion coefficient in user-units */
-            kes = KES_COEFF / MH * (massCF * ivlenCF2);
-            kff = (KFF_COEFF)*p->rho_est * pow(p->temp, -3.5) * (massCF * ivlenCF);
-            p->D = C_LIGHT * tdivlCF / (3.0 * (kes + kff) * p->rho_est);
+                /* Calculate diffusion coefficient in user-units */
+                kes = KES_COEFF / MH * (massCF * ivlenCF2);
+                kff = (KFF_COEFF)*p->rho_est * pow(p->temp, -3.5) * (massCF * ivlenCF);
+                p->D = C_LIGHT * tdivlCF / (3.0 * (kes + kff) * p->rho_est);
 
-            /* Also, eventually, handle lightbulb approximation here */
+                /* Also, eventually, handle lightbulb approximation here */
+            }
         }
     }
 }
