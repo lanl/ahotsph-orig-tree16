@@ -346,6 +346,7 @@ void print_initial_ctl(setup_params_t params) {
         singlPrintf("float E_Young = %g;\n", params.material.E_Young);
         singlPrintf("float yield = %g;\n", params.material.yield);
         singlPrintf("float umelt = %g;\n", params.material.umelt);
+        singlPrintf("float tmelt = %g;\n", params.material.tmelt);       
         singlPrintf("float material_k = %g;\n", params.material.material_k);
         singlPrintf("float material_m = %g;\n", params.material.material_m);
         singlPrintf("float Vol0 = %g;\n", params.material.Vol0);
@@ -359,6 +360,7 @@ void print_initial_ctl(setup_params_t params) {
         singlPrintf("float beta = %g;\n", params.material.beta);
         singlPrintf("float Eiv = %g;\n", params.material.Eiv);
         singlPrintf("float Ecv = %g;\n", params.material.Ecv);
+        singlPrintf("float C_v = %g;\n", params.material.C_v);
         singlPrintf("float mu = %g;\n", params.material.mu);
     }
 

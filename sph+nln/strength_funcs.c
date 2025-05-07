@@ -196,8 +196,10 @@ void set_material(SDF *sdfp, Material_t *mat) {
     SDFgetdoubleOrDie(sdfp, "Till_beta", &(mat->beta));
     SDFgetdoubleOrDie(sdfp, "Eiv", &(mat->Eiv));
     SDFgetdoubleOrDie(sdfp, "Ecv", &(mat->Ecv));
+    SDFgetdoubleOrDie(sdfp, "C_v", &(mat->C_v));
     SDFgetdoubleOrDie(sdfp, "u0", &(mat->u0));
     SDFgetdoubleOrDie(sdfp, "umelt", &(mat->umelt));
+    SDFgetdoubleOrDie(sdfp, "tmelt", &(mat->tmelt));
     SDFgetdoubleOrDie(sdfp, "mu", &(mat->mu));
     SDFgetdoubleOrDie(sdfp, "Yieldstr", &(mat->yield));
     SDFgetdoubleOrDie(sdfp, "G_shear", &(mat->G_shear));

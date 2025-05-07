@@ -44,8 +44,10 @@ typedef struct material_s {
     double beta;      /* Tillotson parameter */
     double Eiv;       /* energy of incipient vaporization */
     double Ecv;       /* energy of complete vaporization */
+    double C_v;       /* specific heat capacity */
     double u0;        /* initial material specific energy density */
     double umelt;     /* melt energy */
+    double tmelt;     /* melting temperature */
     double mu;        /* strain, rho/rho0 - 1 */
     double yield;     /* yield strength */
     double pweib;     /* some Weibull parameter */
