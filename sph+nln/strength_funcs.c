@@ -211,6 +211,32 @@ void set_material(SDF *sdfp, Material_t *mat) {
     mat->E_Young = 9. * mat->A * mat->G_shear / (3. * mat->A + mat->G_shear);
 }
 
+/* using the von Mises formula */
+double equiv_strain(double const s[]) {
+    double equiv_s = 0.5 * (s[0] - s[1]) * (s[0] - s[1])
+                    + 0.5 * (s[1] - s[2]) * (s[1] - s[2])
+                    + 0.5 * (s[2] - s[1]) * (s[2] - s[1])
+                    + s[3] * s[3]
+                    + s[4] * s[4]
+                    + s[5] * s[5];
+    return sqrt(4.0 / 3.0 * equiv_s);
+}
+
+/* using the von Mises formula */
+double equiv_stress(double const s[]) {
+    double equiv_s = 0.5 * (s[0] - s[1]) * (s[0] - s[1])
+                    + 0.5 * (s[1] - s[2]) * (s[1] - s[2])
+                    + 0.5 * (s[2] - s[1]) * (s[2] - s[1])
+                    + 3.0 * s[3] * s[3]
+                    + 3.0 * s[4] * s[4]
+                    + 3.0 * s[5] * s[5];
+    return sqrt(equiv_s);
+}
+
+double equiv_strain_rate(double const strain_rate[]) {
+
+}
+
 
 void strength_force(double *grpmj,
                     double *rhoij,

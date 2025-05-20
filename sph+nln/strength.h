@@ -1,6 +1,8 @@
 #ifndef STRENGTH_DOT_H
 #define STRENGTH_DOT_H
 
+#include "SDF.h"
+
 /*#include "physics_sph.h"*/
 
 extern double *flaw_actv_tbl;
@@ -32,6 +34,9 @@ void strength_force(double *grpmj,
                     double *dfxi,
                     double *dfyi,
                     double *dfzi);
+
+double equiv_strain(double const s[]);
+double equiv_stress(double const s[]);
 
 typedef struct material_s {
     double Vol0;      /* initial target volume */

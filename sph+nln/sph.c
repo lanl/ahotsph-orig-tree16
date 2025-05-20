@@ -296,7 +296,7 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
     float dstraindt[SRTERMS] = {0, 0, 0, 0, 0, 0};
     double dstraindt_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
     float gshear = (float)(params.material.G_shear);
-    double yieldstr = (double)(params.material.yield);
+    // double yieldstr = (double)(params.material.yield);
     double umelt = (double)(params.material.umelt);
     Vxd(double dr_i);
     Vxd(double dv_i);
@@ -856,7 +856,7 @@ void update_final(SPHbody *btab,
         }
 
         if (params.do_strength) {
-            p->temp = 306.0; /* fix temp for now */
+            // p->temp = 306.0; /* fix temp for now */
             for (i = 0; i < NDIM * NDIM; i++) stress[i] = (double)p->data.strengthbody.stress[i];
 
             for (i = 0; i < SRTERMS; i++) strain[i] = (double)p->data.strengthbody.strain[i];
@@ -936,6 +936,7 @@ void update_intermediate(SPHbody *btab,
     double P_ratio, Gammai;
     double tlo = 1.e0, tup = 2.5e11;
     double pr_d, rho_d, u_d, cs_d;
+    double equiv_e, equiv_edot, equiv_s;
     int j, temp_ok;
     SPHbody *p;
     Material_t mat;
@@ -1027,6 +1028,17 @@ void update_intermediate(SPHbody *btab,
                 if (params.do_plastic) {
                     /* calculate von Mises yielding factor ('f' in eq. 9),
                      * and calcuate reduced stress terms, viz. eq. 8 */
+                    /* calc equiv strain
+                     * calc equiv strain rate
+                     * update_temp from ptw
+                     * calc flow stress with ptw
+                    */
+                    equiv_e = equiv_strain(p->data.strengthbody.strain);
+                    equiv_edot = equiv_strain(p->data.strengthbody.dstraindt);
+                    equiv_s = equiv_stress(p->data.strengthbody.stress);
+                    update_T(&(p->temp), &equiv_s, &equiv_edot, &dt_last, &(params.material.C_v), &(p->rho_est));
+                    yieldstr = ptw(&equiv_e, &(p->temp), &(params.material.tmelt), &gshear, &equiv_edot);
+
                     plastic_(&stress[0],
                              &stress[4],
                              &stress[8],
@@ -1038,6 +1050,9 @@ void update_intermediate(SPHbody *btab,
                              &umelt,
                              &yieldstr,
                              &vonMises);
+                    stress[3] = stress[1];
+                    stress[6] = stress[2];
+                    stress[7] = stress[5];
                     for (i = 0; i < NDIM * NDIM; i++)
                         p->data.strengthbody.stress[i] = (float)stress[i];
                 } else {
