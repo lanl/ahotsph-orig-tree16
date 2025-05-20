@@ -13,7 +13,7 @@ const consts_t mat_consts = {.alpha = 0.2,
                          .G0 = 0.4,
                          .chi = 1.0,
                          .sgB = 6.44e-4};
-params_t ptw_params;
+plasticity_params_t ptw_params;
 
 double ptw(const double* edot,
            const double* temp,

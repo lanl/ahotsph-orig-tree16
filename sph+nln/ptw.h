@@ -11,7 +11,7 @@ typedef struct params_s {
     double yInf;
     double y1;
     double y2;
-} params_t;
+} plasticity_params_t;
 
 typedef struct consts_s {
     const double alpha;
@@ -37,7 +37,7 @@ typedef struct state_s {
 } state_t;
 
 extern const consts_t mat_consts;
-extern params_t ptw_params;
+extern plasticity_params_t ptw_params;
 
 double ptw(const double* edot,
            const double* temp,
