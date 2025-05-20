@@ -136,3 +136,5 @@ void print_initial_ctl(setup_params_t params);
 void read_absorb_bndry(SDF *sdfp, bndry_t *bndry);
 void print_absorb_bndry(bndry_t bndry);
 void set_material(SDF *sdfp, Material_t *mat);
+
+#endif
