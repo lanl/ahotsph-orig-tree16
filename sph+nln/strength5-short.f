@@ -485,12 +485,13 @@ c
       if (vonmisesi.lt.0.9) then
          print *, xj2,vonmisesi
       end if
-c      sxxi=vonmisesi*sxxi
-c      syyi=vonmisesi*syyi
-c      sxyi=vonmisesi*sxyi
-c      sxzi=vonmisesi*sxzi
-c      syzi=vonmisesi*syzi
-c
+      sxxi=vonmisesi*sxxi
+      syyi=vonmisesi*syyi
+      szzi=vonmisesi*szzi
+      sxyi=vonmisesi*sxyi
+      sxzi=vonmisesi*sxzi
+      syzi=vonmisesi*syzi
+
       return
       end
 
