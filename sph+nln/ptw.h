@@ -1,5 +1,7 @@
 #pragma once
 
+#include "strength.h"
+
 typedef struct params_s {
     double theta;
     double p;
@@ -13,18 +15,6 @@ typedef struct params_s {
     double y2;
 } plasticity_params_t;
 
-typedef struct consts_s {
-    const double alpha;
-    const double beta;
-    const double mAtomic;
-    const double TMelt0;
-    const double rho0;
-    const double Cv0;
-    const double G0;
-    const double chi;
-    const double sgB;
-} consts_t;
-
 typedef struct state_s {
     double* stress;
     double* strain;
@@ -36,21 +26,20 @@ typedef struct state_s {
     double* Tmelt;
 } state_t;
 
-extern const consts_t mat_consts;
-extern plasticity_params_t ptw_params;
-
 double ptw(const double* edot,
            const double* temp,
-           const double* tmelt,
            const double* shear,
-           const double* eps);
-double calc_specific_heat();
+           const double* eps,
+           const plasticity_params_t* ptw_params,
+           const Material_t* mat_consts);
+double calc_specific_heat(const Material_t* mat_consts);
 void update_T(double* temp,
               const double* stress,
               const double* edot,
               const double* dt,
               const double* C_v,
-              const double* rho);
-double calc_tmelt();
-double calc_shear_modulus(const double* temp, const double* tmelt);
+              const double* rho,
+              const double* chi);
+double calc_tmelt(const Material_t* mat_consts);
+double calc_shear_modulus(const double* temp, const double* tmelt, const Material_t* mat_consts);
 void* calc_flow_stress();

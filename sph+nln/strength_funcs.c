@@ -184,10 +184,11 @@ int has_strength(const SPHbody *p) {
     return 1;
 }
 
-void set_material(SDF *sdfp, Material_t *mat) {
+void set_material(SDF *sdfp, Material_t *mat, int plasticity_model) {
     *mat = *(Material_t *)malloc(sizeof(Material_t));
     SDFgetdoubleOrDie(sdfp, "Vol0", &(mat->Vol0));
     SDFgetdoubleOrDie(sdfp, "rho0", &(mat->rho0));
+    SDFgetdoubleOrDie(sdfp, "mAtomic", &(mat->mAtomic));
     SDFgetdoubleOrDie(sdfp, "Till_A", &(mat->A));
     SDFgetdoubleOrDie(sdfp, "Till_B", &(mat->B));
     SDFgetdoubleOrDie(sdfp, "Till_a", &(mat->a));
@@ -204,11 +205,17 @@ void set_material(SDF *sdfp, Material_t *mat) {
     SDFgetdoubleOrDie(sdfp, "Yieldstr", &(mat->yield));
     SDFgetdoubleOrDie(sdfp, "G_shear", &(mat->G_shear));
     SDFgetdoubleOrDie(sdfp, "E_Young", &(mat->E_Young));
+    SDFgetdoubleOrDie(sdfp, "chi", &(mat->chi));
+    SDFgetdoubleOrDie(sdfp, "sgB", &(mat->sgB));
+    if (plasticity_model == 1) {
+        SDFgetdoubleOrDie(sdfp, "ptw_alpha", &(mat->ptw_alpha));
+        SDFgetdoubleOrDie(sdfp, "ptw_beta", &(mat->ptw_beta));
+    }
     SDFgetfloatOrDie(sdfp, "material_k", &(mat->material_k));
     SDFgetfloatOrDie(sdfp, "material_m", &(mat->material_m));
     //	mat->A = mat->E_Young * mat->G_shear /
     //		(9. * mat->G_shear - 3. * mat->E_Young);
-    mat->E_Young = 9. * mat->A * mat->G_shear / (3. * mat->A + mat->G_shear);
+    // mat->E_Young = 9. * mat->A * mat->G_shear / (3. * mat->A + mat->G_shear);
 }
 
 /* using the von Mises formula */

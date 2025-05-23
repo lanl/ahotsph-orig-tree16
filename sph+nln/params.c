@@ -132,6 +132,23 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
 
     if (params->do_strength || params->do_strength_test) {
         SDFgetintOrDefault(sdfp, "do_plastic", &(params->do_plastic), 0);
+        if (params->do_plastic) {
+            SDFgetintOrDefault(sdfp, "plasticity_model", &(params->plasticity_model), 1);
+            if (params->plasticity_model < 0 || params->plasticity_model > 1) 
+                Error("Unsupported plasticity model. \nOnly von Mises (0) and PTW (1) are supported currently.\n");
+            if (params->plasticity_model == 1) {
+                SDFgetdoubleOrDie(sdfp, "ptw_theta", &(params->plasticity_params.theta));
+                SDFgetdoubleOrDie(sdfp, "ptw_p", &(params->plasticity_params.p));
+                SDFgetdoubleOrDie(sdfp, "ptw_s0", &(params->plasticity_params.s0));
+                SDFgetdoubleOrDie(sdfp, "ptw_sInf", &(params->plasticity_params.sInf));
+                SDFgetdoubleOrDie(sdfp, "ptw_kappa", &(params->plasticity_params.kappa));
+                SDFgetdoubleOrDie(sdfp, "ptw_lgamma", &(params->plasticity_params.lgamma));
+                SDFgetdoubleOrDie(sdfp, "ptw_y0", &(params->plasticity_params.y0));
+                SDFgetdoubleOrDie(sdfp, "ptw_yInf", &(params->plasticity_params.yInf));
+                SDFgetdoubleOrDie(sdfp, "ptw_y1", &(params->plasticity_params.y1));
+                SDFgetdoubleOrDie(sdfp, "ptw_y2", &(params->plasticity_params.y2));
+            }
+        }
         SDFgetintOrDefault(sdfp, "make_brittle", &(params->make_brittle), 0);
         SDFgetintOrDefault(sdfp, "defects_table_exists", &(params->defects_table_exists), 0);
         /* if reading from flaws table, make sure solid is brittle */
@@ -142,7 +159,7 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
         }
         SDFgetintOrDefault(sdfp, "Nflaws", &(params->Nflaws), -1);
         SDFgetintOrDie(sdfp, "frac_model", &(params->frac_model));
-        set_material(sdfp, &(params->material));
+        set_material(sdfp, &(params->material), params->plasticity_model);
     }
 
     SDFgetfloatOrDefault(sdfp, "CWfac", &(params->CWfac), 0.0);

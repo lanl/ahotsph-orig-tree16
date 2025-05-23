@@ -295,7 +295,7 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
     float strain_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
     float dstraindt[SRTERMS] = {0, 0, 0, 0, 0, 0};
     double dstraindt_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
-    float gshear = (float)(params.material.G_shear);
+    // float gshear = (float)(params.material.G_shear);
     // double yieldstr = (double)(params.material.yield);
     double umelt = (double)(params.material.umelt);
     Vxd(double dr_i);
@@ -1028,16 +1028,16 @@ void update_intermediate(SPHbody *btab,
                 if (params.do_plastic) {
                     /* calculate von Mises yielding factor ('f' in eq. 9),
                      * and calcuate reduced stress terms, viz. eq. 8 */
-                    /* calc equiv strain
-                     * calc equiv strain rate
-                     * update_temp from ptw
-                     * calc flow stress with ptw
-                    */
-                    equiv_e = equiv_strain(p->data.strengthbody.strain);
-                    equiv_edot = equiv_strain(p->data.strengthbody.dstraindt);
-                    equiv_s = equiv_stress(p->data.strengthbody.stress);
-                    update_T(&(p->temp), &equiv_s, &equiv_edot, &dt_last, &(params.material.C_v), &(p->rho_est));
-                    yieldstr = ptw(&equiv_e, &(p->temp), &(params.material.tmelt), &gshear, &equiv_edot);
+                    if (params.plasticity_model == 1) { /* PTW */
+                        equiv_e = equiv_strain(p->data.strengthbody.strain);
+                        equiv_edot = equiv_strain(p->data.strengthbody.dstraindt);
+                        equiv_s = equiv_stress(p->data.strengthbody.stress);
+                        update_T(&(p->temp), &equiv_s, &equiv_edot, &dt_last, &(params.material.C_v), &(p->rho_est), &(params.material.chi));
+                        if (equiv_edot > 0.0)
+                            yieldstr = ptw(&equiv_e, &(p->temp), &(params.material.G_shear), &equiv_edot, &(params.plasticity_params), &(params.material));
+                        if (yieldstr < 0.0) 
+                            Error("Bad flow stress from PTW.\n");
+                    }
 
                     plastic_(&stress[0],
                              &stress[4],

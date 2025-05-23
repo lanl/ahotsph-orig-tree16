@@ -41,6 +41,7 @@ double equiv_stress(double const s[]);
 typedef struct material_s {
     double Vol0;      /* initial target volume */
     double rho0;      /* original density */
+    double mAtomic;   /* atomic mass */
     double A;         /* bulk modulus, units of pressure */
     double B;         /* Tillotson parameter, units of pressure */
     double a;         /* Tillotson parameter */
@@ -59,6 +60,10 @@ typedef struct material_s {
     double cweib;     /* some Weibull parameter */
     double G_shear;   /* shear modulus */
     double E_Young;   /* Young's modulus */
+    double chi;       /* parameter for PTW */
+    double sgB;       /* parameter for PTW */
+    double ptw_alpha; /* parameter for PTW */
+    double ptw_beta;  /* parameter for PTW */
     float material_k; /* material coefficient for flaws */
     float material_m; /* powerlaw index for flaws */
 } Material_t;
