@@ -507,7 +507,7 @@ void *SPHRead_strength(char *name,
     SDF *sdfp;
     int massconf, xconf, yconf, zconf;
     int vxconf, vyconf, vzconf;
-    int hconf, uconf;
+    int hconf, uconf, tempconf;
     int identconf;
     int n_defectsconf, total_defectsconf, is_strengthconf, act_thresholdconf;
     int dmgconf, ddmgdtconf, stressconf[9], dstressdtconf[9];
@@ -551,6 +551,9 @@ void *SPHRead_strength(char *name,
                     "ident",
                     offsetof(SPHbody, ident),
                     &identconf,
+                    "temp",
+                    offsetof(SPHbody, temp),
+                    &tempconf,
                     "actv_defects",
                     offsetof(SPHbody, data.strengthbody.actv_defects),
                     &n_defectsconf,
