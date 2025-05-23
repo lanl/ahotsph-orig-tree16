@@ -741,11 +741,9 @@ int main(int argc, char *argv[]) {
             q->data.strengthbody.ddmgdt = 0.0;
             q->data.strengthbody.vonMises = 1.0;
             q->data.strengthbody.crack_len = 0.0;
-            for (i = 0; i < NDIM * NDIM; i++) {
+            for (i = 0; i < SRTERMS; i++) {
                 q->data.strengthbody.dstressdt[i] = 0.0;
                 q->data.strengthbody.dstressdt_last[i] = 0.0;
-            }
-            for (i = 0; i < SRTERMS; i++) {
                 q->data.strengthbody.strain[i] = 0.0;
                 q->data.strengthbody.dstraindt[i] = 0.0;
                 q->data.strengthbody.dstraindt_last[i] = 0.0;
@@ -761,26 +759,6 @@ int main(int argc, char *argv[]) {
                 q->acc[2] = acc_0;
                 // q->vel[1] = 1.0e+2;
             }
-            /* hopefully equil stress terms? */
-            /* diag. terms = normal stresses, off-diag. terms = shear stresses */
-            // q->data.strengthbody.stress[0] = 1.0*stress_mag;// * q->pos[0] / rad;
-            // q->data.strengthbody.stress[1] = 1.0*stress_mag;
-            // q->data.strengthbody.stress[2] = 1.0*stress_mag;
-            // q->data.strengthbody.stress[3] = 0.5*stress_mag;
-            // q->data.strengthbody.stress[4] = -1.0*stress_mag * q->pos[1] / rad;
-            // q->data.strengthbody.stress[5] = 0.5*stress_mag;
-            // q->data.strengthbody.stress[6] = 1.0*stress_mag;
-            // q->data.strengthbody.stress[7] = 0.5*stress_mag;
-            // q->data.strengthbody.stress[8] = -1.0*stress_mag * q->pos[2] / rad;
-            // q->data.strengthbody.dstressdt[8] = -0.0001;
-            /*
-            q->data.strengthbody.stress[0] = -1.0e12;
-            q->data.strengthbody.stress[4] = 1.0e12;
-            q->data.strengthbody.stress[8] = 2.0e12;
-            q->data.strengthbody.dstressdt_last[0] = -1.0e12;
-            q->data.strengthbody.dstressdt_last[4] = -1.0e12;
-            q->data.strengthbody.dstressdt_last[8] = 2.0e12;
-            */
         }
     }
 
@@ -1577,7 +1555,7 @@ int main(int argc, char *argv[]) {
                    dt,
                    dt_last);
         if (params.do_strength) {
-            for (i = 0; i < NDIM * NDIM; i++) {
+            for (i = 0; i < SRTERMS; i++) {
                 if (!isfinite(SPHbtab[0].data.strengthbody.stress[i]))
                     singlPrintf("stress not finite\n");
                 if (!isfinite(SPHbtab[0].data.strengthbody.dstressdt[i]))
@@ -1596,8 +1574,6 @@ int main(int argc, char *argv[]) {
                            SPHnobj,
                            dt,
                            dt_last);
-            }
-            for (i = 0; i < SRTERMS; i++) {
                 ABUpdateXs(&SPHbtab[0].data.strengthbody.strain[i],
                            SPHstride,
                            &SPHbtab[0].data.strengthbody.dstraindt[i],
@@ -3226,10 +3202,8 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
         output_btab[i].strengthbody.vonMises = btab[i].data.strengthbody.vonMises;
-        for (j = 0; j < NDIM * NDIM; j++) {
+        for (j = 0; j < SRTERMS; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
-        }
-        for (j = 0; j < SRTERMS; j++)
             output_btab[i].strengthbody.strain[j] = btab[i].data.strengthbody.strain[j];
     }
     /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */

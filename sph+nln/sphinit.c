@@ -510,7 +510,7 @@ void *SPHRead_strength(char *name,
     int hconf, uconf, tempconf;
     int identconf;
     int n_defectsconf, total_defectsconf, is_strengthconf, act_thresholdconf;
-    int dmgconf, ddmgdtconf, stressconf[9], dstressdtconf[9];
+    int dmgconf, ddmgdtconf, stressconf[SRTERMS], dstressdtconf[SRTERMS];
     SPHbody *btab, *p;
     int nobj, gnobj;
     int i;
@@ -569,57 +569,39 @@ void *SPHRead_strength(char *name,
                     "stressxx",
                     offsetof(SPHbody, data.strengthbody.stress[0]),
                     &stressconf[0],
-                    "stressxy",
+                    "stressyy",
                     offsetof(SPHbody, data.strengthbody.stress[1]),
                     &stressconf[1],
-                    "stressxz",
+                    "stresszz",
                     offsetof(SPHbody, data.strengthbody.stress[2]),
                     &stressconf[2],
-                    "stressyx",
+                    "stressxy",
                     offsetof(SPHbody, data.strengthbody.stress[3]),
                     &stressconf[3],
-                    "stressyy",
+                    "stressxz",
                     offsetof(SPHbody, data.strengthbody.stress[4]),
                     &stressconf[4],
                     "stressyz",
                     offsetof(SPHbody, data.strengthbody.stress[5]),
                     &stressconf[5],
-                    "stresszx",
-                    offsetof(SPHbody, data.strengthbody.stress[6]),
-                    &stressconf[6],
-                    "stresszy",
-                    offsetof(SPHbody, data.strengthbody.stress[7]),
-                    &stressconf[7],
-                    "stresszz",
-                    offsetof(SPHbody, data.strengthbody.stress[8]),
-                    &stressconf[8],
                     "dstressxxdt",
                     offsetof(SPHbody, data.strengthbody.dstressdt[0]),
                     &dstressdtconf[0],
-                    "dstressxydt",
+                    "dstressyydt",
                     offsetof(SPHbody, data.strengthbody.dstressdt[1]),
                     &dstressdtconf[1],
-                    "dstressxzdt",
+                    "dstresszzdt",
                     offsetof(SPHbody, data.strengthbody.dstressdt[2]),
                     &dstressdtconf[2],
-                    "dstressyxdt",
+                    "dstressxydt",
                     offsetof(SPHbody, data.strengthbody.dstressdt[3]),
                     &dstressdtconf[3],
-                    "dstressyydt",
+                    "dstressxzdt",
                     offsetof(SPHbody, data.strengthbody.dstressdt[4]),
                     &dstressdtconf[4],
                     "dstressyzdt",
                     offsetof(SPHbody, data.strengthbody.dstressdt[5]),
                     &dstressdtconf[5],
-                    "dstresszxdt",
-                    offsetof(SPHbody, data.strengthbody.dstressdt[6]),
-                    &dstressdtconf[6],
-                    "dstresszydt",
-                    offsetof(SPHbody, data.strengthbody.dstressdt[7]),
-                    &dstressdtconf[7],
-                    "dstresszzdt",
-                    offsetof(SPHbody, data.strengthbody.dstressdt[8]),
-                    &dstressdtconf[8],
                     NULL);
     nobj = *nobjp;
     gnobj = *gnobjp;
@@ -653,7 +635,7 @@ void *SPHRead_strength(char *name,
     } else if (uconf == 0) {
         SinglError("No u in data file\n");
     }
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < SRTERMS; i++) {
         if (stressconf[i] == 0)
             SinglWarning("Missing stress tensor component %d.\n", i);
         if (dstressdtconf[i] == 0)

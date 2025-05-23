@@ -46,9 +46,10 @@ typedef struct strength_s {
     float ddmgdt;                      /* rate of change of damage */
     float vonMises;                    /* von Mises yielding factor */
     float crack_len;                   /* length of longest crack */
-    float stress[NDIM * NDIM];         /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
-    float dstressdt[NDIM * NDIM];      /* stress tensor */
-    float dstressdt_last[NDIM * NDIM]; /* stress tensor, previous step */
+    //float stress[NDIM * NDIM];         /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
+    float stress[SRTERMS];              /* stress tensor xx, yy, zz, xy, xz, yz */
+    float dstressdt[SRTERMS];      /* stress tensor */
+    float dstressdt_last[SRTERMS]; /* stress tensor, previous step */
     float strain[SRTERMS];    /* strain tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy,
                                  xz, yz */
     float dstraindt[SRTERMS]; /* rate of change in strain tensor */
@@ -61,7 +62,7 @@ typedef struct strength_out_s {
     float dmg;                 /* damage parameter */
     float vonMises;            /* von Mises yielding factor */
     float crack_len;           /* length of longest crack */
-    float stress[NDIM * NDIM]; /* stress tensor: xx, xy, xz, yx, yy, yz, zx, zy, zz*/
+    float stress[SRTERMS]; /* stress tensor: xx, yy, zz, xy, xz, yz */
     float strain[SRTERMS]; /* strain tensor, symmetric, only need 6 terms, all-D: xx, yy, zz, xy,
                               xz, yz */
 } strength_data_out_t;
@@ -324,14 +325,11 @@ typedef struct {
 	float vonMises;			/* von Mises yielding factor */\n\
 	float crack_len;		/* length of longest crack */\n\
     float stressxx;        /* stress tensor, el. 0 */\n\
-    float stressxy;        /* stress tensor, el. 1 */\n\
-    float stressxz;        /* stress tensor, el. 2 */\n\
-    float stressyx;        /* stress tensor, el. 3 */\n\
-    float stressyy;        /* stress tensor, el. 4 */\n\
+    float stressyy;        /* stress tensor, el. 1 */\n\
+    float stresszz;        /* stress tensor, el. 2 */\n\
+    float stressxy;        /* stress tensor, el. 3 */\n\
+    float stressxz;        /* stress tensor, el. 4 */\n\
     float stressyz;        /* stress tensor, el. 5 */\n\
-    float stresszx;        /* stress tensor, el. 6 */\n\
-    float stresszy;        /* stress tensor, el. 7 */\n\
-    float stresszz;        /* stress tensor, el. 8 */\n\
 	float strainxx;		/* strain tensor */\n\
 	float strainyy;		/* strain tensor */\n\
 	float strainzz;		/* strain tensor */\n\
@@ -414,27 +412,18 @@ typedef struct {
     float stressyx;        /* stress tensor, el. 3 */\n\
     float stressyy;        /* stress tensor, el. 4 */\n\
     float stressyz;        /* stress tensor, el. 5 */\n\
-    float stresszx;        /* stress tensor, el. 6 */\n\
-    float stresszy;        /* stress tensor, el. 7 */\n\
-    float stresszz;        /* stress tensor, el. 8 */\n\
     float dstressxxdt;      /* rate of change of stress tensor */\n\
+    float dstressyydt;      /* rate of change of stress tensor */\n\
+    float dstresszzdt;      /* rate of change of stress tensor */\n\
     float dstressxydt;      /* rate of change of stress tensor */\n\
     float dstressxzdt;      /* rate of change of stress tensor */\n\
-    float dstressyxdt;      /* rate of change of stress tensor */\n\
-    float dstressyydt;      /* rate of change of stress tensor */\n\
     float dstressyzdt;      /* rate of change of stress tensor */\n\
-    float dstresszxdt;      /* rate of change of stress tensor */\n\
-    float dstresszydt;      /* rate of change of stress tensor */\n\
-    float dstresszzdt;      /* rate of change of stress tensor */\n\
     float stressxx_last;        /* stress tensor, el. 0 */\n\
-    float stressxy_last;        /* stress tensor, el. 1 */\n\
-    float stressxz_last;        /* stress tensor, el. 2 */\n\
-    float stressyx_last;        /* stress tensor, el. 3 */\n\
-    float stressyy_last;        /* stress tensor, el. 4 */\n\
+    float stressyy_last;        /* stress tensor, el. 1 */\n\
+    float stresszz_last;        /* stress tensor, el. 2 */\n\
+    float stressxy_last;        /* stress tensor, el. 3 */\n\
+    float stressxz_last;        /* stress tensor, el. 4 */\n\
     float stressyz_last;        /* stress tensor, el. 5 */\n\
-    float stresszx_last;        /* stress tensor, el. 6 */\n\
-    float stresszy_last;        /* stress tensor, el. 7 */\n\
-    float stresszz_last;        /* stress tensor, el. 8 */\n\
 	float strainxx;		/* strain tensor */\n\
 	float strainyy;		/* strain tensor */\n\
 	float strainzz;		/* strain tensor */\n\
