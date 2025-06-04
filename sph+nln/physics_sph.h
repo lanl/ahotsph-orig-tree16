@@ -406,10 +406,10 @@ typedef struct {
     float dmg;                  /* damage */\n\
     float ddmgdt;			/* rate of change of damage */\n\
     float stressxx;        /* deviatoric stress tensor, el. 0 */\n\
-    float stressxy;        /* deviatoric stress tensor, el. 1 */\n\
-    float stressxz;        /* deviatoric stress tensor, el. 2 */\n\
-    float stressyx;        /* deviatoric stress tensor, el. 3 */\n\
-    float stressyy;        /* deviatoric stress tensor, el. 4 */\n\
+    float stressyy;        /* deviatoric stress tensor, el. 1 */\n\
+    float stresszz;        /* deviatoric stress tensor, el. 2 */\n\
+    float stressxy;        /* deviatoric stress tensor, el. 3 */\n\
+    float stressxz;        /* deviatoric stress tensor, el. 4 */\n\
     float stressyz;        /* deviatoric stress tensor, el. 5 */\n\
     float dstressxxdt;      /* rate of change of deviatoric stress tensor */\n\
     float dstressyydt;      /* rate of change of deviatoric stress tensor */\n\
