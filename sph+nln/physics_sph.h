@@ -234,7 +234,7 @@ typedef struct {
     unsigned int nbrs;
     unsigned int ident; /* unique? identifier */
     strength_data_out_t strengthbody;
-    float padding;
+    // float padding;
 } SPHoutbody_strength;
 
 typedef struct {
@@ -336,7 +336,6 @@ typedef struct {
 	float strainxy;		/* strain tensor */\n\
 	float strainxz;		/* strain tensor */\n\
 	float strainyz;		/* strain tensor */\n\
-	float padding;\n\
 }"
 #define SPHSHORTOUTBODYDESC \
     "struct {\n\

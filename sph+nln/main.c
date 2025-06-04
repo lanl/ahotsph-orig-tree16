@@ -3197,7 +3197,7 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         output_btab[i].nbrs = btab[i].nbrs;
         output_btab[i].ident = btab[i].ident;
         output_btab[i].temp = btab[i].temp;
-        output_btab[i].padding = btab[i].padding;
+        // output_btab[i].padding = btab[i].padding;
         output_btab[i].strengthbody.actv_defects = btab[i].data.strengthbody.actv_defects;
         output_btab[i].strengthbody.is_strength = btab[i].data.strengthbody.is_strength;
         output_btab[i].strengthbody.dmg = btab[i].data.strengthbody.dmg;
