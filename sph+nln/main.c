@@ -3205,6 +3205,7 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
         for (j = 0; j < SRTERMS; j++) {
             output_btab[i].strengthbody.stress[j] = btab[i].data.strengthbody.stress[j];
             output_btab[i].strengthbody.strain[j] = btab[i].data.strengthbody.strain[j];
+        }
     }
     /*     Msg("output", ("Doing output of %d bodies\n", output_nobj)); */
     Msgf(("Doing output of %d bodies\n", output_nobj));
