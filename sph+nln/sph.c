@@ -971,6 +971,7 @@ void update_intermediate(SPHbody *btab,
                         equiv_edot = equiv_strain(p->data.strengthbody.dstraindt);
                         equiv_s = equiv_stress(p->data.strengthbody.stress);
                         // update_T(&(p->temp), &equiv_s, &equiv_edot, &dt_last, &(params.material.C_v), &(p->rho_est), &(params.material.chi));
+                        shear = (double)(params.material.G_shear * (1.0 - params.plasticity_params.alpha * p->temp / params.material.tmelt));
                         if (equiv_edot > 0.0)
                             yieldstr = ptw(&equiv_e, &(p->temp), &(params.material.G_shear), &equiv_edot, &(params.plasticity_params), &(params.material));
                         if (yieldstr < 0.0) {

@@ -13,6 +13,8 @@ typedef struct params_s {
     double yInf;
     double y1;
     double y2;
+    double alpha;
+    double beta;
 } plasticity_params_t;
 
 typedef struct state_s {

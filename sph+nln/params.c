@@ -147,6 +147,8 @@ void read_initial_ctl(SDF *sdfp, setup_params_t *params) {
                 SDFgetdoubleOrDie(sdfp, "ptw_yInf", &(params->plasticity_params.yInf));
                 SDFgetdoubleOrDie(sdfp, "ptw_y1", &(params->plasticity_params.y1));
                 SDFgetdoubleOrDie(sdfp, "ptw_y2", &(params->plasticity_params.y2));
+                SDFgetdoubleOrDie(sdfp, "ptw_alpha", &(params->plasticity_params.alpha));
+                SDFgetdoubleOrDie(sdfp, "ptw_beta", &(params->plasticity_params.beta));
             }
         }
         SDFgetintOrDefault(sdfp, "make_brittle", &(params->make_brittle), 0);
