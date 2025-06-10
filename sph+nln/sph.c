@@ -969,6 +969,7 @@ void update_intermediate(SPHbody *btab,
                     /* calculate von Mises yielding factor ('f' in eq. 9),
                      * and calcuate reduced stress terms, viz. eq. 8 */
                     if (params.plasticity_model == 1) { /* PTW */
+                        /* todo: make sure these are in cgs units (multiply with conversion factors)*/
                         equiv_e = equiv_strain(p->data.strengthbody.strain);
                         equiv_edot = equiv_strain(p->data.strengthbody.dstraindt);
                         equiv_s = equiv_stress(p->data.strengthbody.stress);
