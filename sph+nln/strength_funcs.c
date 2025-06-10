@@ -219,7 +219,7 @@ void set_material(SDF *sdfp, Material_t *mat, int plasticity_model) {
 }
 
 /* using the von Mises formula */
-double equiv_strain(double const s[]) {
+double equiv_strain(float const s[]) {
     double equiv_s = 0.5 * (s[0] - s[1]) * (s[0] - s[1])
                     + 0.5 * (s[1] - s[2]) * (s[1] - s[2])
                     + 0.5 * (s[2] - s[1]) * (s[2] - s[1])
@@ -230,7 +230,7 @@ double equiv_strain(double const s[]) {
 }
 
 /* using the von Mises formula */
-double equiv_stress(double const s[]) {
+double equiv_stress(float const s[]) {
     double equiv_s = 0.5 * (s[0] - s[1]) * (s[0] - s[1])
                     + 0.5 * (s[1] - s[2]) * (s[1] - s[2])
                     + 0.5 * (s[2] - s[1]) * (s[2] - s[1])

@@ -892,6 +892,8 @@ void update_intermediate(SPHbody *btab,
     float umelt = (float)(params.material.umelt);
     float gshear = (float)(params.material.G_shear);
     float yieldstr = (float)(params.material.yield);
+    double shear;
+    double d_temp, d_dt_last, d_rho_est;
     int i;
 
     max_rad = 0.95 * R0 * R0;
@@ -970,10 +972,16 @@ void update_intermediate(SPHbody *btab,
                         equiv_e = equiv_strain(p->data.strengthbody.strain);
                         equiv_edot = equiv_strain(p->data.strengthbody.dstraindt);
                         equiv_s = equiv_stress(p->data.strengthbody.stress);
-                        // update_T(&(p->temp), &equiv_s, &equiv_edot, &dt_last, &(params.material.C_v), &(p->rho_est), &(params.material.chi));
                         shear = (double)(params.material.G_shear * (1.0 - params.plasticity_params.alpha * p->temp / params.material.tmelt));
+                        if (shear < 0.0) shear = 0.0;
+                        d_temp = (double)p->temp;
+                        d_dt_last = (double)dt_last;
+                        d_rho_est = (double)p->rho_est;
+                        /* I think initial strain rates are way too high so this gives the wrong temp... */
+                        //update_T(&(d_temp), &equiv_s, &equiv_edot, &d_dt_last, &(params.material.C_v), &(d_rho_est), &(params.material.chi));
+                        p->temp = (float)d_temp;
                         if (equiv_edot > 0.0)
-                            yieldstr = ptw(&equiv_e, &(p->temp), &(params.material.G_shear), &equiv_edot, &(params.plasticity_params), &(params.material));
+                            yieldstr = ptw(&equiv_e, &(d_temp), &(shear), &equiv_edot, &(params.plasticity_params), &(params.material));
                         if (yieldstr < 0.0) {
                             SinglWarning("Bad flow stress from PTW.\n");
                             yieldstr = (float)(params.material.yield);
