@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #include "ptw.h"
+#include "test_ptw.h"
 
 int main(int argc, char* argv[]) {
     plasticity_params_t params;
@@ -82,4 +83,9 @@ int main(int argc, char* argv[]) {
                state.G[i],
                state.rho[i]);
     }
+
+    int i = 0;
+    check_ptw(&(state.stress[i]), &(state.strain_rate[i]), &(state.temp[i]), &(state.Tmelt[i]), &(state.G[i]), &(state.strain[i]), &params);
+
+    check_all(&state, nhist);
 }

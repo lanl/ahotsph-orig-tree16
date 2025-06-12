@@ -9,6 +9,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 add_executable(ptw 
     main.c
     ptw.c
+    test_ptw.c
 )
 
 # Add include directories
