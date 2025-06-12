@@ -5,7 +5,7 @@ treedir_sed=\.\.
 ifndef prog
 src=cofm.c eos.c grav.c mac.c main.c physics.c print.c integrate.c \
 	sphcofm.c sph.c sphinit.c shrink.c physics_sph.c sphprint.c sphplus.c \
-	SDFreadf.c nrutil.c coolandburn.c params.c strength_funcs.c ptw.c
+	SDFreadf.c nrutil.c coolandburn.c params.c strength_funcs.c ptw/ptw.c
 
 #fsrc=build.f solven.f
 fsrc=strength5-short.f find.f getfkt.f abinit.f masses.f sparse_ma28.f naray.f weakread.f build.f locate.f partfun.f bilenshort.f weakintp.f rate.f rhside.f jacob.f dtnuc.f nse.f leqs.f rated.f solven.f
@@ -26,6 +26,11 @@ appexcludes:=-name data
 include $(treedir)/Make-common/Make.$(ARCH)
 
 include $(treedir)/Make-common/Make.generic
+
+$(objdir)/ptw/ptw$(objsuf) : ptw/ptw.c
+	$(CC) $(CFLAGS) $(AGGRESSIVE_OPT) -c ptw/ptw.c
+	-@mkdir $(objdir)/ptw/
+	-@mv ptw$(objsuf) $(objdir)/ptw/
 
 $(objdir)/grav$(objsuf) : grav.c
 	$(CC) $(CFLAGS) $(AGGRESSIVE_OPT) -c grav.c

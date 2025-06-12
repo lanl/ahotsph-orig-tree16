@@ -13,6 +13,7 @@
 #include "timers.h"
 #include "units.h"
 #include "vop.h"
+#include "ptw/ptw.h"
 
 #ifndef M_1_PI
 #define M_1_PI 0.31830988618379067154
@@ -898,6 +899,15 @@ void update_intermediate(SPHbody *btab,
 
     max_rad = 0.95 * R0 * R0;
 
+    const mat_consts_t mat_consts = {.mAtomic = params.material.mAtomic,
+                                    .TMelt0 = params.material.tmelt,
+                                    .rho0 = params.material.rho0,
+                                    .Cv0 = params.material.C_v,
+                                    .G0 = params.material.G_shear,
+                                    .chi = params.material.chi,
+                                    .sgB = params.material.sgB};
+
+
     for (p = btab; p < btab + nobj; p++) {
         if (!SPH_need_update(p))
             continue;
@@ -982,7 +992,7 @@ void update_intermediate(SPHbody *btab,
                         //update_T(&(d_temp), &equiv_s, &equiv_edot, &d_dt_last, &(params.material.C_v), &(d_rho_est), &(params.material.chi));
                         p->temp = (float)d_temp;
                         if (equiv_edot > 0.0)
-                            yieldstr = ptw(&equiv_e, &(d_temp), &(shear), &equiv_edot, &(params.plasticity_params), &(params.material));
+                            yieldstr = ptw(&equiv_e, &(d_temp), &(shear), &equiv_edot, &(params.plasticity_params), &mat_consts);
                         if (yieldstr < 0.0) {
                             SinglWarning("Bad flow stress from PTW.\n");
                             yieldstr = (float)(params.material.yield);

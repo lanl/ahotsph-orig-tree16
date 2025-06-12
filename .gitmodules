@@ -1,3 +1,6 @@
 [submodule "3rdparty/Unity"]
 	path = 3rdparty/Unity
 	url = https://github.com/ThrowTheSwitch/Unity.git
+[submodule "sph+nln/ptw"]
+	path = sph+nln/ptw
+	url = ssh://git@re-git.lanl.gov:10022/sph/ptw.git

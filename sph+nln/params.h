@@ -4,7 +4,7 @@
 #include "SDF.h"
 #include "ndim.h"
 #include "strength.h"
-#include "ptw.h"
+#include "ptw/ptw.h"
 
 #ifndef MAXCOEF
 #define MAXCOEF 16
