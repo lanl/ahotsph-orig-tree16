@@ -4,20 +4,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-const consts_t consts = {.mAtomic = 45.9,
-                         .TMelt0 = 2110.0,
-                         .rho0 = 4.419,
-                         .Cv0 = 0.525e-5,
-                         .G0 = 0.4,
-                         .chi = 1.0,
-                         .sgB = 6.44e-4};
-
 double ptw(const double* edot,
            const double* temp,
-           const double* tmelt,
            const double* shear,
            const double* eps,
-           const plasticity_params_t* ptw_params) {
+           const plasticity_params_t* ptw_params,
+           const mat_consts_t* mat_consts) {
     double scaled_stress = -999.0;
     bool good = (ptw_params->sInf < ptw_params->s0) * (ptw_params->yInf < ptw_params->y0) * (ptw_params->y0 < ptw_params->s0)
                 * (ptw_params->yInf < ptw_params->sInf) * (ptw_params->y1 > ptw_params->s0) * (ptw_params->y2 > ptw_params->beta);
@@ -28,10 +20,10 @@ double ptw(const double* edot,
 
     // convert to 1/s strain rate since PTW rate is in that unit - N.b.: for Flag data
     double edot_scaled = *edot;// * 1.0e6;
-    double t_hom = (*temp) / (*tmelt);
-    double afact = (4.0 / 3.0) * M_PI * consts.rho0 / consts.mAtomic;
+    double t_hom = (*temp) / (mat_consts->TMelt0);
+    double afact = (4.0 / 3.0) * M_PI * mat_consts->rho0 / mat_consts->mAtomic;
     double ainv = pow(afact, (1.0 / 3.0));
-    double xfact = sqrt(*shear / consts.rho0);
+    double xfact = sqrt(*shear / mat_consts->rho0);
     /* LA-UR-04-0305 eqn. 3 */
     double xiDot = 0.5 * ainv * xfact * pow(6.022e29, (1.0 / 3.0)) * 1.0e4;
     double argErf = ptw_params->kappa * t_hom * (ptw_params->lgamma + log(xiDot / edot_scaled));
@@ -81,27 +73,28 @@ double ptw(const double* edot,
     return (scaled_stress * (*shear) * 2.0);
 };
 
-double calc_specific_heat() { return (consts.Cv0); };
+double calc_specific_heat(const mat_consts_t* consts) { return (consts->Cv0); };
 
 void update_T(double* temp,
               const double* stress,
               const double* edot,
               const double* dt,
               const double* C_v,
-              const double* rho) {
+              const double* rho,
+              const mat_consts_t* consts) {
     const double edotcrit = 1.0;
     int cond = (int)(*edot > edotcrit);
-    *temp += (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
+    *temp += (double)cond * consts->chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
 };
 
-double calc_tmelt() { return consts.TMelt0; };
+double calc_tmelt(const mat_consts_t* consts) { return consts->TMelt0; };
 
-double calc_shear_modulus(const double* temp, const double* tmelt) {
+double calc_shear_modulus(const double* temp, const mat_consts_t* consts) {
     // Stein Shear Modulus
     double aterm = 0.0;
-    double bterm = consts.sgB * (*temp - 300.0);
-    double gnow = consts.G0 * (1.0 + aterm - bterm);
-    if (*temp > *tmelt)
+    double bterm = consts->sgB * (*temp - 300.0);
+    double gnow = consts->G0 * (1.0 + aterm - bterm);
+    if (*temp > consts->TMelt0)
         gnow = 0.0;
     if (gnow < 0.0)
         gnow = 0.0;

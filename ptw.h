@@ -23,7 +23,7 @@ typedef struct consts_s {
     const double G0;
     const double chi;
     const double sgB;
-} consts_t;
+} mat_consts_t;
 
 typedef struct state_s {
     double* stress;
@@ -36,21 +36,20 @@ typedef struct state_s {
     double* Tmelt;
 } state_t;
 
-extern const consts_t consts;
-
 double ptw(const double* edot,
            const double* temp,
-           const double* tmelt,
            const double* shear,
            const double* eps,
-           const plasticity_params_t* ptw_params);
-double calc_specific_heat();
+           const plasticity_params_t* ptw_params,
+           const mat_consts_t* mat_consts);
+double calc_specific_heat(const mat_consts_t* mat_consts);
 void update_T(double* temp,
               const double* stress,
               const double* edot,
               const double* dt,
               const double* C_v,
-              const double* rho);
-double calc_tmelt();
-double calc_shear_modulus(const double* temp, const double* tmelt);
+              const double* rho,
+              const mat_consts_t* mat_consts);
+double calc_tmelt(const mat_consts_t* mat_consts);
+double calc_shear_modulus(const double* temp, const mat_consts_t* consts);
 void* calc_flow_stress();

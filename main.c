@@ -19,6 +19,14 @@ int main(int argc, char* argv[]) {
     params.alpha = 0.2;
     params.beta = 0.33;
 
+    const mat_consts_t consts = {.mAtomic = 45.9,
+                         .TMelt0 = 2110.0,
+                         .rho0 = 4.419,
+                         .Cv0 = 0.525e-5,
+                         .G0 = 0.4,
+                         .chi = 1.0,
+                         .sgB = 6.44e-4};
+
     state_t state;
 
     const int nhist = 100;
@@ -42,10 +50,10 @@ int main(int argc, char* argv[]) {
     state.strain[0] = 0.0;
     state.strain_rate[0] = edot;
     state.Tmelt[0] = consts.TMelt0;
-    state.G[0] = calc_shear_modulus(&(state.temp[0]), &(state.Tmelt[0]));
+    state.G[0] = calc_shear_modulus(&(state.temp[0]), &consts);
     state.rho[0] = consts.rho0;
     state.stress[0] = ptw(
-        &(state.strain_rate[0]), &(state.temp[0]), state.Tmelt, &(state.G[0]), &(state.strain[0]), &params);
+        &(state.strain_rate[0]), &(state.temp[0]), &(state.G[0]), &(state.strain[0]), &params, &consts);
     printf("%f %.10f %f %.10f %.10f %.10f %f\n",
            state.time[0],
            state.strain[0],
@@ -57,7 +65,7 @@ int main(int argc, char* argv[]) {
 
     for (int i = 1; i < nhist; i++) {
         state.time[i] = state.time[i - 1] + dt;
-        double C_v = calc_specific_heat();
+        double C_v = calc_specific_heat(&consts);
         state.rho[i] = consts.rho0;
         state.temp[i] = state.temp[i - 1];
         state.strain[i] = state.strain[i - 1] + edot * dt;
@@ -67,15 +75,16 @@ int main(int argc, char* argv[]) {
                  &(state.strain_rate[i - 1]),
                  &dt,
                  &C_v,
-                 &(state.rho[i-1]));
-        state.Tmelt[i] = calc_tmelt();
-        state.G[i] = calc_shear_modulus(&(state.temp[i]), &(state.Tmelt[i]));
+                 &(state.rho[i-1]),
+                 &consts);
+        state.Tmelt[i] = calc_tmelt(&consts);
+        state.G[i] = calc_shear_modulus(&(state.temp[i]), &consts);
         state.stress[i] = ptw(&(state.strain_rate[i - 1]),
                               &(state.temp[i]),
-                              &(state.Tmelt[i]),
                               &(state.G[i]),
                               &(state.strain[i]),
-                              &params);
+                              &params,
+                              &consts);
         printf("%f %.10f %f %.10f %.10f %.10f %f\n",
                state.time[i],
                state.strain[i],
@@ -87,7 +96,7 @@ int main(int argc, char* argv[]) {
     }
 
     int i = 0;
-    check_ptw(&(state.stress[i]), &(state.strain_rate[i]), &(state.temp[i]), &(state.Tmelt[i]), &(state.G[i]), &(state.strain[i]), &params);
+    check_ptw(&(state.stress[i]), &(state.strain_rate[i]), &(state.temp[i]), &(state.G[i]), &(state.strain[i]), &params, &consts);
 
     check_all(&state, nhist);
 }

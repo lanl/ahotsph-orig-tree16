@@ -4,8 +4,8 @@
 
 #include "test_ptw.h"
 
-bool check_ptw(const double* ptw_value, const double* edot, const double* temp, const double* tmelt, const double* shear, const double* eps, const plasticity_params_t* params) {
-    double ptw_calc = ptw(edot, temp, tmelt, shear, eps, params);
+bool check_ptw(const double* ptw_value, const double* edot, const double* temp, const double* shear, const double* eps, const plasticity_params_t* params, const mat_consts_t* consts) {
+    double ptw_calc = ptw(edot, temp, shear, eps, params, consts);
     if (fabs(*ptw_value - ptw_calc) / (*ptw_value) > 1.0e-10) {
         printf("Error: ptw_test = %f, ptw_calc = %f\n", *ptw_value, ptw_calc);
         return false;
@@ -74,13 +74,13 @@ bool check_all(const state_t* state, const int n) {
     }
 }
 
-bool check_shear_modulus(const double* temp, const double* tmelt) {
-    double G_calc = calc_shear_modulus(temp, tmelt);
+bool check_shear_modulus(const double* temp, const mat_consts_t* consts) {
+    double G_calc = calc_shear_modulus(temp, consts);
     double G_test = 0.0;
-    if (*temp > *tmelt) {
+    if (*temp > consts->TMelt0) {
         G_test = 0.0;
     } else {
-        G_test = consts.G0 * (1.0 + 0.0 - consts.sgB * (*temp - 300.0));
+        G_test = consts->G0 * (1.0 + 0.0 - consts->sgB * (*temp - 300.0));
     }
     if (abs(G_test - G_calc) > 1.0e-10) {
         printf("Error: G_test = %f, G_calc = %f\n", G_test, G_calc);
@@ -89,12 +89,12 @@ bool check_shear_modulus(const double* temp, const double* tmelt) {
     return true;
 }
 
-bool check_update_T(const double* stress, const double* edot, const double* dt, const double* C_v, const double* rho) {
+bool check_update_T(const double* stress, const double* edot, const double* dt, const double* C_v, const double* rho, const mat_consts_t* consts) {
     double temp_calc = 0.0;
     double temp_test = 0.0;
     double edotcrit = 1.0e-6;
     int cond = (int)(*edot > edotcrit);
-    temp_calc = temp_test + (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
+    temp_calc = temp_test + (double)cond * consts->chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
     if (abs(temp_calc - temp_test) > 1.0e-10) {
         printf("Error: temp_calc = %f, temp_test = %f\n", temp_calc, temp_test);
         return false;
