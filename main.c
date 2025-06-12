@@ -19,11 +19,11 @@ int main(int argc, char* argv[]) {
     state_t state;
 
     const int nhist = 100;
-    double edot = 2500.0 * 1.e-6;
+    double edot = 2500.0;// * 1.e-6;
     double emax = 0.6;
     double tmax = emax / edot;
     double dt = tmax / (nhist - 1);
-    const double edotcrit = 1.e-6;
+    // const double edotcrit = 1.0;//e-6;
 
     state.time = malloc(nhist * sizeof(double));
     state.stress = malloc(nhist * sizeof(double));

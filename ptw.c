@@ -28,8 +28,8 @@ double ptw(const double* edot,
         return scaled_stress;
     };
 
-    // convert to 1/s strain rate since PTW rate is in that unit
-    double edot_scaled = *edot * 1.0e6;
+    // convert to 1/s strain rate since PTW rate is in that unit - N.b.: for Flag data
+    double edot_scaled = *edot;// * 1.0e6;
     double t_hom = (*temp) / (*tmelt);
     double afact = (4.0 / 3.0) * M_PI * consts.rho0 / consts.mAtomic;
     double ainv = pow(afact, (1.0 / 3.0));
@@ -91,7 +91,7 @@ void update_T(double* temp,
               const double* dt,
               const double* C_v,
               const double* rho) {
-    const double edotcrit = 1.e-6;
+    const double edotcrit = 1.0;
     int cond = (int)(*edot > edotcrit);
     *temp += (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
 };
