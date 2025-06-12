@@ -82,7 +82,9 @@ double ptw(const double* edot,
     scaled_stress = (tau_s - (tau_s - tau_y) * exp(-(*eps) * params.theta / (tau_s - tau_y)));
     return (scaled_stress * (*shear) * 2.0);
 };
+
 double calc_specific_heat() { return (consts.Cv0); };
+
 void update_T(double* temp,
               const double* stress,
               const double* edot,
@@ -93,7 +95,9 @@ void update_T(double* temp,
     int cond = (int)(*edot > edotcrit);
     *temp += (double)cond * consts.chi * (*stress) * (*edot) * (*dt) / ((*C_v) * (*rho));
 };
+
 double calc_tmelt() { return consts.TMelt0; };
+
 double calc_shear_modulus(const double* temp, const double* tmelt) {
     // Stein Shear Modulus
     double aterm = 0.0;
@@ -105,4 +109,5 @@ double calc_shear_modulus(const double* temp, const double* tmelt) {
         gnow = 0.0;
     return gnow;
 };
+
 void* calc_flow_stress();
