@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
                  &(state.rho[i-1]));
         state.Tmelt[i] = calc_tmelt();
         state.G[i] = calc_shear_modulus(&(state.temp[i]), &(state.Tmelt[i]));
-        state.stress[i] = ptw(&(state.strain_rate[i]),
+        state.stress[i] = ptw(&(state.strain_rate[i - 1]),
                               &(state.temp[i]),
                               &(state.Tmelt[i]),
                               &(state.G[i]),
