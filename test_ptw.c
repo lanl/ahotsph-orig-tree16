@@ -57,7 +57,7 @@ bool check_all(const state_t* state, const int n) {
         times[i] *= 1.0e-6;
     }            
 
-    double rel_err = 1.0e-4;
+    double rel_err = 1.0e-10;
     for (int idx = 0; idx < nlines; ++idx) {
         if (! approx_equal(&(state->time[idx+1]), &(times[idx]), &rel_err)) 
             printf("Error: ptw test failed at iteration %i: time not equal. Expected: %f, actual: %f\n",

@@ -54,7 +54,7 @@ int main(int argc, char* argv[]) {
     state.rho[0] = consts.rho0;
     state.stress[0] = ptw(
         &(state.strain_rate[0]), &(state.temp[0]), &(state.G[0]), &(state.strain[0]), &params, &consts);
-    printf("%f %.10f %f %.10f %.10f %.10f %f\n",
+    printf("%e %.10f %f %.10f %.10f %.10f %f\n",
            state.time[0],
            state.strain[0],
            state.strain_rate[0],
@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
                               &(state.strain[i]),
                               &params,
                               &consts);
-        printf("%f %.10f %f %.10f %.10f %.10f %f\n",
+        printf("%e %.10f %f %.10f %.10f %.10f %f\n",
                state.time[i],
                state.strain[i],
                state.strain_rate[i],

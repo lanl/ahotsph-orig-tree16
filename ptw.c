@@ -61,15 +61,38 @@ double ptw(const double* edot,
     scaled_stress = tau_s;
     //?? - use the commented if block for this
     // int ind = (int)((ptw_params->p > small) * (fabs(tau_s - tau_y) > small));
-    double eArg1 = (ptw_params->p * (tau_s - tau_y) / (ptw_params->s0 - tau_y));
-    double eArg2 = ((*eps) * ptw_params->p * ptw_params->theta) / (ptw_params->s0 - tau_y) / (exp(eArg1) - 1.0);
-    double check_val = 1.0 - (1.0 - exp(-eArg1)) * exp(-eArg2);
-    if ((check_val <= 0.0) || (check_val != check_val))
-        printf("bad\n");
-    double theLog = log(check_val);
-    scaled_stress = (tau_s + (ptw_params->s0 - tau_y) * theLog / ptw_params->p);
-    // int ind2 = (int)((ptw_params->p <= small) * tau_s > tau_y);
-    scaled_stress = (tau_s - (tau_s - tau_y) * exp(-(*eps) * ptw_params->theta / (tau_s - tau_y)));
+    if (ptw_params->p > 0.0) {
+        if (fabs(tau_s - tau_y) < small) {
+            scaled_stress = tau_s;
+        } else {
+            double eArg1 = (ptw_params->p * (tau_s - tau_y) / (ptw_params->s0 - tau_y));
+            double eArg2 = ((*eps) * ptw_params->p * ptw_params->theta) / (ptw_params->s0 - tau_y) / (exp(eArg1) - 1.0);
+            double theLog = log(1.0 - (1.0 - exp(-eArg1)) * exp(-eArg2));
+            scaled_stress = (tau_s + (ptw_params->s0 - tau_y) * theLog / ptw_params->p);
+        }
+    } else {
+        if (tau_s > tau_y) {
+            scaled_stress = (tau_s - (tau_s - tau_y) * exp(-(*eps) * ptw_params->theta / (tau_s - tau_y)));
+        } else {
+            scaled_stress = tau_s;
+        }
+    }
+    // double eArg1 = (ptw_params->p * (tau_s - tau_y) / (ptw_params->s0 - tau_y));
+    // /* eArg1 can be zero when tau_s == tau_y. Should ask David W. what that means/if that's possible... */
+    // double theLog = 0.0;
+    // if (eArg1 > 0.0) {
+    //     double eArg2 = ((*eps) * ptw_params->p * ptw_params->theta) / (ptw_params->s0 - tau_y) / (exp(eArg1) - 1.0);
+    //     double check_val = 1.0 - (1.0 - exp(-eArg1)) * exp(-eArg2);
+    //     if ((check_val <= 0.0) || (check_val != check_val)) {
+    //         printf("bad. ");
+    //         return bad_scaled_stress;
+    //     }
+    //     theLog = log(check_val);
+    // }
+    // scaled_stress = (tau_s + (ptw_params->s0 - tau_y) * theLog / ptw_params->p);
+    // // int ind2 = (int)((ptw_params->p <= small) * tau_s > tau_y);
+    // /* what is being calculated here?? */
+    // scaled_stress = (tau_s - (tau_s - tau_y) * exp(-(*eps) * ptw_params->theta / (tau_s - tau_y)));
     return (scaled_stress * (*shear) * 2.0);
 };
 
