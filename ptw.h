@@ -11,11 +11,11 @@ typedef struct params_s {
     double yInf;
     double y1;
     double y2;
+    double alpha;
+    double beta;
 } plasticity_params_t;
 
 typedef struct consts_s {
-    const double alpha;
-    const double beta;
     const double mAtomic;
     const double TMelt0;
     const double rho0;

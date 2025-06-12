@@ -16,6 +16,8 @@ int main(int argc, char* argv[]) {
     params.yInf = 0.003;
     params.y1 = 0.09;
     params.y2 = 0.7;
+    params.alpha = 0.2;
+    params.beta = 0.33;
 
     state_t state;
 

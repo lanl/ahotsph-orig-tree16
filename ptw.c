@@ -4,9 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-const consts_t consts = {.alpha = 0.2,
-                         .beta = 0.33,
-                         .mAtomic = 45.9,
+const consts_t consts = {.mAtomic = 45.9,
                          .TMelt0 = 2110.0,
                          .rho0 = 4.419,
                          .Cv0 = 0.525e-5,
@@ -22,7 +20,7 @@ double ptw(const double* edot,
            const plasticity_params_t* ptw_params) {
     double scaled_stress = -999.0;
     bool good = (ptw_params->sInf < ptw_params->s0) * (ptw_params->yInf < ptw_params->y0) * (ptw_params->y0 < ptw_params->s0)
-                * (ptw_params->yInf < ptw_params->sInf) * (ptw_params->y1 > ptw_params->s0) * (ptw_params->y2 > consts.beta);
+                * (ptw_params->yInf < ptw_params->sInf) * (ptw_params->y1 > ptw_params->s0) * (ptw_params->y2 > ptw_params->beta);
     if (!good) {
         printf("PTW bad val.");
         return scaled_stress;
@@ -40,7 +38,7 @@ double ptw(const double* edot,
     /* LA-UR-04-0305 eqn. 7 */
     double saturation1 = ptw_params->s0 - (ptw_params->s0 - ptw_params->sInf) * erf(argErf);
     /* LA-UR-04-0305 eqn. 8 */
-    double saturation2 = ptw_params->s0 * exp(consts.beta * (-ptw_params->lgamma + log(edot_scaled / xiDot)));
+    double saturation2 = ptw_params->s0 * exp(ptw_params->beta * (-ptw_params->lgamma + log(edot_scaled / xiDot)));
     double tau_s;
     /* LA-UR-04-0305 eqn. 9 */
     if (saturation1 > saturation2) {
@@ -53,7 +51,7 @@ double ptw(const double* edot,
     /* LA-UR-04-0305 eqn. 10, but xiDot and edot_scaled are flipped? */
     double byield = ptw_params->y1 * exp(-ptw_params->y2 * (ptw_params->lgamma + log(xiDot / edot_scaled)));
     /* LA-UR-04-0305 eqn. 8, since at very high strain rates tauhat_y = tauhat_s */
-    double cyield = ptw_params->s0 * exp(-consts.beta * (ptw_params->lgamma + log(xiDot / edot_scaled)));
+    double cyield = ptw_params->s0 * exp(-ptw_params->beta * (ptw_params->lgamma + log(xiDot / edot_scaled)));
     double dyield;
     /* LA-UR-04-0305 eqn. 11 */
     if (byield < cyield) {
