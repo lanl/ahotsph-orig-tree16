@@ -4,6 +4,7 @@
 #include "ptw.h"
 
 int main(int argc, char* argv[]) {
+    plasticity_params_t params;
     params.theta = 0.1;
     params.p = 2.0;
     params.s0 = 0.02;
@@ -41,8 +42,8 @@ int main(int argc, char* argv[]) {
     state.G[0] = calc_shear_modulus(&(state.temp[0]), &(state.Tmelt[0]));
     state.rho[0] = consts.rho0;
     state.stress[0] = ptw(
-        &(state.strain_rate[0]), &(state.temp[0]), state.Tmelt, &(state.G[0]), &(state.strain[0]));
-    printf("%f %f %f %f %f %f %f\n",
+        &(state.strain_rate[0]), &(state.temp[0]), state.Tmelt, &(state.G[0]), &(state.strain[0]), &params);
+    printf("%f %.10f %f %.10f %.10f %.10f %f\n",
            state.time[0],
            state.strain[0],
            state.strain_rate[0],
@@ -70,8 +71,9 @@ int main(int argc, char* argv[]) {
                               &(state.temp[i]),
                               &(state.Tmelt[i]),
                               &(state.G[i]),
-                              &(state.strain[i]));
-        printf("%f %.10f %f %f %.10f %.10f %f\n",
+                              &(state.strain[i]),
+                              &params);
+        printf("%f %.10f %f %.10f %.10f %.10f %f\n",
                state.time[i],
                state.strain[i],
                state.strain_rate[i],

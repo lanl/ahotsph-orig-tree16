@@ -11,7 +11,7 @@ typedef struct params_s {
     double yInf;
     double y1;
     double y2;
-} params_t;
+} plasticity_params_t;
 
 typedef struct consts_s {
     const double alpha;
@@ -37,13 +37,13 @@ typedef struct state_s {
 } state_t;
 
 extern const consts_t consts;
-extern params_t params;
 
 double ptw(const double* edot,
            const double* temp,
            const double* tmelt,
            const double* shear,
-           const double* eps);
+           const double* eps,
+           const plasticity_params_t* ptw_params);
 double calc_specific_heat();
 void update_T(double* temp,
               const double* stress,
