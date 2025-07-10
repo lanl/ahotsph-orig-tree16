@@ -160,7 +160,7 @@ clean-clutter: FORCE
 # clean will remove the binary and object files associated with the
 # current ARCH-PAROS pair
 clean: FORCE clean-clutter
-	rm $(bin) $(objdir)/*
+	rm -rf $(bin) $(objdir)/*
 
 # clean-all will attempt to remove all object files in Objfiles/ and
 # all executables in . associated with them.  USE WITH CARE!!
