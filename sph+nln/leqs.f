@@ -35,10 +35,10 @@ c..   Find maximum element in each row, and divide
          b(i) = b(i) / r
  19   continue
 
-      do 9 j = 1, n1
+      do j = 1, n1
          l = j + 1
 c..   no pivoting
-         do 9 i = l, n
+         do i = l, n
             r = -a(i,j)
             if ( r .ne. zero )then
                r = r / a(j,j)
@@ -47,7 +47,9 @@ c..   no pivoting
  7             continue
                b(i) = b(i) + r*b(j)
             endif
- 9       continue
+         end do
+      end do
+
 
 c..   The matrix is now in triangular form
 c..   start the back substitution and find solution

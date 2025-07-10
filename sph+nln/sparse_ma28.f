@@ -788,7 +788,14 @@ c..dummy loop for following a chain of interchanges. executed nz times.
         jnew = iw1(jold,2)
 c..
 c..are we in a valid block and is it diagonal or off-diagonal?
-        if (iw1(inew,3)-iw1(jnew,3)) 40, 60, 50
+c.. deleted feature: arithmetic if        if (iw1(inew,3)-iw1(jnew,3)) 40, 60, 50
+        if (iw1(inew,3)-iw1(jnew,3) .lt. 0) then
+            go to 40
+        else if (iw1(inew,3)-iw1(jnew,3) .eq. 0) then
+            go to 60
+        else
+            go to 50
+        endif
 40      iflag = -13
         if (lp .ne. 0) write (lp,99998) iold, jold
         go to 180
@@ -808,7 +815,14 @@ c..binary search of ordered list  .. element in l part of row.
         do 100 jdummy=1,n
          midpt = (j1+j2)/2
          jcomp = iabs(icn(midpt)+0)
-         if (jnew-jcomp) 80, 130, 90
+c.. deleted feature: arithmetic if:         if (jnew-jcomp) 80, 130, 90
+         if (jnew-jcomp .lt. 0) then
+            go to 80
+         else if (jnew-jcomp .eq. 0) then 
+            go to 130
+         else
+            go to 90
+         endif
 80       j2 = midpt
          go to 100
 90       j1 = midpt
@@ -1284,7 +1298,14 @@ c..a pass with l equal to 2 is only performed in the case of singularity.
          do 330 nz=nz2,n
           if (jcost .le. (nz-1)**2) go to 420
           ijfir = ifirst(nz)
-          if (ijfir) 230, 220, 240
+c.. deleted feature: arithmetic if:          if (ijfir) 230, 220, 240
+          if (ijfir .lt. 0) then
+           go to 230
+          else if (ijfir .eq. 0) then
+           go to 220
+          else
+           go to 240
+          endif
 220       if (ll .eq. 1) nzmin = nz + 1
           go to 330
 230       ll    = 2
@@ -1859,7 +1880,14 @@ c..remove pivot column from column oriented storage; update row ordering arrays.
          go to 890
 850      ifir       = ifirst(nz)
          ifirst(nz) = i
-         if (ifir) 860, 880, 870
+c.. deleted feature: arithmetic if:         if (ifir) 860, 880, 870
+         if (ifir .lt. 0) then
+            go to 860
+         else if (ifir .eq. 0) then
+            go to 880
+         else
+            go to 870
+         endif
 860      lastr(i) = ifir
          nextr(i) = 0
          go to 890
@@ -1911,7 +1939,14 @@ c..adjust column ordering arrays.
          go to 970
 924      ifir     = ifirst(nz)
          lastc(j) = 0
-         if (ifir) 930, 940, 950
+c.. deleted feature: arithmetic if:        if (ifir) 930, 940, 950 
+         if (ifir .lt. 0) then
+            go to 930
+         else if (ifir .eq. 0) then
+            go to 940
+         else
+            go to 950
+         endif
 930      ifirst(nz)  = -j
          ifir        = -ifir
          lastc(ifir) = j
