@@ -65,7 +65,7 @@ c..     Start reading
 c      write(*,*) nuc(i), a(i),nz(i), n(i), w(i), mxcess(i)
       my_nz(i) = nz(i)
       my_n(i) = n(i)
-      read (12,4) (p(j),j=1,24)
+      read (12,4) (p(j),j=1,nnuc)
     2 format (a5,4x,f9.3,i3,1x,i3,2x,f5.1,2x,f7.3)
     4 Format(8f9.2)
 

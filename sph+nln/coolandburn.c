@@ -32,10 +32,8 @@ extern int do_cooling;
 void init_CoolTable(int *Gridpts, int *Nel) {
     FILE *File1p; /*pointer to file with cooling curves*/
     FILE *file2p; /*pointer to file with ion fractions*/
-    long lSize;   /*holds file size (number of characters in file)*/
     int i, j, k;  /*indices for looping through arrays*/
     int counter1 = 0, counter2 = 0;
-    int index;               /*index to access correct array element*/
     int myint;               /*holds un-needed integers read in from files*/
     int tot_ion;             /* total number of ions in database (w/ bare ions)*/
     char mychar, myline[50]; /*holds new-lines and text read in from files*/
@@ -186,7 +184,6 @@ double calc_lcool1(float abundarr[],
     float n_ion = 0.; /* total ion number density */
     long j;           /*holds index returned by locate routine*/
     long *jp;         /*pointer to j*/
-    long j_prev;
     int n, m, N, index; /*some indices for looping and arrays*/
 
     /*initialize things so I don't get stupid warnings all the time:*/
@@ -207,7 +204,6 @@ double calc_lcool1(float abundarr[],
     for (n = 0; n < Gridpts; n++) temps[n] = ionfracp[0][n];
 
     locate(&temps[0], Gridpts, logtemp, jp);
-    j_prev = j;
 
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
@@ -313,12 +309,10 @@ double find_ne(
     float abundarr[], int nparr[], int nnarr[], double temp, double rho, int Gridpts, int Nel) {
     /* could also calculate n_ion and set a flag that determines which one is returned */
     extern float **ionfracp;     /*global array with ion fractions*/
-    double dy, df;               /*measure of accuracy returned from interp.*/
-    double *dyp;                 /*pointer to dy*/
+    double df;               /*measure of accuracy returned from interp.*/
     double *dfp;                 /*pointer to df*/
     double fracn;                /*holds ion fraction returned by interp. */
     double *fracnp;              /*pointer to frac*/
-    double fracneu;              /*fraction of neutral atoms per element*/
     double rowarr[2], fracns[2]; /*temporary arrays for interp.*/
     double logtemp;              /*log(temp) for ionfracp interpolation*/
     float temps[Gridpts];
@@ -326,15 +320,12 @@ double find_ne(
     double nelectron = 0.; /* total electron number density */
     long j;                /*holds index returned by locate routine*/
     long *jp;              /*pointer to j*/
-    long j_prev;
     /*int nparr[Nel], nnarr[Nel];*/ /*array for A,N numbers for each isotope*/
     int n, m, N, index;             /*some indices for looping and arrays*/
 
     /*initialize things so I don't get stupid warnings all the time:*/
     j = -999;
-    dy = -999;
     jp = &j;
-    dyp = &dy;
     dfp = &df;
     fracnp = &fracn;
 
@@ -351,7 +342,6 @@ double find_ne(
     for (n = 0; n < Gridpts; n++) { temps[n] = ionfracp[0][n]; }
 
     locate(&temps[0], Gridpts, logtemp, jp);
-    j_prev = j;
 
     /*if we're outside the table, do analytic cooling if extrapolate=0
       or extrapolate if extrapolate=1:
@@ -485,7 +475,7 @@ interpolation between tabulated points [14..17]*/
 /*~~~~~~~~~~~~~~~~~ WORKS!!!! 04/23/2009 ~~~~~~~~~~~~~~~~~*/
 void polint(double xa[], double ya[], int n, double x, double *y, double *dy) {
     /*ZERO!!! offset is assumed in all indices*/
-    int i, m, ns = 0, size;
+    int i, m, ns = 0;
     double den, dif, dift, ho, hp, w;
     double *c, *d;
 
@@ -603,10 +593,11 @@ extern double eos_n;
 
 /* set eos, the temperature, and mean free path */
 int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int rho_or_rhoest) {
-    int i, j, k;
+    int j;
     double rho, mfp, ne;
-    float opacity, temp, op_depth;
-    float temp_ok, prev_temp;
+    //float opacity, temp;
+    float op_depth;
+    float temp_ok;//, prev_temp;
 
     switch (rho_or_rhoest) {
         case 0:
@@ -662,8 +653,8 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
         } else {
             temp_ok = 0;
             /*    SeriousWarning("particle %d for eos_u=%.4E eos_n=%.4E ne=%.4E gives T=%.4E\nfrom
-            previous T=%4E\n",
-            /*          p->ident, eos_u, eos_n, ne, p->temp,prev_temp);
+            previous T=%4E\n", */
+            /*          p->ident, eos_u, eos_n, ne, p->temp,prev_temp); */
             /* set a floor on the temperature, cuz I kinda just want this to run ... */
             /* assume material is cold, low density; thus can assume gas contribution only */
             p->temp = 0.6666666666667 * eos_u / (K_BOLTZ * eos_n);
@@ -678,9 +669,9 @@ int prep_cool_burn(SPHbody *p, float tlo, float tup, int Gridpts, int Nel, int r
 /********** do the burning ***********/
 /*************************************/
 float burning(SPHbody *p, float dt, int rank) {
-    int i, j, l;
+    int i, j;
     int partid;
-    double temp, rho, dt_cgs, ndens;
+    double temp, rho, dt_cgs;
     double deltah;
     double *molfrac;
 
@@ -690,7 +681,6 @@ float burning(SPHbody *p, float dt, int rank) {
     temp = (double)p->temp;
     rho = (double)p->rho * (massCF * ivlenCF3);
     dt_cgs = (double)(dt * timeCF);
-    ndens = eos_n;
 
     /*prepare abundance array passed into network - more ugliness!*/
     for (i = 0; i < NNW; i++) {
@@ -727,16 +717,16 @@ float burning(SPHbody *p, float dt, int rank) {
 #include "vop.h"
 
 float cooling(SPHbody *p, float dt, float frac, int Gridpts, int Nel, int *notprinted) {
-    int i, j, k;
+    int i;
     int decr, cycles, countc;
     int cycled;
-    int temp_ok;
     float r2, temp, m_kboltz;
-    double tlo, tup, dt_sub, dt_save, dt_tot;
+    //double tlo, tup; 
+    double dt_sub, dt_save, dt_tot;
     double u, u_last, lcool, udot, rho;
 
-    tlo = 1.0e+1;
-    tup = 1.0e10;
+    //tlo = 1.0e+1;
+    //tup = 1.0e10;
     u = (double)p->u * lenCF2 * ivtimeCF2;
     u_last = u;
     dt_sub = (double)dt * timeCF;

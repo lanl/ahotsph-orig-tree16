@@ -1173,7 +1173,7 @@ int main(int argc, char *argv[]) {
             singlPrintf("FindRho\n");
             WalkNT(&SPHtree);
             WalkTerminate();
-            singlPrintf("updating final ....");
+            singlPrintf("updating final .... ");
             update_final(
                 SPHbtab, SPHnobj, Gridpts, Nel, dt, &udot_limit[0], &udot_limit[1], rank, tpos, R0);
             singlPrintf("updated final\n");
@@ -1186,6 +1186,7 @@ int main(int argc, char *argv[]) {
         if (params.do_sph) {
             SPHFixKeys(SPHbtab, SPHnobj, SPHGetKey);
             /* This sets rho_est and pr for communication during BuildTree */
+            singlPrintf("updating intermediate ... ");
             update_intermediate(SPHbtab,
                                 SPHnobj,
                                 Gridpts,
@@ -1194,7 +1195,7 @@ int main(int argc, char *argv[]) {
                                 !(first_step || params.exact_rho),
                                 0,
                                 sysradius);
-
+            singlPrintf("updated intermediate.\n");
             SPHsinknobj = 0;
             for (q = SPHbtab; q < SPHbtab + SPHnobj; q++) {
                 if (SPH_need_update(q))
@@ -1313,6 +1314,7 @@ int main(int argc, char *argv[]) {
             WalkTerminate();
             singlPrintf("ForceSPH done\n");
             udot_limit[0] = udot_limit[1] = 0;
+            singlPrintf("updating final ... ");
             update_final(SPHsinkbtab,
                          SPHsinknobj,
                          Gridpts,
@@ -1323,6 +1325,7 @@ int main(int argc, char *argv[]) {
                          rank,
                          tpos,
                          R0);
+            singlPrintf("updated final.\n");
             StopTimer(&ForceSPH);
             /* This should be the high-water mark for memory use */
             AddCounter(&MemCnt, malloc_used() / 1024);

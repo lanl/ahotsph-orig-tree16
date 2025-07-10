@@ -288,7 +288,8 @@ void AdjustBtab4(SPHbody **SPHbtabp,
     SPHbody *btab = *SPHbtabp;
     SPHbody *p, *q;
     Stk s;
-    float r1, r2, v2, b2, minb2 = 1e30;
+    float r1, r2, b2, minb2 = 1e30;
+    //float v2; 
     float j[NDIM], jhat[NDIM], r_vec[NDIM], v_vec[NDIM];
     float jm, jmax;
     float small = 1.e-12;
@@ -309,7 +310,7 @@ void AdjustBtab4(SPHbody **SPHbtabp,
     for (*newmass = 0.0, p = btab; p < btab + *nobj; p++) {
         /* r and v w.r.t. to bndry */
         VVV(v_vec, = p->vel, -b.vel);
-        v2 = Dot(v_vec, v_vec);
+        //v2 = Dot(v_vec, v_vec);
 
         VVV(r_vec, = p->pos, -b.pos);
         r2 = Dot(r_vec, r_vec);

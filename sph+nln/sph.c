@@ -292,16 +292,14 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
     Vxd(float smv);
     float stress_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
     float stress_j[SRTERMS] = {0, 0, 0, 0, 0, 0};
-    float dstressdt_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
     float strain_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
     float dstraindt[SRTERMS] = {0, 0, 0, 0, 0, 0};
     double dstraindt_i[SRTERMS] = {0, 0, 0, 0, 0, 0};
     // float gshear = (float)(params.material.G_shear);
     // double yieldstr = (double)(params.material.yield);
-    double umelt = (double)(params.material.umelt);
     Vxd(double dr_i);
     Vxd(double dv_i);
-    float dmg_i, dmg_j, u_i;
+    float dmg_i, dmg_j;
     double drot_i[NDIM], drot[NDIM];
     float rot_i[NDIM];
     float vonMises_i;
@@ -454,7 +452,6 @@ void macSPH(SinkSPH *sink, hcell **source_vec, int *result, int n) {
             VxVx(dv_i, = dv);
             VS(rot_i, = 0.); /* equilibrium, no rotation */
             VS(drot_i, = 0.);
-            u_i = u;
             grpm_dbl = (double)grpm;
             robar = 1. / robar1;
 
@@ -701,28 +698,20 @@ void update_final(SPHbody *btab,
                   float tpos,
                   float R0) {
     SPHbody *p;
-    int i, j, k; /*coupla indices for loops*/
+    int i; /*coupla indices for loops*/
     int nflawi;
-    double u, n, lcool, deltah, dt_cool;
-    double *molfrac; /*float or double?? */
-    double dt_tot, udot_tot, dt_sub, dt_save, udot, frac = 0.05, minfrac = 0.001;
-    double temp, rho, dt_cgs, ndens = 0., ne = 0.;
-    double tlo, tup, mfp, radius;
+    double deltah, dt_cool;
+    double frac = 0.05;
     float stress[SRTERMS];
     float strain[SRTERMS];
-    float xmi, crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
+    float crack_len, dmg, ddmgdt, dudt, pr_i, rho_i;
     float epsmini, eyoung;
     float iv_Weibull_m = 1. / params.material.material_m;
     float stress_max;
-    int decr, notprinted;
-    long cycles = 0, countc;
-    static long cycled = 0;
-    int temp_ok, partid;
+    int notprinted;
+    int temp_ok;
 
-    /*molfrac = (double *)malloc( (NNW+1) * sizeof(double) );*/
-
-    tlo = 1.0e0;
-    tup = 2.5e11;
+    temp_ok = 0;
 
     notprinted = 1;
 
@@ -877,14 +866,11 @@ void update_intermediate(SPHbody *btab,
                          float R0) {
     float kes, kff; /* Opacities (Thomson, free-free) */
     float pgas, prad;
-    float ne, rho, max_rad, r2;
-    double P_ratio, Gammai;
-    double tlo = 1.e0, tup = 2.5e11;
+    //double P_ratio;
     double pr_d, rho_d, u_d, cs_d;
     double equiv_e, equiv_edot, equiv_s;
-    int j, temp_ok;
+    int temp_ok;
     SPHbody *p;
-    Material_t mat;
     float stress[SRTERMS], dstressdt[SRTERMS];
     float strain[SRTERMS];
     float rot[NDIM];
@@ -893,11 +879,10 @@ void update_intermediate(SPHbody *btab,
     float umelt = (float)(params.material.umelt);
     float gshear = (float)(params.material.G_shear);
     float yieldstr = (float)(params.material.yield);
+    //double Gammai;
     double shear;
     double d_temp, d_dt_last, d_rho_est;
     int i;
-
-    max_rad = 0.95 * R0 * R0;
 
     const mat_consts_t mat_consts = {.mAtomic = params.material.mAtomic,
                                     .TMelt0 = params.material.tmelt,
@@ -957,7 +942,6 @@ void update_intermediate(SPHbody *btab,
                           &dstressdt[3],
                           &dstressdt[4],
                           &dstressdt[5]);
-                // dstressdt_i[4] = 1.5e+4;
                 if (isfinite(dstressdt[0]))
                     p->data.strengthbody.dstressdt[0] = (float)dstressdt[0];
                 if (isfinite(dstressdt[1]))
@@ -1041,10 +1025,10 @@ void update_intermediate(SPHbody *btab,
 
                 /* this is still using Gamma. Perhaps could calculate gamma
                 at this point? */
-                P_ratio = (double)pgas / (double)(pgas + prad);
+                //P_ratio = (double)pgas / (double)(pgas + prad);
                 /* from D. Clayton's Stellar Evolution book, p.119 */
-                Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
-                        / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
+                //Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
+                //        / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
                 /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
                 p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
             }
@@ -1070,10 +1054,10 @@ void update_intermediate(SPHbody *btab,
 
             /* this is still using Gamma. Perhaps could calculate gamma
             at this point? */
-            P_ratio = (double)pgas / (double)(pgas + prad);
+            //P_ratio = (double)pgas / (double)(pgas + prad);
             /* from D. Clayton's Stellar Evolution book, p.119 */
-            Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
-                    / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
+            //Gammai = (double)(32. - 24. * P_ratio - 3. * P_ratio * P_ratio)
+            //        / (double)(24. - 18. * P_ratio - 3. * P_ratio * P_ratio);
             /*p->vsound = sqrtf_fast(Gammai * p->pr*P_ratio / p->rho_est);*/ /*code-units*/
             p->vsound = sqrtf_fast(Gamma * p->pr / p->rho_est);
 
@@ -1185,7 +1169,7 @@ void do_SPHgrav(const float *p,
                 float *phi0,
                 const float *eps2p,
                 int *ncut) {
-    float dr2, h, h2, dxx, dphidx, dmassdx, v2;
+    float dr2, h, h2, v2;
     Vxd(float r);
     float phii, mor3, mass;
     VxdV(const float ppos, = pos0);
@@ -1195,6 +1179,8 @@ void do_SPHgrav(const float *p,
     const float eps2 = *eps2p; /* Nuts! Eps2 is not eps^2, but hsink!*/
     int index;
 
+    phii = 0.0;
+    mor3 = 0.0;
     VxV(a, = acc0);
 
     while (p < end) {
