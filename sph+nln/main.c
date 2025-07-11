@@ -229,7 +229,6 @@ Counter_t SPHbodyCnt;
 Timer_t WTermTm, WNTTm, PerTm;
 
 static float dt;
-static float dt_max;
 static float sysradius;
 static float tpos, tvel;
 static float dt_wind;
@@ -339,7 +338,7 @@ int main(int argc, char *argv[]) {
     float newp[NDIM], newl[NDIM];
     float newr = 0.0;
     float newmass = 0.0, totnewmass = 0.0, invmass = 0.0;
-    float drag_coeff;
+    float drag_coeff = 0.0;
     /*     float newmass = 0.0, totnewmass = 0.0; */
     int udot_limit[2];
     float vsz;
@@ -353,14 +352,12 @@ int main(int argc, char *argv[]) {
     int SPHnupdate;
     int make_sink_tree;
     int Gridpts = 0, Nel = 0; /* for cooling tables */
-    int status, done, rank, idbug;
+    int rank, idbug;
     char netrcfn[20] = "                    "; /* build.f reserves 20 chars for net.rc filename */
     char **pnames, **nnames;
     int calc_gamma = 0;
     float tot_u, tot_pv;
-    double vol;
     SDF *defects_sdfp = NULL;
-    Material_t mat;
     float rad;
     float acc_0 = 1.e8;
 
@@ -401,7 +398,7 @@ int main(int argc, char *argv[]) {
     if (params.do_sph || params.do_grav) {
         if (!((strncmp(params.name, "test", 4) == 0))) {
             if (strlen(params.SPHdatafile) > 0 || params.do_restart) {
-                char iname[256];
+                char iname[300];
 
                 if (params.do_sph) {
                     if (params.do_restart)
@@ -723,7 +720,6 @@ int main(int argc, char *argv[]) {
         q->phi = 0.0;
     }
 
-    float stress_mag = 1.0e+2;
     /* Testing initialization */
     for (q = SPHbtab; q < SPHbtab + SPHnobj; q++) {
         VS(q->acc, = 0.0);
@@ -1099,7 +1095,7 @@ int main(int argc, char *argv[]) {
 
         /* Do image before GravMinusSPH if you want to image all particles */
         if (params.image_freq && iter % params.image_freq == 0) {
-            char name[256];
+            char name[300];
             float sysr, image_rmin[3], image_rmax[3];
 
             if (params.cosmology)
@@ -2068,7 +2064,7 @@ static void set_vels(body *p, int n, float real_time) {
     body *end = p + n;
     float H;
     float acc_back;
-    float vel_fac, pos_fac;
+    float vel_fac;
     float a;
     float asum1, asum2;
 
@@ -2080,7 +2076,6 @@ static void set_vels(body *p, int n, float real_time) {
     acc_back = (0.5 * cosmo.Omega0 / (a * a * a) - cosmo.Lambda) * cosmo.H0 * cosmo.H0;
 
     vel_fac = (a * a * a * cosmo.Zel_f * H) / (1.5F * cosmo.Omega0 * cosmo.H0 * cosmo.H0);
-    pos_fac = H;
     /* Velocities really store dx/dp = dx/dt * (dp/dt)^-1, but that
        correction is done elsewhere! */
 
@@ -2489,7 +2484,7 @@ static void ShortWindOutput(
     float tvel_out = tvel; /* changed in Integrate() */
     MPMY_Comm_request req;
     int output_gnobj;
-    float output_z, output_h, output_R0;
+    float output_R0;
     char outname[256];
 
     sprintf(outname, "%s_sph.%04d", outnamebase, iter);
@@ -2516,12 +2511,8 @@ static void ShortWindOutput(
     MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
     MPMY_ICombine_Wait(req);
     if (params.cosmology) {
-        output_z = Znow(tpos_out);
-        output_h = Hnow(tpos_out);
         output_R0 = R0;
     } else {
-        output_z = 0.0;
-        output_h = 0.0;
         output_R0 = sysradius;
     }
     SDFwritewind(outname,
@@ -2589,7 +2580,7 @@ static void ShortWindOutput(
 
 static void SPHOutput(SPHbody *btab, int nobj, const char *outnamebase, int iter) {
     SPHbody *p;
-    int i, j;
+    int i;
     sortresult_t outputsort;
     SPHoutbody *output_btab;
     int output_nobj = nobj;
@@ -3166,11 +3157,10 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
     int output_nobj = nobj;
     float tpos_out = tpos;
     float tvel_out = tvel; /* changed in Integrate() */
-    float twind_out = params.t_wind;
     double ke, pe, te;
     MPMY_Comm_request req;
     int output_gnobj;
-    float output_z, output_h, output_R0;
+    float output_R0;
     char outname[256];
 
     sprintf(outname, "%s_sph.%04d", outnamebase, iter);
@@ -3226,12 +3216,8 @@ static void SPHOutput_strength(SPHbody *btab, int nobj, const char *outnamebase,
     MPMY_ICombine(&output_nobj, &output_gnobj, 1, MPMY_INT, MPMY_SUM, req);
     MPMY_ICombine_Wait(req);
     if (params.cosmology) {
-        output_z = Znow(tpos_out);
-        output_h = Hnow(tpos_out);
         output_R0 = R0;
     } else {
-        output_z = 0.0;
-        output_h = 0.0;
         output_R0 = sysradius;
     }
     /* I'm guessing this writes whatever is in output_btab, matched to SPHOUTBODYDESC -CIE */

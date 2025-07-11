@@ -464,7 +464,7 @@ void *SPHRead_strength(char *name,
     int vxconf, vyconf, vzconf;
     int hconf, uconf, tempconf;
     int identconf;
-    int n_defectsconf, is_strengthconf, act_thresholdconf;
+    int n_defectsconf, is_strengthconf;
     int dmgconf, ddmgdtconf, stressconf[SRTERMS], dstressdtconf[SRTERMS];
     SPHbody *btab, *p;
     int nobj, gnobj;
