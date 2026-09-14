@@ -1,0 +1,30 @@
+name: Parallel Code Compilation
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Download your code
+    - name: Checkout repository code
+      uses: actions/checkout@v4
+
+    # Step 2: Install OpenMPI onto GitHub's cloud machine
+    - name: Install OpenMPI
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libopenmpi-dev openmpi-bin
+
+    # Step 3: Compile using mpicc (which wraps GCC)
+    - name: Compile MPI Program
+      run: |
+        which gcc
+        gcc --version
+        which mpicc
+        mpicc --version
