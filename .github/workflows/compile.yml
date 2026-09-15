@@ -27,5 +27,5 @@ jobs:
     # Step 3: Compile using mpicc (which wraps GCC)
     - name: Compile MPI Program
       run: |
-        cd ahotsph-orig-tree16
+        pwd
         make ARCH=github-ci PAROS=mpi
