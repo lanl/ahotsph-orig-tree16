@@ -15,7 +15,9 @@ include $(treedir)/Make-common/Make.default
 
 swsrc:=lsv.c swampi.c
 
+mpihome:=/usr/lib/x86_64-linux-gnu/openmpi
+
 ifeq ($(PAROS),mpi)
-LOADLIBES:=-L/usr/lib64 -lmpi -lm
-PAROSCFLAGS:=-I/usr/include -DUSE_MPIIO
+LOADLIBES:=-L$(mpihome)/lib64 -lmpi -lm
+PAROSCFLAGS:=-I$(mpihome)/include -DUSE_MPIIO
 endif
